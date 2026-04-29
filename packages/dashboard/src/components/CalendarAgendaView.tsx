@@ -73,40 +73,47 @@ export function CalendarAgendaView({ settings }: CalendarAgendaViewProps): React
         flexDirection: 'column',
       }}
     >
-      <div style={{ fontSize: '3vw', fontWeight: 700, marginBottom: '2vw' }}>Termine</div>
+      <div style={{ fontSize: '5vw', fontWeight: 700, marginBottom: '2.5vw' }}>Termine</div>
       <div style={{ flex: 1, overflow: 'hidden' }}>
         {events.length === 0 && (
-          <div style={{ color: '#666', fontSize: '2vw' }}>Keine Termine in den nächsten {daysAhead} Tagen</div>
+          <div style={{ color: '#666', fontSize: '3.5vw' }}>Keine Termine in den nächsten {daysAhead} Tagen</div>
         )}
-        {Array.from(grouped.entries()).map(([day, dayEvents]) => (
-          <div key={day} style={{ marginBottom: '2vw' }}>
-            <div style={{ fontSize: '1.8vw', fontWeight: 600, color: '#8899a6', marginBottom: '0.5vw' }}>
-              {formatDate(dayEvents[0].start)}
-            </div>
-            {dayEvents.map((event) => (
-              <div
-                key={event.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1vw',
-                  padding: '0.6vw 0',
-                  borderLeft: `0.3vw solid ${event.color}`,
-                  paddingLeft: '1vw',
-                  marginBottom: '0.4vw',
-                }}
-              >
-                <span style={{ fontSize: '1.5vw', color: '#8899a6', minWidth: '6vw' }}>
-                  {event.allDay ? 'Ganztägig' : formatTime(event.start)}
-                </span>
-                <span style={{ fontSize: '1.8vw', fontWeight: 500 }}>{event.title}</span>
-                {event.location && (
-                  <span style={{ fontSize: '1.3vw', color: '#666', marginLeft: 'auto' }}>{event.location}</span>
-                )}
+        {(() => {
+          let count = 0;
+          const maxItems = 4;
+          return Array.from(grouped.entries()).map(([day, dayEvents]) => {
+            if (count >= maxItems) return null;
+            const remaining = maxItems - count;
+            const visibleEvents = dayEvents.slice(0, remaining);
+            count += visibleEvents.length;
+            return (
+              <div key={day} style={{ marginBottom: '2.5vw' }}>
+                <div style={{ fontSize: '3vw', fontWeight: 600, color: '#8899a6', marginBottom: '0.8vw' }}>
+                  {formatDate(dayEvents[0].start)}
+                </div>
+                {visibleEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1.5vw',
+                      padding: '1vw 0',
+                      borderLeft: `0.5vw solid ${event.color}`,
+                      paddingLeft: '1.5vw',
+                      marginBottom: '0.6vw',
+                    }}
+                  >
+                    <span style={{ fontSize: '2.5vw', color: '#8899a6', minWidth: '10vw' }}>
+                      {event.allDay ? 'Ganztägig' : formatTime(event.start)}
+                    </span>
+                    <span style={{ fontSize: '3vw', fontWeight: 500 }}>{event.title}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ))}
+            );
+          });
+        })()}
       </div>
     </div>
   );

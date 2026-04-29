@@ -46,7 +46,7 @@ export function RetroRecentView({ settings }: RetroRecentViewProps): React.React
       try {
         const res = await fetch(`/api/retro/recent-achievements?apiUser=${apiUser}&apiKey=${apiKey}&user=${user}&minutes=43200`);
         const data = await res.json();
-        if (Array.isArray(data)) setAchievements(data.slice(0, 12));
+        if (Array.isArray(data)) setAchievements(data.slice(0, 5));
       } catch { /* ignore */ }
       setLoading(false);
     }
@@ -80,47 +80,47 @@ export function RetroRecentView({ settings }: RetroRecentViewProps): React.React
         flexDirection: 'column',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1vw', marginBottom: '2vw' }}>
-        <span style={{ fontSize: '2.5vw' }}>🏆</span>
-        <span style={{ fontSize: '2.8vw', fontWeight: 700 }}>Letzte Achievements</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5vw', marginBottom: '2.5vw' }}>
+        <span style={{ fontSize: '4vw' }}>🏆</span>
+        <span style={{ fontSize: '4vw', fontWeight: 700 }}>Letzte Achievements</span>
       </div>
 
       {achievements.length === 0 ? (
-        <div style={{ color: '#666', fontSize: '2vw' }}>Keine Achievements in letzter Zeit</div>
+        <div style={{ color: '#666', fontSize: '3vw' }}>Keine Achievements in letzter Zeit</div>
       ) : (
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '0.8vw' }}>
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '1.2vw' }}>
           {achievements.map((ach) => (
             <div
               key={ach.Date + ach.Title}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '1vw',
+                gap: '1.5vw',
                 background: 'rgba(255,255,255,0.05)',
-                borderRadius: '0.5vw',
-                padding: '0.6vw 1vw',
+                borderRadius: '0.8vw',
+                padding: '1.2vw 1.5vw',
               }}
             >
               {/* Badge */}
               <img
                 src={`${RA_MEDIA}${ach.BadgeURL}`}
                 alt=""
-                style={{ width: '3.5vw', height: '3.5vw', borderRadius: '0.3vw', flexShrink: 0 }}
+                style={{ width: '5.5vw', height: '5.5vw', borderRadius: '0.4vw', flexShrink: 0 }}
               />
               {/* Info */}
               <div style={{ flex: 1, overflow: 'hidden' }}>
-                <div style={{ fontSize: '1.5vw', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: '2.5vw', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {ach.Title}
-                  {ach.HardcoreMode === 1 && <span style={{ color: '#ffd700', marginLeft: '0.3vw' }}>⭐</span>}
+                  {ach.HardcoreMode === 1 && <span style={{ color: '#ffd700', marginLeft: '0.5vw' }}>⭐</span>}
                 </div>
-                <div style={{ fontSize: '1.1vw', color: '#8899a6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: '1.8vw', color: '#8899a6', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {ach.GameTitle} · {ach.ConsoleName}
                 </div>
               </div>
               {/* Points + time */}
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <div style={{ fontSize: '1.4vw', fontWeight: 700, color: '#ffd700' }}>{ach.Points}</div>
-                <div style={{ fontSize: '1vw', color: '#556' }}>{timeAgo(ach.Date)}</div>
+                <div style={{ fontSize: '2.2vw', fontWeight: 700, color: '#ffd700' }}>{ach.Points}</div>
+                <div style={{ fontSize: '1.6vw', color: '#556' }}>{timeAgo(ach.Date)}</div>
               </div>
             </div>
           ))}

@@ -73,61 +73,61 @@ export function RetroPlayingView({ settings }: RetroPlayingViewProps): React.Rea
         flexDirection: 'column',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1vw', marginBottom: '2vw' }}>
-        <span style={{ fontSize: '2.5vw' }}>🎮</span>
-        <span style={{ fontSize: '2.8vw', fontWeight: 700 }}>Aktuell gespielt</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5vw', marginBottom: '2.5vw' }}>
+        <span style={{ fontSize: '4vw' }}>🎮</span>
+        <span style={{ fontSize: '4vw', fontWeight: 700 }}>Aktuell gespielt</span>
       </div>
 
       {/* Featured game — large */}
       {featured && (
         <div style={{
           display: 'flex',
-          gap: '2vw',
-          marginBottom: '2vw',
+          gap: '2.5vw',
+          marginBottom: '2.5vw',
           background: 'rgba(255,255,255,0.05)',
-          borderRadius: '0.8vw',
-          padding: '1.5vw',
+          borderRadius: '1vw',
+          padding: '2vw',
           alignItems: 'center',
         }}>
           <img
             src={`${RA_MEDIA}${featured.ImageIcon}`}
             alt=""
-            style={{ width: '8vw', height: '8vw', borderRadius: '0.5vw', flexShrink: 0 }}
+            style={{ width: '10vw', height: '10vw', borderRadius: '0.8vw', flexShrink: 0 }}
           />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: '2.2vw', fontWeight: 700, marginBottom: '0.3vw' }}>{featured.Title}</div>
-            <div style={{ fontSize: '1.3vw', color: '#8899a6', marginBottom: '1vw' }}>{featured.ConsoleName}</div>
+            <div style={{ fontSize: '3vw', fontWeight: 700, marginBottom: '0.3vw' }}>{featured.Title}</div>
+            <div style={{ fontSize: '2vw', color: '#8899a6', marginBottom: '1.2vw' }}>{featured.ConsoleName}</div>
             {/* Progress bar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1vw' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5vw' }}>
               <div style={{
                 flex: 1,
-                height: '1.2vw',
+                height: '1.8vw',
                 background: 'rgba(255,255,255,0.1)',
-                borderRadius: '0.6vw',
+                borderRadius: '0.9vw',
                 overflow: 'hidden',
               }}>
                 <div style={{
                   width: `${(featured.NumAchieved / featured.NumPossibleAchievements) * 100}%`,
                   height: '100%',
                   background: 'linear-gradient(90deg, #ffd700, #ff8c00)',
-                  borderRadius: '0.6vw',
+                  borderRadius: '0.9vw',
                   transition: 'width 0.5s ease',
                 }} />
               </div>
-              <span style={{ fontSize: '1.4vw', fontWeight: 600, color: '#ffd700', flexShrink: 0 }}>
+              <span style={{ fontSize: '2.2vw', fontWeight: 600, color: '#ffd700', flexShrink: 0 }}>
                 {featured.NumAchieved}/{featured.NumPossibleAchievements}
               </span>
             </div>
-            <div style={{ fontSize: '1.1vw', color: '#556', marginTop: '0.4vw' }}>
+            <div style={{ fontSize: '1.8vw', color: '#556', marginTop: '0.5vw' }}>
               {featured.ScoreAchieved}/{featured.PossibleScore} Punkte
             </div>
           </div>
         </div>
       )}
 
-      {/* Other games */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '0.6vw' }}>
-        {gamesWithProgress.slice(1).map((game) => {
+      {/* Other games — limit to 2 */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: '1vw' }}>
+        {gamesWithProgress.slice(1, 3).map((game) => {
           const pct = game.NumPossibleAchievements > 0
             ? Math.round((game.NumAchieved / game.NumPossibleAchievements) * 100)
             : 0;
@@ -138,40 +138,40 @@ export function RetroPlayingView({ settings }: RetroPlayingViewProps): React.Rea
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '1vw',
+                gap: '1.5vw',
                 background: 'rgba(255,255,255,0.03)',
-                borderRadius: '0.4vw',
-                padding: '0.6vw 1vw',
+                borderRadius: '0.6vw',
+                padding: '1vw 1.5vw',
               }}
             >
               <img
                 src={`${RA_MEDIA}${game.ImageIcon}`}
                 alt=""
-                style={{ width: '3.5vw', height: '3.5vw', borderRadius: '0.3vw', flexShrink: 0 }}
+                style={{ width: '5vw', height: '5vw', borderRadius: '0.4vw', flexShrink: 0 }}
               />
               <div style={{ flex: 1, overflow: 'hidden' }}>
-                <div style={{ fontSize: '1.4vw', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: '2.2vw', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {game.Title}
                 </div>
-                <div style={{ fontSize: '1vw', color: '#556' }}>{game.ConsoleName}</div>
+                <div style={{ fontSize: '1.6vw', color: '#556' }}>{game.ConsoleName}</div>
               </div>
               {/* Mini progress */}
-              <div style={{ width: '8vw', flexShrink: 0 }}>
+              <div style={{ width: '10vw', flexShrink: 0 }}>
                 <div style={{
-                  height: '0.8vw',
+                  height: '1.2vw',
                   background: 'rgba(255,255,255,0.1)',
-                  borderRadius: '0.4vw',
+                  borderRadius: '0.6vw',
                   overflow: 'hidden',
                 }}>
                   <div style={{
                     width: `${pct}%`,
                     height: '100%',
                     background: 'linear-gradient(90deg, #ffd700, #ff8c00)',
-                    borderRadius: '0.4vw',
+                    borderRadius: '0.6vw',
                   }} />
                 </div>
               </div>
-              <span style={{ fontSize: '1.2vw', color: '#8899a6', flexShrink: 0 }}>
+              <span style={{ fontSize: '1.8vw', color: '#8899a6', flexShrink: 0 }}>
                 {game.NumAchieved}/{game.NumPossibleAchievements}
               </span>
             </div>

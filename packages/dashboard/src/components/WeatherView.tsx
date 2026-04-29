@@ -173,23 +173,23 @@ export function WeatherView({ settings }: WeatherViewProps): React.ReactElement 
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'flex-end',
-        padding: '4vw',
+        padding: '6vw',
         color: '#fff',
-        textShadow: '0 2px 12px rgba(0,0,0,0.4)',
+        textShadow: '0 2px 16px rgba(0,0,0,0.6), 0 4px 32px rgba(0,0,0,0.3)',
       }}
     >
       {accent}
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ fontSize: '10vw', fontWeight: 700, lineHeight: 1 }}>
+        <div style={{ fontSize: '14vw', fontWeight: 700, lineHeight: 1 }}>
           {weather.temp}{unitSymbol}
         </div>
-        <div style={{ fontSize: '3.5vw', fontWeight: 500, marginTop: '0.5vw', textTransform: 'capitalize' }}>
+        <div style={{ fontSize: '5vw', fontWeight: 500, marginTop: '0.5vw', textTransform: 'capitalize' }}>
           {weather.condition}
         </div>
-        <div style={{ fontSize: '2.5vw', fontWeight: 400, marginTop: '0.5vw', opacity: 0.8 }}>
+        <div style={{ fontSize: '3.5vw', fontWeight: 400, marginTop: '0.5vw', opacity: 0.8 }}>
           {weather.city}
         </div>
-        <div style={{ fontSize: '2vw', fontWeight: 400, marginTop: '1vw', opacity: 0.7 }}>
+        <div style={{ fontSize: '3vw', fontWeight: 400, marginTop: '1vw', opacity: 0.7 }}>
           H: {weather.tempMax}{unitSymbol}  L: {weather.tempMin}{unitSymbol}
         </div>
       </div>

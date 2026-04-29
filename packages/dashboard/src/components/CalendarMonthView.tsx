@@ -91,18 +91,18 @@ export function CalendarMonthView({ settings }: CalendarMonthViewProps): React.R
       }}
     >
       {/* Month title */}
-      <div style={{ fontSize: '3vw', fontWeight: 700, marginBottom: '1.5vw', textTransform: 'capitalize' }}>
+      <div style={{ fontSize: '4.5vw', fontWeight: 700, marginBottom: '1.5vw', textTransform: 'capitalize' }}>
         {monthName}
       </div>
 
       {/* Weekday headers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.4vw', marginBottom: '0.5vw' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5vw', marginBottom: '0.5vw' }}>
         {WEEKDAY_LABELS.map((label) => (
           <div
             key={label}
             style={{
               textAlign: 'center',
-              fontSize: '1.3vw',
+              fontSize: '2.2vw',
               fontWeight: 600,
               color: '#8899a6',
               padding: '0.3vw 0',
@@ -114,12 +114,12 @@ export function CalendarMonthView({ settings }: CalendarMonthViewProps): React.R
       </div>
 
       {/* Calendar grid */}
-      <div style={{ flex: 1, display: 'grid', gridTemplateRows: `repeat(${weeks.length}, 1fr)`, gap: '0.4vw' }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateRows: `repeat(${weeks.length}, 1fr)`, gap: '0.5vw' }}>
         {weeks.map((week, wi) => (
-          <div key={wi} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.4vw' }}>
+          <div key={wi} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5vw' }}>
             {week.map((date, di) => {
               if (!date) {
-                return <div key={di} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '0.3vw' }} />;
+                return <div key={di} style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '0.5vw' }} />;
               }
 
               const isToday = date.toDateString() === todayStr;
@@ -130,53 +130,44 @@ export function CalendarMonthView({ settings }: CalendarMonthViewProps): React.R
                 <div
                   key={di}
                   style={{
-                    background: isToday ? 'rgba(74,144,217,0.2)' : 'rgba(255,255,255,0.03)',
-                    border: isToday ? '2px solid rgba(74,144,217,0.6)' : '1px solid rgba(255,255,255,0.06)',
-                    borderRadius: '0.4vw',
-                    padding: '0.4vw',
+                    background: isToday ? 'rgba(74,144,217,0.25)' : 'rgba(255,255,255,0.03)',
+                    border: isToday ? '2px solid rgba(74,144,217,0.7)' : '1px solid rgba(255,255,255,0.06)',
+                    borderRadius: '0.5vw',
+                    padding: '0.5vw',
                     display: 'flex',
                     flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     overflow: 'hidden',
                     opacity: isPast ? 0.5 : 1,
                   }}
                 >
                   {/* Day number */}
                   <div style={{
-                    fontSize: '1.6vw',
+                    fontSize: '2.8vw',
                     fontWeight: isToday ? 700 : 400,
                     color: isToday ? '#4a90d9' : '#fff',
                     textAlign: 'center',
-                    marginBottom: '0.2vw',
                   }}>
                     {date.getDate()}
                   </div>
 
-                  {/* Event dots / pills */}
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.15vw', overflow: 'hidden' }}>
-                    {dayEvents.slice(0, 3).map((event) => (
-                      <div
-                        key={event.id}
-                        style={{
-                          background: event.color,
-                          borderRadius: '0.15vw',
-                          padding: '0.1vw 0.3vw',
-                          fontSize: '0.8vw',
-                          fontWeight: 500,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          opacity: 0.85,
-                        }}
-                      >
-                        {event.title}
-                      </div>
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <div style={{ fontSize: '0.7vw', color: '#666', textAlign: 'center' }}>
-                        +{dayEvents.length - 3}
-                      </div>
-                    )}
-                  </div>
+                  {/* Event dot indicators */}
+                  {dayEvents.length > 0 && (
+                    <div style={{ display: 'flex', gap: '0.4vw', marginTop: '0.3vw' }}>
+                      {dayEvents.slice(0, 3).map((event) => (
+                        <div
+                          key={event.id}
+                          style={{
+                            width: '0.8vw',
+                            height: '0.8vw',
+                            borderRadius: '50%',
+                            background: event.color,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}

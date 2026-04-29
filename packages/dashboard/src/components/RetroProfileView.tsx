@@ -94,21 +94,21 @@ export function RetroProfileView({ settings }: RetroProfileViewProps): React.Rea
       }}
     >
       {/* Profile header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2vw', marginBottom: '3vw' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2.5vw', marginBottom: '3vw' }}>
         <img
           src={avatarUrl}
           alt={profile.User}
           style={{
-            width: '8vw',
-            height: '8vw',
+            width: '10vw',
+            height: '10vw',
             borderRadius: '50%',
             border: '0.3vw solid rgba(255,215,0,0.5)',
             flexShrink: 0,
           }}
         />
         <div>
-          <div style={{ fontSize: '3vw', fontWeight: 700 }}>{profile.User}</div>
-          <div style={{ fontSize: '1.5vw', color: '#8899a6' }}>
+          <div style={{ fontSize: '4.5vw', fontWeight: 700 }}>{profile.User}</div>
+          <div style={{ fontSize: '2.5vw', color: '#8899a6' }}>
             Rang #{profile.Rank.toLocaleString()}
           </div>
         </div>
@@ -118,7 +118,7 @@ export function RetroProfileView({ settings }: RetroProfileViewProps): React.Rea
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '1.5vw',
+        gap: '2vw',
         marginBottom: '3vw',
       }}>
         {[
@@ -130,14 +130,14 @@ export function RetroProfileView({ settings }: RetroProfileViewProps): React.Rea
             key={stat.label}
             style={{
               background: 'rgba(255,255,255,0.05)',
-              borderRadius: '0.6vw',
-              padding: '1.5vw',
+              borderRadius: '0.8vw',
+              padding: '2vw',
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: '2.5vw', marginBottom: '0.3vw' }}>{stat.icon}</div>
-            <div style={{ fontSize: '2.5vw', fontWeight: 700, color: '#ffd700' }}>{stat.value}</div>
-            <div style={{ fontSize: '1.2vw', color: '#8899a6' }}>{stat.label}</div>
+            <div style={{ fontSize: '3.5vw', marginBottom: '0.3vw' }}>{stat.icon}</div>
+            <div style={{ fontSize: '3.5vw', fontWeight: 700, color: '#ffd700' }}>{stat.value}</div>
+            <div style={{ fontSize: '2vw', color: '#8899a6' }}>{stat.label}</div>
           </div>
         ))}
       </div>
@@ -146,29 +146,29 @@ export function RetroProfileView({ settings }: RetroProfileViewProps): React.Rea
       {profile.RichPresenceMsg && (
         <div style={{
           background: 'rgba(255,255,255,0.05)',
-          borderRadius: '0.6vw',
-          padding: '1.5vw',
+          borderRadius: '0.8vw',
+          padding: '2vw',
           marginBottom: '2vw',
         }}>
-          <div style={{ fontSize: '1.3vw', color: '#8899a6', marginBottom: '0.5vw' }}>Aktuelle Aktivität</div>
-          <div style={{ fontSize: '1.8vw', fontWeight: 500 }}>{profile.RichPresenceMsg}</div>
+          <div style={{ fontSize: '2vw', color: '#8899a6', marginBottom: '0.5vw' }}>Aktuelle Aktivität</div>
+          <div style={{ fontSize: '2.8vw', fontWeight: 500 }}>{profile.RichPresenceMsg}</div>
         </div>
       )}
 
       {/* Last played games */}
       {lastGame && (
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          <div style={{ fontSize: '1.5vw', color: '#8899a6', marginBottom: '1vw' }}>Zuletzt gespielt</div>
-          <div style={{ display: 'flex', gap: '1.5vw', overflow: 'hidden' }}>
-            {profile.RecentlyPlayed.slice(0, 4).map((game) => (
+          <div style={{ fontSize: '2.2vw', color: '#8899a6', marginBottom: '1vw' }}>Zuletzt gespielt</div>
+          <div style={{ display: 'flex', gap: '2vw', overflow: 'hidden' }}>
+            {profile.RecentlyPlayed.slice(0, 3).map((game) => (
               <div key={game.GameID} style={{ flex: '1 1 0', minWidth: 0, textAlign: 'center' }}>
                 <img
                   src={`${RA_MEDIA}${game.ImageIcon}`}
                   alt=""
-                  style={{ width: '5vw', height: '5vw', borderRadius: '0.4vw', marginBottom: '0.5vw' }}
+                  style={{ width: '7vw', height: '7vw', borderRadius: '0.5vw', marginBottom: '0.5vw' }}
                 />
                 <div style={{
-                  fontSize: '1.1vw',
+                  fontSize: '1.8vw',
                   fontWeight: 500,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -176,7 +176,7 @@ export function RetroProfileView({ settings }: RetroProfileViewProps): React.Rea
                 }}>
                   {game.Title}
                 </div>
-                <div style={{ fontSize: '0.9vw', color: '#556' }}>{game.ConsoleName}</div>
+                <div style={{ fontSize: '1.4vw', color: '#556' }}>{game.ConsoleName}</div>
               </div>
             ))}
           </div>
