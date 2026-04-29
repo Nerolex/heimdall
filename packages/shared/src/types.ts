@@ -52,6 +52,8 @@ export interface DashboardConfig {
   views: ViewEntry[];
   /** Weather configuration (required for weather overlay) */
   weather?: WeatherConfig;
+  /** Show fullscreen toggle button in overlay */
+  showFullscreenButton?: boolean;
 }
 
 /** A calendar source (iCal URL) */

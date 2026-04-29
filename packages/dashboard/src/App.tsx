@@ -180,6 +180,7 @@ export function App(): React.ReactElement {
         clockVisible={clockVisible}
         weatherVisible={weatherVisible}
         weatherConfig={config!.weather}
+        showFullscreenButton={config!.showFullscreenButton}
       />
       <div
         style={{

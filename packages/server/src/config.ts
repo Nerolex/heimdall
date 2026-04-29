@@ -57,6 +57,7 @@ export function loadConfig(configPath: string): ConfigResult {
     viewOrder: normalizeViewOrder(parsed.viewOrder),
     views: parsed.views,
     ...(parsed.weather ? { weather: parsed.weather } : {}),
+    ...(parsed.showFullscreenButton != null ? { showFullscreenButton: parsed.showFullscreenButton } : {}),
   };
 
   return { config };
