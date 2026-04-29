@@ -31,6 +31,8 @@ export function App(): React.ReactElement {
   const [clockVisible, setClockVisible] = useState(true);
   const [weatherVisible, setWeatherVisible] = useState(true);
   const cycleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTransitioning = useRef(false);
+  const viewHistory = useRef<number[]>([0]);
 
   // Fetch config on mount
   useEffect(() => {
@@ -64,6 +66,64 @@ export function App(): React.ReactElement {
       });
   }, []);
 
+  // Transition to a specific view index with fade
+  function transitionTo(nextIdx: number): void {
+    if (!config || isTransitioning.current) return;
+    isTransitioning.current = true;
+
+    const currentIdx = activeViewIndex;
+    const currentMode = getOverlayMode(config, currentIdx);
+    const nextMode = getOverlayMode(config, nextIdx);
+
+    setVisible(false);
+    if (showsClock(currentMode) && !showsClock(nextMode)) setClockVisible(false);
+    if (showsWeather(currentMode) && !showsWeather(nextMode)) setWeatherVisible(false);
+
+    setTimeout(() => {
+      setActiveViewIndex(nextIdx);
+      setVisible(true);
+      setClockVisible(showsClock(nextMode));
+      setWeatherVisible(showsWeather(nextMode));
+      isTransitioning.current = false;
+    }, FADE_DURATION);
+  }
+
+  // Get next view index (sequential or random)
+  function getNextIndex(currentIdx: number): number {
+    if (!config) return 0;
+    const viewOrder = normalizeViewOrder(config.viewOrder);
+    if (viewOrder === 'random') {
+      const candidates = Array.from({ length: config.views.length }, (_, i) => i).filter((i) => i !== currentIdx);
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+    return (currentIdx + 1) % config.views.length;
+  }
+
+  // Handle tap/click navigation
+  function handleNavClick(e: React.MouseEvent<HTMLDivElement>): void {
+    if (!config || config.views.length <= 1) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const isLeftHalf = x < rect.width / 2;
+
+    // Reset auto-cycle timer
+    if (cycleTimer.current) clearTimeout(cycleTimer.current);
+
+    if (isLeftHalf) {
+      // Go back in history
+      if (viewHistory.current.length > 1) {
+        viewHistory.current.pop();
+        const prevIdx = viewHistory.current[viewHistory.current.length - 1];
+        transitionTo(prevIdx);
+      }
+    } else {
+      // Go forward
+      const nextIdx = getNextIndex(activeViewIndex);
+      viewHistory.current.push(nextIdx);
+      transitionTo(nextIdx);
+    }
+  }
+
   // View cycling with fade transition
   useEffect(() => {
     if (!config || config.views.length <= 1) return;
@@ -72,39 +132,10 @@ export function App(): React.ReactElement {
 
     function scheduleCycle(): void {
       cycleTimer.current = setTimeout(() => {
-        const currentIdx = activeViewIndex;
-        const viewOrder = normalizeViewOrder(config!.viewOrder);
-        let nextIdx: number;
-        if (viewOrder === 'random') {
-          // Pick a random view that isn't the current one
-          const candidates = Array.from({ length: config!.views.length }, (_, i) => i).filter((i) => i !== currentIdx);
-          nextIdx = candidates[Math.floor(Math.random() * candidates.length)];
-        } else {
-          nextIdx = (currentIdx + 1) % config!.views.length;
-        }
-        const currentMode = getOverlayMode(config!, currentIdx);
-        const nextMode = getOverlayMode(config!, nextIdx);
-
-        // Fade out view
-        setVisible(false);
-
-        // Fade out each overlay element only if it won't persist to next view
-        if (showsClock(currentMode) && !showsClock(nextMode)) {
-          setClockVisible(false);
-        }
-        if (showsWeather(currentMode) && !showsWeather(nextMode)) {
-          setWeatherVisible(false);
-        }
-
-        // Swap view while black, then fade back in
-        setTimeout(() => {
-          setActiveViewIndex(nextIdx);
-          setVisible(true);
-          // Fade in each overlay element based on next view's config
-          setClockVisible(showsClock(nextMode));
-          setWeatherVisible(showsWeather(nextMode));
-          scheduleCycle();
-        }, FADE_DURATION);
+        const nextIdx = getNextIndex(activeViewIndex);
+        viewHistory.current.push(nextIdx);
+        transitionTo(nextIdx);
+        scheduleCycle();
       }, interval - FADE_DURATION);
     }
 
@@ -135,12 +166,16 @@ export function App(): React.ReactElement {
   const hasOverlay = clockVisible || weatherVisible;
 
   return (
-    <div style={{
-      width: '100vw',
-      height: '100vh',
-      position: 'relative',
-      '--overlay-height': hasOverlay ? '8vw' : '0px',
-    } as React.CSSProperties}>
+    <div
+      onClick={handleNavClick}
+      style={{
+        width: '100vw',
+        height: '100vh',
+        position: 'relative',
+        cursor: 'pointer',
+        '--overlay-height': hasOverlay ? '8vw' : '0px',
+      } as React.CSSProperties}
+    >
       <Overlay
         clockVisible={clockVisible}
         weatherVisible={weatherVisible}
