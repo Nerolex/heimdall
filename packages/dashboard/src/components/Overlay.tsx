@@ -67,20 +67,36 @@ export function Overlay({ clockVisible, weatherVisible, weatherConfig, showFulls
           style={{
             marginLeft: 'auto',
             pointerEvents: 'auto',
-            background: 'rgba(255,255,255,0.15)',
-            border: '1px solid rgba(255,255,255,0.3)',
-            borderRadius: '0.8vw',
-            padding: '0.8vw 1.2vw',
+            background: 'transparent',
+            border: 'none',
+            borderRadius: '0.5vw',
+            padding: '0.6vw',
             cursor: 'pointer',
-            color: '#fff',
-            fontSize: '2vw',
-            lineHeight: 1,
-            backdropFilter: 'blur(4px)',
+            opacity: 0.35,
             transition: 'opacity 0.3s',
+            lineHeight: 0,
           }}
+          onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
+          onMouseLeave={e => { e.currentTarget.style.opacity = '0.35'; }}
           title={isFullscreen ? 'Vollbild beenden' : 'Vollbild'}
         >
-          {isFullscreen ? '⊠' : '⛶'}
+          <svg width="1.6vw" height="1.6vw" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            {isFullscreen ? (
+              <>
+                <polyline points="4 14 10 14 10 20" />
+                <polyline points="20 10 14 10 14 4" />
+                <line x1="14" y1="10" x2="21" y2="3" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </>
+            ) : (
+              <>
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </>
+            )}
+          </svg>
         </button>
       )}
     </div>
