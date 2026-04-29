@@ -1,50 +1,57 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Heimdall Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Modular-First
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Every dashboard view is a self-contained component with its own config schema, rendering logic, and data fetching. Components must be independently addable/removable without affecting others. No cross-component dependencies.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Configuration-Driven
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+The dashboard layout, component selection, and component settings are defined entirely through configuration (e.g., JSON/YAML). No code changes required to rearrange or reconfigure views. Config is the single source of truth for what the dashboard displays.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### III. Dual-Mode Operation
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+The application must support both headless (browser-only, no window) and headed (kiosk/window) modes from the same codebase. Mode selection is a runtime configuration, not a build-time decision.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### IV. Local-Network-First
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+Designed for self-hosting on a local network. No cloud dependencies required for core functionality. All data stays on the user's network. External service integrations (weather, calendar, etc.) are optional and handled by individual components.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### V. Simplicity (YAGNI)
+
+Start with the simplest implementation that works. No premature abstractions, no over-engineering. Add complexity only when a concrete requirement demands it.
+
+### VI. Human-Maintainable Code
+
+Code must be concise, tested, and immediately understandable by a solo maintainer. Prefer fewer lines of clear code over abstractions. Every module must have tests. If a piece of code requires extensive comments to explain, it's too complex — simplify it.
+
+## Technology Constraints
+
+- **Runtime**: Node.js 20+ (LTS)
+- **Language**: TypeScript (full-stack)
+- **Frontend**: React with Vite
+- **Backend**: Express or Fastify (lightweight HTTP server)
+- **Headed mode**: Electron (for kiosk/window display)
+- **Monorepo**: Shared types between frontend and backend
+- **Package manager**: pnpm
+- **Testing**: Vitest (unit), Playwright (E2E)
+- **Dependencies**: Keep minimal — every new dependency must be justified
+
+## Development Workflow
+
+- **Commit style**: Messages complete the sentence "This commit will…" — e.g., `add weather component to dashboard`. Short header describing what was done, followed by a body explaining what and why.
+- **Commit scope**: Group changes semantically. Each commit should be a coherent, reviewable unit — not too large, not trivially small.
+- **Testing**: All code changes require tests.
+- **Branching**: Feature branches per SpecKit workflow with sequential numbering.
+- **CI**: Runs lint + tests before merge.
+- **Dependencies**: Keep minimal — justify any new dependency.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- This constitution supersedes all other project practices and conventions.
+- Amendments require documentation and review before adoption.
+- All code contributions must verify compliance with these principles.
+- Complexity beyond what the constitution allows must be justified in writing.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-04-28 | **Last Amended**: 2026-04-28

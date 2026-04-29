@@ -1,0 +1,76 @@
+import Fastify from 'fastify';
+import fastifyStatic from '@fastify/static';
+import * as path from 'node:path';
+import * as fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { configRoute } from './routes/config.js';
+import { calendarRoute } from './routes/calendar.js';
+import { photosRoute } from './routes/photos.js';
+import { retroAchievementsRoute } from './routes/retroachievements.js';
+
+const server = Fastify({ logger: true });
+
+const PORT = parseInt(process.env.PORT || '3000', 10);
+const HOST = process.env.HOST || '0.0.0.0';
+
+/** Walk up from cwd to find the monorepo root (has pnpm-workspace.yaml). */
+function findProjectRoot(): string {
+  let dir = process.cwd();
+  while (true) {
+    if (fs.existsSync(path.join(dir, 'pnpm-workspace.yaml'))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return process.cwd();
+}
+
+const PROJECT_ROOT = findProjectRoot();
+
+async function start(): Promise<void> {
+  // Register config API route
+  await server.register(configRoute);
+  await server.register(calendarRoute);
+  await server.register(photosRoute);
+  await server.register(retroAchievementsRoute);
+
+  // Serve static assets from assets/ directory
+  const assetsDir = path.resolve(PROJECT_ROOT, 'assets');
+  if (fs.existsSync(assetsDir)) {
+    await server.register(fastifyStatic, {
+      root: assetsDir,
+      prefix: '/assets/',
+    });
+  }
+
+  // Serve dashboard build (production)
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const dashboardDir = path.resolve(currentDir, '../../dashboard/dist');
+  if (fs.existsSync(dashboardDir)) {
+    await server.register(fastifyStatic, {
+      root: dashboardDir,
+      prefix: '/',
+      decorateReply: false,
+      wildcard: false,
+    });
+
+    // SPA fallback — serve index.html for non-API routes
+    server.setNotFoundHandler(async (_request, reply) => {
+      const indexPath = path.join(dashboardDir, 'index.html');
+      const content = fs.readFileSync(indexPath, 'utf-8');
+      return reply.type('text/html').send(content);
+    });
+  }
+
+  try {
+    await server.listen({ port: PORT, host: HOST });
+    server.log.info(`Heimdall server listening on ${HOST}:${PORT}`);
+  } catch (err) {
+    server.log.error(err);
+    process.exit(1);
+  }
+}
+
+start();
+
+export { server };

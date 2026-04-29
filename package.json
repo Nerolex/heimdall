@@ -1,0 +1,25 @@
+{
+  "name": "heimdall",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "dev": "concurrently \"pnpm --filter @heimdall/server run dev\" \"pnpm --filter @heimdall/dashboard run dev\"",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "start": "node packages/server/dist/index.js",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^20.17.0",
+    "concurrently": "^9.1.0",
+    "typescript": "~5.7.0",
+    "vitest": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}
