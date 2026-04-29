@@ -13,7 +13,7 @@ export function Clock(): React.ReactElement {
   const minutes = time.getMinutes().toString().padStart(2, '0');
 
   return (
-    <span data-testid="overlay-clock" style={{ fontSize: '3vw', fontWeight: 700 }}>
+    <span data-testid="overlay-clock" style={{ fontSize: '5.5vw', fontWeight: 700 }}>
       {hours}:{minutes}
     </span>
   );

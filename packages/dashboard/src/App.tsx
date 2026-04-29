@@ -139,7 +139,7 @@ export function App(): React.ReactElement {
       width: '100vw',
       height: '100vh',
       position: 'relative',
-      '--overlay-height': hasOverlay ? '6vw' : '0px',
+      '--overlay-height': hasOverlay ? '8vw' : '0px',
     } as React.CSSProperties}>
       <Overlay
         clockVisible={clockVisible}

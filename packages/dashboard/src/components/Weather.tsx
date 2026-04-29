@@ -12,7 +12,7 @@ interface WeatherProps {
 }
 
 const DEFAULT_REFRESH_MINUTES = 15;
-const ICON_SIZE = '3vw';
+const ICON_SIZE = '5vw';
 
 /** Map OWM icon codes to white SVG weather icons */
 function WeatherIcon({ code }: { code: string }): React.ReactElement {
@@ -135,11 +135,11 @@ export function Weather({ config }: WeatherProps): React.ReactElement {
   }, [config.apiKey, config.city, config.units, config.refreshInterval]);
 
   if (error) {
-    return <span data-testid="overlay-weather" style={{ fontSize: '2vw', opacity: 0.6 }}>--</span>;
+    return <span data-testid="overlay-weather" style={{ fontSize: '4vw', opacity: 0.6 }}>--</span>;
   }
 
   if (!weather) {
-    return <span data-testid="overlay-weather" style={{ fontSize: '2vw', opacity: 0.6 }}>…</span>;
+    return <span data-testid="overlay-weather" style={{ fontSize: '4vw', opacity: 0.6 }}>…</span>;
   }
 
   const unit = config.units === 'imperial' ? '°F' : '°C';
@@ -147,7 +147,7 @@ export function Weather({ config }: WeatherProps): React.ReactElement {
   return (
     <span
       data-testid="overlay-weather"
-      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5vw', fontSize: '2vw' }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.8vw', fontSize: '4vw' }}
     >
       <WeatherIcon code={weather.iconCode} />
       {weather.temp}{unit}
