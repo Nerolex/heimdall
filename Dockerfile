@@ -14,9 +14,6 @@ RUN pnpm approve-builds --all
 COPY packages/ packages/
 RUN pnpm build
 
-# Prune dev dependencies
-RUN pnpm prune --prod
-
 # --- Production image ---
 FROM node:20-slim
 
