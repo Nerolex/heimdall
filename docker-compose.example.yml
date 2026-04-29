@@ -1,0 +1,16 @@
+# Heimdall — Docker Compose snippet
+# Add this service to your existing docker-compose.yml on home.local
+
+services:
+  heimdall:
+    image: ghcr.io/nerolex/heimdall:latest
+    container_name: heimdall
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./heimdall/config.json:/app/config.json:ro
+      - ./heimdall/photos:/app/photos:ro
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
