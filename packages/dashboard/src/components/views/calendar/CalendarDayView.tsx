@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { CalendarSource } from '@heimdall/shared';
 import { useCalendarEvents } from '../../../hooks/useCalendarEvents';
 import { getHourPosition } from './calendarUtils';
+import { getRandomQuote } from './emptyDayQuotes';
 import styles from './Calendar.module.css';
 
 interface Props {
@@ -19,11 +20,13 @@ function formatHour(hour: number): string {
 export function CalendarDayView({ settings }: Props): React.ReactElement {
   const sources = (settings.sources || []) as CalendarSource[];
   const { events, loading, error } = useCalendarEvents(sources, 1);
+  const quote = useMemo(() => getRandomQuote(), []);
 
   const today = new Date();
   const todayStr = today.toDateString();
   const todayEvents = events.filter((e) => new Date(e.start).toDateString() === todayStr && !e.allDay);
   const allDayEvents = events.filter((e) => new Date(e.start).toDateString() === todayStr && e.allDay);
+  const isEmpty = todayEvents.length === 0 && allDayEvents.length === 0;
 
   const hours = Array.from({ length: TOTAL_HOURS + 1 }, (_, i) => START_HOUR + i);
   const currentHour = today.getHours() + today.getMinutes() / 60;
@@ -35,9 +38,18 @@ export function CalendarDayView({ settings }: Props): React.ReactElement {
 
   return (
     <div className={styles.container} data-testid="calendar-day-view">
-      <div className={styles.dayViewTitle}>
-        {today.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
-      </div>
+      {isEmpty ? (
+        <div className={styles.dayEmptyContainer}>
+          <div className={styles.dayEmptyDate}>
+            {today.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </div>
+          <div className={styles.dayEmptyQuote}>„{quote}"</div>
+        </div>
+      ) : (
+        <>
+          <div className={styles.dayViewTitle}>
+            {today.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </div>
 
       {allDayEvents.length > 0 && (
         <div className={styles.allDayRow}>
@@ -81,6 +93,8 @@ export function CalendarDayView({ settings }: Props): React.ReactElement {
           );
         })}
       </div>
+        </>
+      )}
     </div>
   );
 }

@@ -18,6 +18,8 @@ export function CalendarAgendaView({ settings }: Props): React.ReactElement {
   }
 
   const grouped = groupByDay(events);
+  // Show more items on larger screens
+  const maxItems = window.innerHeight > 800 ? 8 : window.innerHeight > 500 ? 6 : 4;
 
   return (
     <div className={styles.agendaContainer} data-testid="calendar-agenda-view">
@@ -28,7 +30,6 @@ export function CalendarAgendaView({ settings }: Props): React.ReactElement {
         )}
         {(() => {
           let count = 0;
-          const maxItems = 4;
           return Array.from(grouped.entries()).map(([day, dayEvents]) => {
             if (count >= maxItems) return null;
             const remaining = maxItems - count;

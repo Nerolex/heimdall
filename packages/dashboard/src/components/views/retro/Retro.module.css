@@ -113,17 +113,17 @@
 /* Playing view */
 .featuredCard {
   display: flex;
-  gap: 2.5vw;
-  margin-bottom: 2.5vw;
+  gap: clamp(16px, 2.5vw, 28px);
+  margin-bottom: clamp(16px, 2.5vw, 28px);
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 1vw;
-  padding: 2vw;
+  border-radius: clamp(6px, 1vw, 12px);
+  padding: clamp(12px, 2vw, 24px);
   align-items: center;
 }
 
 .featuredIcon {
-  width: 10vw;
-  height: 10vw;
+  width: clamp(64px, 10vw, 110px);
+  height: clamp(64px, 10vw, 110px);
   border-radius: 0.8vw;
   flex-shrink: 0;
 }
@@ -133,13 +133,13 @@
 }
 
 .featuredTitle {
-  font-size: 3vw;
+  font-size: clamp(18px, 3vw, 32px);
   font-weight: 700;
   margin-bottom: 0.3vw;
 }
 
 .featuredConsole {
-  font-size: 2vw;
+  font-size: clamp(12px, 2vw, 20px);
   color: #8899a6;
   margin-bottom: 1.2vw;
 }
@@ -147,12 +147,12 @@
 .progressRow {
   display: flex;
   align-items: center;
-  gap: 1.5vw;
+  gap: clamp(8px, 1.5vw, 16px);
 }
 
 .progressBar {
   flex: 1;
-  height: 1.8vw;
+  height: clamp(10px, 1.8vw, 18px);
   background: rgba(255, 255, 255, 0.1);
   border-radius: 0.9vw;
   overflow: hidden;
@@ -166,38 +166,38 @@
 }
 
 .progressLabel {
-  font-size: 2.2vw;
+  font-size: clamp(12px, 2.2vw, 20px);
   font-weight: 600;
   color: #ffd700;
   flex-shrink: 0;
 }
 
 .progressPoints {
-  font-size: 1.8vw;
+  font-size: clamp(10px, 1.8vw, 16px);
   color: #556;
   margin-top: 0.5vw;
 }
 
 .secondaryList {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1vw;
+  gap: clamp(6px, 1vw, 12px);
 }
 
 .secondaryRow {
   display: flex;
   align-items: center;
-  gap: 1.5vw;
+  gap: clamp(8px, 1.5vw, 16px);
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 0.6vw;
-  padding: 1vw 1.5vw;
+  border-radius: clamp(4px, 0.6vw, 8px);
+  padding: clamp(8px, 1vw, 14px) clamp(10px, 1.5vw, 18px);
 }
 
 .secondaryIcon {
-  width: 5vw;
-  height: 5vw;
+  width: clamp(36px, 5vw, 56px);
+  height: clamp(36px, 5vw, 56px);
   border-radius: 0.4vw;
   flex-shrink: 0;
 }
@@ -208,7 +208,7 @@
 }
 
 .secondaryTitle {
-  font-size: 2.2vw;
+  font-size: clamp(12px, 2.2vw, 18px);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -216,17 +216,17 @@
 }
 
 .secondaryConsole {
-  font-size: 1.6vw;
+  font-size: clamp(10px, 1.6vw, 14px);
   color: #556;
 }
 
 .miniProgress {
-  width: 10vw;
+  width: clamp(60px, 10vw, 100px);
   flex-shrink: 0;
 }
 
 .miniProgressBar {
-  height: 1.2vw;
+  height: clamp(8px, 1.2vw, 12px);
   background: rgba(255, 255, 255, 0.1);
   border-radius: 0.6vw;
   overflow: hidden;
@@ -239,7 +239,7 @@
 }
 
 .miniLabel {
-  font-size: 1.8vw;
+  font-size: clamp(10px, 1.8vw, 16px);
   color: #8899a6;
   flex-shrink: 0;
 }
@@ -247,81 +247,82 @@
 /* Profile view */
 .profileContainer {
   composes: container;
-  padding-left: 4vw;
-  padding-right: 4vw;
-  padding-bottom: 3vw;
+  padding-left: clamp(16px, 4vw, 40px);
+  padding-right: clamp(16px, 4vw, 40px);
+  padding-bottom: clamp(12px, 3vw, 24px);
+  overflow-y: auto;
 }
 
 .profileHeader {
   display: flex;
   align-items: center;
-  gap: 2.5vw;
-  margin-bottom: 3vw;
+  gap: clamp(12px, 2.5vw, 24px);
+  margin-bottom: clamp(8px, 1.5vw, 16px);
 }
 
 .avatar {
-  width: 10vw;
-  height: 10vw;
+  width: clamp(48px, 8vw, 90px);
+  height: clamp(48px, 8vw, 90px);
   border-radius: 50%;
   border: 0.3vw solid rgba(255, 215, 0, 0.5);
   flex-shrink: 0;
 }
 
 .username {
-  font-size: 4.5vw;
+  font-size: clamp(20px, 4.5vw, 36px);
   font-weight: 700;
 }
 
 .rank {
-  font-size: 2.5vw;
+  font-size: clamp(12px, 2.5vw, 20px);
   color: #8899a6;
 }
 
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2vw;
-  margin-bottom: 3vw;
+  gap: clamp(8px, 2vw, 16px);
+  margin-bottom: clamp(8px, 1.5vw, 16px);
 }
 
 .statCard {
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 0.8vw;
-  padding: 2vw;
+  border-radius: clamp(4px, 0.8vw, 10px);
+  padding: clamp(10px, 2vw, 18px);
   text-align: center;
 }
 
 .statIcon {
-  font-size: 3.5vw;
+  font-size: clamp(18px, 3.5vw, 32px);
   margin-bottom: 0.3vw;
 }
 
 .statValue {
-  font-size: 3.5vw;
+  font-size: clamp(18px, 3.5vw, 30px);
   font-weight: 700;
   color: #ffd700;
 }
 
 .statLabel {
-  font-size: 2vw;
+  font-size: clamp(10px, 2vw, 16px);
   color: #8899a6;
 }
 
 .activityCard {
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 0.8vw;
-  padding: 2vw;
-  margin-bottom: 2vw;
+  border-radius: clamp(4px, 0.8vw, 10px);
+  padding: clamp(10px, 2vw, 18px);
+  margin-bottom: clamp(10px, 2vw, 18px);
 }
 
 .activityLabel {
-  font-size: 2vw;
+  font-size: clamp(10px, 2vw, 16px);
   color: #8899a6;
   margin-bottom: 0.5vw;
 }
 
 .activityMessage {
-  font-size: 2.8vw;
+  font-size: clamp(14px, 2.8vw, 22px);
   font-weight: 500;
 }
 
@@ -331,14 +332,14 @@
 }
 
 .recentLabel {
-  font-size: 2.2vw;
+  font-size: clamp(11px, 2.2vw, 18px);
   color: #8899a6;
-  margin-bottom: 1vw;
+  margin-bottom: clamp(6px, 1vw, 12px);
 }
 
 .recentGames {
   display: flex;
-  gap: 2vw;
+  gap: clamp(10px, 2vw, 20px);
   overflow: hidden;
 }
 
@@ -349,14 +350,14 @@
 }
 
 .recentGameIcon {
-  width: 7vw;
-  height: 7vw;
+  width: clamp(36px, 6vw, 72px);
+  height: clamp(36px, 6vw, 72px);
   border-radius: 0.5vw;
   margin-bottom: 0.5vw;
 }
 
 .recentGameTitle {
-  font-size: 1.8vw;
+  font-size: clamp(10px, 1.8vw, 15px);
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -364,6 +365,6 @@
 }
 
 .recentGameConsole {
-  font-size: 1.4vw;
+  font-size: clamp(9px, 1.4vw, 13px);
   color: #556;
 }

@@ -87,7 +87,7 @@ export function RetroProfileView({ settings }: Props): React.ReactElement {
         <div className={styles.recentSection}>
           <div className={styles.recentLabel}>Zuletzt gespielt</div>
           <div className={styles.recentGames}>
-            {profile.RecentlyPlayed.slice(0, 3).map((game) => (
+            {profile.RecentlyPlayed.slice(0, window.innerHeight > 900 ? 5 : 3).map((game) => (
               <div key={game.GameID} className={styles.recentGame}>
                 <img src={`${RA_MEDIA}${game.ImageIcon}`} alt="" className={styles.recentGameIcon} />
                 <div className={styles.recentGameTitle}>{game.Title}</div>

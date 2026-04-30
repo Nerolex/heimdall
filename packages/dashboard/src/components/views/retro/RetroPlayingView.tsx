@@ -26,7 +26,8 @@ export function RetroPlayingView({ settings }: Props): React.ReactElement {
   useEffect(() => {
     async function fetchData(): Promise<void> {
       try {
-        const res = await fetch(`/api/retro/recent-games?apiUser=${apiUser}&apiKey=${apiKey}&user=${user}&count=5`);
+        const count = window.innerHeight > 900 ? 10 : 5;
+        const res = await fetch(`/api/retro/recent-games?apiUser=${apiUser}&apiKey=${apiKey}&user=${user}&count=${count}`);
         const data = await res.json();
         if (Array.isArray(data)) setGames(data);
       } catch { /* ignore */ }
@@ -76,14 +77,14 @@ export function RetroPlayingView({ settings }: Props): React.ReactElement {
       )}
 
       <div className={styles.secondaryList}>
-        {gamesWithProgress.slice(1, 3).map((game) => {
+        {gamesWithProgress.slice(1).map((game) => {
           const pct = Math.round((game.NumAchieved / game.NumPossibleAchievements) * 100);
           return (
             <div key={game.GameID} className={styles.secondaryRow}>
               <img src={`${RA_MEDIA}${game.ImageIcon}`} alt="" className={styles.secondaryIcon} />
               <div className={styles.secondaryInfo}>
                 <div className={styles.secondaryTitle}>{game.Title}</div>
-                <div className={styles.secondaryConsole}>{game.ConsoleName}</div>
+                <div className={styles.secondaryConsole}>{game.ConsoleName} · {game.ScoreAchieved}/{game.PossibleScore} Punkte</div>
               </div>
               <div className={styles.miniProgress}>
                 <div className={styles.miniProgressBar}>
