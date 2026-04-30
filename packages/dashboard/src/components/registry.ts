@@ -31,6 +31,7 @@ registerComponent('calendar-agenda', CalendarAgendaView);
 registerComponent('calendar-day', CalendarDayView);
 registerComponent('calendar-week', CalendarWeekView);
 registerComponent('calendar-month', CalendarMonthView);
+registerComponent('calendar', CalendarDayView);
 registerComponent('photos-memories', PhotosMemoriesView);
 registerComponent('photos-random', PhotosRandomView);
 registerComponent('retro-recent', RetroRecentView);
