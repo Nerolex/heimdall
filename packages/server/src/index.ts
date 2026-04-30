@@ -7,6 +7,8 @@ import { configRoute } from './routes/config.js';
 import { calendarRoute } from './routes/calendar.js';
 import { photosRoute } from './routes/photos.js';
 import { retroAchievementsRoute } from './routes/retroachievements.js';
+import { steamGridDBRoute } from './routes/steamgriddb.js';
+import { igdbRoute } from './routes/igdb.js';
 
 const server = Fastify({ logger: true });
 
@@ -33,6 +35,8 @@ async function start(): Promise<void> {
   await server.register(calendarRoute);
   await server.register(photosRoute);
   await server.register(retroAchievementsRoute);
+  await server.register(steamGridDBRoute);
+  await server.register(igdbRoute);
 
   // Serve static assets from assets/ directory
   const assetsDir = path.resolve(PROJECT_ROOT, 'assets');

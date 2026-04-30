@@ -72,6 +72,20 @@ export async function retroAchievementsRoute(fastify: FastifyInstance): Promise<
     return data;
   });
 
+  // GET /api/retro/game-info — full game info with screenshots and user progress
+  fastify.get<{ Querystring: RAQuery & { gameId: string } }>('/api/retro/game-info', async (request) => {
+    const creds = getCredentials(request.query);
+    if (!creds) return { error: 'Missing apiUser/apiKey' };
+
+    const gameId = request.query.gameId;
+    if (!gameId) return { error: 'Missing gameId' };
+
+    const data = await fetchRA('API_GetGameInfoAndUserProgress.php', {
+      z: creds.z, y: creds.y, u: creds.u, g: gameId,
+    });
+    return data;
+  });
+
   // Proxy RA media images to avoid CORS issues
   fastify.get<{ Params: { '*': string } }>('/api/retro/media/*', async (request, reply) => {
     const imagePath = request.params['*'];
