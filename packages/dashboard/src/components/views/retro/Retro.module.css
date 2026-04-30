@@ -46,10 +46,65 @@
 /* Recent achievements */
 .achievementList {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 1.2vw;
+}
+
+.achievementHero {
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 2vw, 24px);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1vw;
+  padding: clamp(12px, 1.5vw, 20px);
+}
+
+.heroImage {
+  width: clamp(60px, 9vw, 120px);
+  height: clamp(60px, 9vw, 120px);
+  border-radius: 0.6vw;
+  flex-shrink: 0;
+}
+
+.heroInfo {
+  flex: 1;
+  overflow: hidden;
+}
+
+.heroTitle {
+  font-size: clamp(16px, 3vw, 32px);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heroDescription {
+  font-size: clamp(12px, 2vw, 20px);
+  color: #aab;
+  margin-top: 0.3vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heroGame {
+  font-size: clamp(11px, 1.6vw, 16px);
+  color: #889;
+  margin-top: 0.3vw;
+}
+
+.heroPoints {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.heroPointsValue {
+  font-size: clamp(18px, 3.5vw, 36px);
+  font-weight: 700;
+  color: #ffd700;
 }
 
 .achievementRow {
