@@ -65,9 +65,8 @@ function DayAccent({ conditionId }: { conditionId: number }): React.ReactElement
       <div style={{
         position: 'absolute', top: '10%', right: '12%',
         width: '20vw', height: '20vw', borderRadius: '50%',
-        // Radial gradient: bright center → gold → fading glow → transparent
-        background: 'radial-gradient(circle, #fff8c4 0%, #ffd700 40%, rgba(255,215,0,0.3) 65%, transparent 100%)',
-        boxShadow: '0 0 105px 8px yellow,0 0 25px 10px yellow inset', // soft outer glow
+        background: 'radial-gradient(circle, #fffde6 0%, #fff3a0 25%, #ffd700 50%, rgba(255,215,0,0.15) 75%, transparent 100%)',
+        boxShadow: '0 0 120px 60px rgba(255,223,0,0.4)',
       }} />
     );
   }
