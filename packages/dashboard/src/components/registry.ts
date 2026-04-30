@@ -20,17 +20,11 @@ export function getComponent(
 }
 
 // Register built-in components
-import { ImageView } from './ImageView';
-import { WeatherView } from './WeatherView';
-import { CalendarAgendaView } from './CalendarAgendaView';
-import { CalendarDayView } from './CalendarDayView';
-import { CalendarWeekView } from './CalendarWeekView';
-import { CalendarMonthView } from './CalendarMonthView';
-import { PhotosMemoriesView } from './PhotosMemoriesView';
-import { PhotosRandomView } from './PhotosRandomView';
-import { RetroRecentView } from './RetroRecentView';
-import { RetroPlayingView } from './RetroPlayingView';
-import { RetroProfileView } from './RetroProfileView';
+import { ImageView } from './shared/ImageView';
+import { WeatherView } from './views/weather';
+import { CalendarAgendaView, CalendarDayView, CalendarWeekView, CalendarMonthView } from './views/calendar';
+import { PhotosMemoriesView, PhotosRandomView } from './views/photos';
+import { RetroRecentView, RetroPlayingView, RetroProfileView } from './views/retro';
 registerComponent('image', ImageView);
 registerComponent('weather', WeatherView);
 registerComponent('calendar-agenda', CalendarAgendaView);

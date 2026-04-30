@@ -1,5 +1,5 @@
 import React from 'react';
-import { getComponent } from './registry';
+import { getComponent } from '../registry';
 import { ErrorState } from './ErrorState';
 
 interface ViewRendererProps {

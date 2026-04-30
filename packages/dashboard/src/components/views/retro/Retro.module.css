@@ -1,0 +1,369 @@
+.container {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #fff;
+  padding-top: calc(var(--overlay-height, 0px) + 2vw);
+  padding-left: 3vw;
+  padding-right: 3vw;
+  padding-bottom: 2vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+  margin-bottom: 2.5vw;
+}
+
+.headerIcon {
+  font-size: 4vw;
+}
+
+.headerTitle {
+  font-size: 4vw;
+  font-weight: 700;
+}
+
+.loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  background: #111;
+}
+
+.empty {
+  color: #666;
+  font-size: 3vw;
+}
+
+/* Recent achievements */
+.achievementList {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2vw;
+}
+
+.achievementRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.8vw;
+  padding: 1.2vw 1.5vw;
+}
+
+.badge {
+  width: 5.5vw;
+  height: 5.5vw;
+  border-radius: 0.4vw;
+  flex-shrink: 0;
+}
+
+.achievementInfo {
+  flex: 1;
+  overflow: hidden;
+}
+
+.achievementTitle {
+  font-size: 2.5vw;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hardcoreStar {
+  color: #ffd700;
+  margin-left: 0.5vw;
+}
+
+.achievementGame {
+  font-size: 1.8vw;
+  color: #8899a6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pointsBlock {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.points {
+  font-size: 2.2vw;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.timeAgo {
+  font-size: 1.6vw;
+  color: #556;
+}
+
+/* Playing view */
+.featuredCard {
+  display: flex;
+  gap: 2.5vw;
+  margin-bottom: 2.5vw;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1vw;
+  padding: 2vw;
+  align-items: center;
+}
+
+.featuredIcon {
+  width: 10vw;
+  height: 10vw;
+  border-radius: 0.8vw;
+  flex-shrink: 0;
+}
+
+.featuredInfo {
+  flex: 1;
+}
+
+.featuredTitle {
+  font-size: 3vw;
+  font-weight: 700;
+  margin-bottom: 0.3vw;
+}
+
+.featuredConsole {
+  font-size: 2vw;
+  color: #8899a6;
+  margin-bottom: 1.2vw;
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+}
+
+.progressBar {
+  flex: 1;
+  height: 1.8vw;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.9vw;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700, #ff8c00);
+  border-radius: 0.9vw;
+  transition: width 0.5s ease;
+}
+
+.progressLabel {
+  font-size: 2.2vw;
+  font-weight: 600;
+  color: #ffd700;
+  flex-shrink: 0;
+}
+
+.progressPoints {
+  font-size: 1.8vw;
+  color: #556;
+  margin-top: 0.5vw;
+}
+
+.secondaryList {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1vw;
+}
+
+.secondaryRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0.6vw;
+  padding: 1vw 1.5vw;
+}
+
+.secondaryIcon {
+  width: 5vw;
+  height: 5vw;
+  border-radius: 0.4vw;
+  flex-shrink: 0;
+}
+
+.secondaryInfo {
+  flex: 1;
+  overflow: hidden;
+}
+
+.secondaryTitle {
+  font-size: 2.2vw;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.secondaryConsole {
+  font-size: 1.6vw;
+  color: #556;
+}
+
+.miniProgress {
+  width: 10vw;
+  flex-shrink: 0;
+}
+
+.miniProgressBar {
+  height: 1.2vw;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.6vw;
+  overflow: hidden;
+}
+
+.miniProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd700, #ff8c00);
+  border-radius: 0.6vw;
+}
+
+.miniLabel {
+  font-size: 1.8vw;
+  color: #8899a6;
+  flex-shrink: 0;
+}
+
+/* Profile view */
+.profileContainer {
+  composes: container;
+  padding-left: 4vw;
+  padding-right: 4vw;
+  padding-bottom: 3vw;
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  gap: 2.5vw;
+  margin-bottom: 3vw;
+}
+
+.avatar {
+  width: 10vw;
+  height: 10vw;
+  border-radius: 50%;
+  border: 0.3vw solid rgba(255, 215, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.username {
+  font-size: 4.5vw;
+  font-weight: 700;
+}
+
+.rank {
+  font-size: 2.5vw;
+  color: #8899a6;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2vw;
+  margin-bottom: 3vw;
+}
+
+.statCard {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.8vw;
+  padding: 2vw;
+  text-align: center;
+}
+
+.statIcon {
+  font-size: 3.5vw;
+  margin-bottom: 0.3vw;
+}
+
+.statValue {
+  font-size: 3.5vw;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.statLabel {
+  font-size: 2vw;
+  color: #8899a6;
+}
+
+.activityCard {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.8vw;
+  padding: 2vw;
+  margin-bottom: 2vw;
+}
+
+.activityLabel {
+  font-size: 2vw;
+  color: #8899a6;
+  margin-bottom: 0.5vw;
+}
+
+.activityMessage {
+  font-size: 2.8vw;
+  font-weight: 500;
+}
+
+.recentSection {
+  flex: 1;
+  overflow: hidden;
+}
+
+.recentLabel {
+  font-size: 2.2vw;
+  color: #8899a6;
+  margin-bottom: 1vw;
+}
+
+.recentGames {
+  display: flex;
+  gap: 2vw;
+  overflow: hidden;
+}
+
+.recentGame {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+}
+
+.recentGameIcon {
+  width: 7vw;
+  height: 7vw;
+  border-radius: 0.5vw;
+  margin-bottom: 0.5vw;
+}
+
+.recentGameTitle {
+  font-size: 1.8vw;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.recentGameConsole {
+  font-size: 1.4vw;
+  color: #556;
+}

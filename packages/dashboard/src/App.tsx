@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import type { DashboardConfig, OverlayMode } from '@heimdall/shared';
 import { normalizeCycleInterval, normalizeOverlayMode, normalizeViewOrder } from '@heimdall/shared';
-import { ViewRenderer } from './components/ViewRenderer';
-import { EmptyState } from './components/EmptyState';
-import { ErrorState } from './components/ErrorState';
-import { Overlay } from './components/Overlay';
+import { ViewRenderer } from './components/shared/ViewRenderer';
+import { EmptyState } from './components/shared/EmptyState';
+import { ErrorState } from './components/shared/ErrorState';
+import { Overlay } from './components/overlay/Overlay';
 
 type AppState = 'loading' | 'ready' | 'empty' | 'error';
 

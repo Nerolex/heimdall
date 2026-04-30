@@ -1,0 +1,336 @@
+.container {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #0f1419 0%, #1a2332 100%);
+  color: #fff;
+  padding-top: calc(var(--overlay-height, 0px) + 2vw);
+  padding-left: 3vw;
+  padding-right: 3vw;
+  padding-bottom: 3vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  background: #111;
+}
+
+/* Agenda view */
+.agendaContainer {
+  composes: container;
+  padding-left: 4vw;
+  padding-right: 4vw;
+  padding-bottom: 4vw;
+}
+
+.agendaTitle {
+  font-size: 5vw;
+  font-weight: 700;
+  margin-bottom: 2.5vw;
+}
+
+.agendaContent {
+  flex: 1;
+  overflow: hidden;
+}
+
+.agendaEmpty {
+  color: #666;
+  font-size: 3.5vw;
+}
+
+.dayGroup {
+  margin-bottom: 2.5vw;
+}
+
+.dayLabel {
+  font-size: 3vw;
+  font-weight: 600;
+  color: #8899a6;
+  margin-bottom: 0.8vw;
+}
+
+.eventRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+  padding: 1vw 0;
+  padding-left: 1.5vw;
+  margin-bottom: 0.6vw;
+  border-left: 0.5vw solid var(--event-color);
+}
+
+.eventTime {
+  font-size: 2.5vw;
+  color: #8899a6;
+  min-width: 10vw;
+}
+
+.eventTitle {
+  font-size: 3vw;
+  font-weight: 500;
+}
+
+/* Month view */
+.monthTitle {
+  font-size: 4.5vw;
+  font-weight: 700;
+  margin-bottom: 1.5vw;
+  text-transform: capitalize;
+}
+
+.weekdayHeaders {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5vw;
+  margin-bottom: 0.5vw;
+}
+
+.weekdayLabel {
+  text-align: center;
+  font-size: 2.2vw;
+  font-weight: 600;
+  color: #8899a6;
+  padding: 0.3vw 0;
+}
+
+.monthGrid {
+  flex: 1;
+  display: grid;
+  gap: 0.5vw;
+}
+
+.weekRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5vw;
+}
+
+.dayCell {
+  border-radius: 0.5vw;
+  padding: 0.5vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.dayCellEmpty {
+  composes: dayCell;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.dayCellNormal {
+  composes: dayCell;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dayCellToday {
+  composes: dayCell;
+  background: rgba(74, 144, 217, 0.25);
+  border: 2px solid rgba(74, 144, 217, 0.7);
+}
+
+.dayNumber {
+  font-size: 2.8vw;
+  text-align: center;
+}
+
+.dayNumberToday {
+  font-weight: 700;
+  color: #4a90d9;
+}
+
+.eventDots {
+  display: flex;
+  gap: 0.4vw;
+  margin-top: 0.3vw;
+}
+
+.eventDot {
+  width: 0.8vw;
+  height: 0.8vw;
+  border-radius: 50%;
+}
+
+/* Day timeline view */
+.dayViewTitle {
+  font-size: 3vw;
+  font-weight: 700;
+  margin-bottom: 1vw;
+}
+
+.allDayRow {
+  display: flex;
+  gap: 0.5vw;
+  margin-bottom: 1vw;
+  flex-wrap: wrap;
+}
+
+.allDayPill {
+  border-radius: 0.3vw;
+  padding: 0.3vw 0.8vw;
+  font-size: 1.3vw;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.timeline {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.hourLine {
+  position: absolute;
+  left: 5vw;
+  right: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hourLabel {
+  position: absolute;
+  left: -5vw;
+  top: -0.8vw;
+  font-size: 1.2vw;
+  color: #556;
+  width: 4.5vw;
+  text-align: right;
+}
+
+.nowLine {
+  position: absolute;
+  left: 5vw;
+  right: 0;
+  height: 2px;
+  background: #e74c3c;
+  z-index: 5;
+}
+
+.nowDot {
+  position: absolute;
+  left: -0.5vw;
+  top: -0.4vw;
+  width: 0.8vw;
+  height: 0.8vw;
+  border-radius: 50%;
+  background: #e74c3c;
+}
+
+.timelineEvent {
+  position: absolute;
+  left: 6vw;
+  right: 1vw;
+  opacity: 0.85;
+  border-radius: 0.3vw;
+  padding: 0.3vw 0.6vw;
+  overflow: hidden;
+  font-size: 1.3vw;
+  font-weight: 500;
+}
+
+.timelineEventLocation {
+  margin-left: 0.5vw;
+  opacity: 0.7;
+  font-size: 1.1vw;
+}
+
+/* Week view */
+.weekTitle {
+  font-size: 3vw;
+  font-weight: 700;
+  margin-bottom: 2vw;
+}
+
+.weekGrid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.8vw;
+}
+
+.weekDayColumn {
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.5vw;
+  padding: 0.8vw;
+  overflow: hidden;
+}
+
+.weekDayNormal {
+  composes: weekDayColumn;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.weekDayToday {
+  composes: weekDayColumn;
+  background: rgba(74, 144, 217, 0.15);
+  border: 1px solid rgba(74, 144, 217, 0.4);
+}
+
+.weekDayHeader {
+  text-align: center;
+  margin-bottom: 0.5vw;
+}
+
+.weekDayName {
+  font-size: 1.2vw;
+  color: #8899a6;
+  font-weight: 500;
+}
+
+.weekDayNumber {
+  font-size: 2vw;
+}
+
+.weekDayNumberToday {
+  font-weight: 700;
+  color: #4a90d9;
+}
+
+.weekEventList {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3vw;
+}
+
+.weekEventPill {
+  opacity: 0.85;
+  border-radius: 0.2vw;
+  padding: 0.2vw 0.4vw;
+  font-size: 1vw;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.weekEventTime {
+  opacity: 0.7;
+  margin-right: 0.3vw;
+}
+
+.weekMoreLabel {
+  font-size: 0.9vw;
+  color: #666;
+  text-align: center;
+}
+
+.weekEmptyLabel {
+  font-size: 1vw;
+  color: #333;
+  text-align: center;
+  margin-top: auto;
+}

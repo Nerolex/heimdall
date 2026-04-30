@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { ImageView } from '../../src/components/ImageView';
+import { ImageView } from '../../src/components/shared/ImageView';
 
 describe('ImageView', () => {
   it('renders an image with the given src', () => {
