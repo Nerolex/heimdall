@@ -53,15 +53,33 @@ export function CalendarMonthView({ settings }: Props): React.ReactElement {
                     {date.getDate()}
                   </div>
                   {dayEvents.length > 0 && (
-                    <div className={styles.eventDots}>
-                      {dayEvents.slice(0, 3).map((event) => (
-                        <div
-                          key={event.id}
-                          className={styles.eventDot}
-                          style={{ background: event.color }}
-                        />
-                      ))}
-                    </div>
+                    <>
+                      {/* Event titles on large screens */}
+                      <div className={styles.eventTitles}>
+                        {dayEvents.slice(0, 2).map((event) => (
+                          <div
+                            key={event.id}
+                            className={styles.monthEventTitle}
+                            style={{ borderLeftColor: event.color }}
+                          >
+                            {event.title}
+                          </div>
+                        ))}
+                        {dayEvents.length > 2 && (
+                          <div className={styles.eventMore}>+{dayEvents.length - 2}</div>
+                        )}
+                      </div>
+                      {/* Dots fallback on small screens */}
+                      <div className={styles.eventDots}>
+                        {dayEvents.slice(0, 3).map((event) => (
+                          <div
+                            key={event.id}
+                            className={styles.eventDot}
+                            style={{ background: event.color }}
+                          />
+                        ))}
+                      </div>
+                    </>
                   )}
                 </div>
               );
