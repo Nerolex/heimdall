@@ -144,7 +144,7 @@ export async function photosRoute(fastify: FastifyInstance): Promise<void> {
       const photoYear = new Date(photo.dateTaken).getFullYear();
       if (photoYear === currentYear) continue; // Skip this year's photos
       const yearsAgo = currentYear - photoYear;
-      const label = yearsAgo === 1 ? 'Vor 1 Jahr' : `Vor ${yearsAgo} Jahren`;
+      const label = yearsAgo === 1 ? 'Heute vor 1 Jahr' : `Heute vor ${yearsAgo} Jahren`;
       if (!memories[label]) memories[label] = [];
       memories[label].push(photo);
     }

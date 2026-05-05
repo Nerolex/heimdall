@@ -67,6 +67,7 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
 
   return (
     <div className={styles.container} data-testid="photos-memories-view">
+      <img key={`bg-${current.photo.id}`} src={current.photo.url} alt="" className={styles.blurredBg} />
       <img key={current.photo.id} src={current.photo.url} alt={current.photo.filename} className={styles.photo} />
       <div className={styles.memoriesGradient} />
       <div className={styles.memoriesText}>
