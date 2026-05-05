@@ -18,12 +18,30 @@ export function CalendarAgendaView({ settings }: Props): React.ReactElement {
   }
 
   const grouped = groupByDay(events);
-  // Show more items on larger screens
   const maxItems = window.innerHeight > 800 ? 8 : window.innerHeight > 500 ? 6 : 4;
+  const todayStr = new Date().toDateString();
+
+  // Calculate days from today for proximity scaling
+  function daysFromToday(dateStr: string): number {
+    const d = new Date(dateStr);
+    const diff = Math.floor((d.getTime() - new Date(todayStr).getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, diff);
+  }
+
+  // Scale: 0 days = 1.0, 1 day = 0.85, 2 = 0.72, 3+ progressively smaller
+  function getScale(daysAway: number): number {
+    if (daysAway <= 0) return 1.0;
+    return Math.max(0.6, 1.0 - daysAway * 0.12);
+  }
+
+  function getOpacity(daysAway: number): number {
+    if (daysAway <= 0) return 1.0;
+    return Math.max(0.5, 1.0 - daysAway * 0.1);
+  }
 
   return (
     <div className={styles.agendaContainer} data-testid="calendar-agenda-view">
-      <div className={styles.agendaTitle}>Termine</div>
+      <div className={styles.agendaTitle}>Nächste Termine</div>
       <div className={styles.agendaContent}>
         {events.length === 0 && (
           <div className={styles.agendaEmpty}>Keine Termine in den nächsten {daysAhead} Tagen</div>
@@ -35,8 +53,22 @@ export function CalendarAgendaView({ settings }: Props): React.ReactElement {
             const remaining = maxItems - count;
             const visibleEvents = dayEvents.slice(0, remaining);
             count += visibleEvents.length;
+
+            const daysAway = daysFromToday(dayEvents[0].start);
+            const scale = getScale(daysAway);
+            const opacity = getOpacity(daysAway);
+
             return (
-              <div key={day} className={styles.dayGroup}>
+              <div
+                key={day}
+                className={styles.dayGroup}
+                style={{
+                  opacity,
+                  transform: `scale(${scale})`,
+                  transformOrigin: 'left center',
+                  marginBottom: `${1.5 * scale}vw`,
+                }}
+              >
                 <div className={styles.dayLabel}>{formatDate(dayEvents[0].start)}</div>
                 {visibleEvents.map((event) => (
                   <div

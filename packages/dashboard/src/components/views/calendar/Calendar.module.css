@@ -52,7 +52,7 @@
 }
 
 .dayLabel {
-  font-size: clamp(14px, 3vw, 32px);
+  font-size: clamp(18px, 3.5vw, 38px);
   font-weight: 600;
   color: #8899a6;
   margin-bottom: 0.8vw;
@@ -69,13 +69,13 @@
 }
 
 .eventTime {
-  font-size: clamp(12px, 2.5vw, 26px);
+  font-size: clamp(14px, 2.8vw, 30px);
   color: #8899a6;
   min-width: 10vw;
 }
 
 .eventTitle {
-  font-size: clamp(14px, 3vw, 30px);
+  font-size: clamp(16px, 3.5vw, 36px);
   font-weight: 500;
 }
 
@@ -119,8 +119,8 @@
   padding: 0.5vw;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   overflow: hidden;
 }
 
@@ -176,12 +176,14 @@
 .monthEventTitle {
   font-size: clamp(9px, 1.1vw, 13px);
   color: rgba(255, 255, 255, 0.85);
-  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   border-left: 2px solid;
   padding-left: 4px;
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .eventMore {
