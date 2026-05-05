@@ -51,18 +51,19 @@ export function loadConfig(configPath: string): ConfigResult {
     };
   }
 
-  // Normalize values
-  const config: DashboardConfig = {
+  // Pass through extra config sections for view settings
+  const extra = parsed as unknown as Record<string, unknown>;
+  const config = {
     cycleInterval: normalizeCycleInterval(parsed.cycleInterval),
     viewOrder: normalizeViewOrder(parsed.viewOrder),
     views: parsed.views,
     ...(parsed.weather ? { weather: parsed.weather } : {}),
-    ...(parsed.showFullscreenButton != null ? { showFullscreenButton: parsed.showFullscreenButton } : {}),
-    ...((parsed as Record<string, unknown>).retro ? { retro: (parsed as Record<string, unknown>).retro } : {}),
-    ...((parsed as Record<string, unknown>).steam ? { steam: (parsed as Record<string, unknown>).steam } : {}),
-    ...((parsed as Record<string, unknown>).calendar ? { calendar: (parsed as Record<string, unknown>).calendar } : {}),
-    ...((parsed as Record<string, unknown>).lastfm ? { lastfm: (parsed as Record<string, unknown>).lastfm } : {}),
-  };
+    ...(extra.showFullscreenButton != null ? { showFullscreenButton: extra.showFullscreenButton } : {}),
+    ...(extra.retro ? { retro: extra.retro } : {}),
+    ...(extra.steam ? { steam: extra.steam } : {}),
+    ...(extra.calendar ? { calendar: extra.calendar } : {}),
+    ...(extra.lastfm ? { lastfm: extra.lastfm } : {}),
+  } as DashboardConfig;
 
   return { config };
 }
