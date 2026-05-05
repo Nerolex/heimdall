@@ -37,7 +37,8 @@ function mergeViewSettings(config: DashboardConfig, view: DashboardConfig['views
     return { ...cfg.calendar as Record<string, unknown>, ...base };
   }
   if (type.startsWith('music') && cfg.lastfm) {
-    return { ...cfg.lastfm as Record<string, unknown>, ...base };
+    const lastfm = cfg.lastfm as Record<string, unknown>;
+    return { lastfmApiKey: lastfm.apiKey, lastfmUser: lastfm.user, ...base };
   }
   if (type.startsWith('weather') && config.weather) {
     return { ...config.weather as Record<string, unknown>, ...base };
