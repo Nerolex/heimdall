@@ -26,6 +26,7 @@ import { CalendarAgendaView, CalendarDayView, CalendarWeekView, CalendarMonthVie
 import { PhotosMemoriesView, PhotosRandomView } from './views/photos';
 import { RetroRecentView, RetroPlayingView, RetroProfileView, RetroShowcaseView } from './views/retro';
 import { MusicNowPlayingView } from './views/music';
+import { GamingNowView, GamingRecentView, GamingShowcaseView, GamingAchievementView } from './views/gaming';
 registerComponent('image', ImageView);
 registerComponent('weather', WeatherView);
 registerComponent('calendar-agenda', CalendarAgendaView);
@@ -40,3 +41,7 @@ registerComponent('retro-playing', RetroPlayingView);
 registerComponent('retro-profile', RetroProfileView);
 registerComponent('retro-showcase', RetroShowcaseView);
 registerComponent('music-now-playing', MusicNowPlayingView);
+registerComponent('gaming-now', GamingNowView);
+registerComponent('gaming-recent', GamingRecentView);
+registerComponent('gaming-showcase', GamingShowcaseView);
+registerComponent('gaming-achievement', GamingAchievementView);

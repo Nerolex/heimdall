@@ -50,8 +50,13 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
           return;
         }
 
+        // Filter out games with only placeholder images
+        const isPlaceholder = (img: string) => !img || /\/Images\/00000[0-9]\.png$/.test(img);
+        const validGames = games.filter(g => !isPlaceholder(g.ImageIcon));
+        const pool = validGames.length > 0 ? validGames : games;
+
         // Pick random game
-        const game = games[Math.floor(Math.random() * games.length)];
+        const game = pool[Math.floor(Math.random() * pool.length)];
 
         // Fetch RA game info for progress
         const infoRes = await fetch(
@@ -60,8 +65,8 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
         const info = await infoRes.json();
         if (info.Title) setGameInfo(info);
 
-        // Fetch SGDB hero as background
-        if (sgdbApiKey && info.Title) {
+        // Fetch SGDB hero and IGDB screenshot in parallel
+        const heroPromise = (sgdbApiKey && info.Title) ? (async () => {
           try {
             const searchRes = await fetch(`/api/sgdb/search?apiKey=${sgdbApiKey}&term=${encodeURIComponent(info.Title)}`);
             const searchData = await searchRes.json();
@@ -76,10 +81,9 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
               }
             }
           } catch { /* ignore */ }
-        }
+        })() : Promise.resolve();
 
-        // Fetch IGDB screenshot as inset
-        if (igdbClientId && igdbClientSecret && info.Title) {
+        const screenshotPromise = (igdbClientId && igdbClientSecret && info.Title) ? (async () => {
           try {
             const igdbRes = await fetch(
               `/api/igdb/screenshots?clientId=${igdbClientId}&clientSecret=${igdbClientSecret}&game=${encodeURIComponent(info.Title)}`
@@ -90,7 +94,9 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
               setScreenshotUrl(screenshots[Math.floor(Math.random() * screenshots.length)].url);
             }
           } catch { /* ignore */ }
-        }
+        })() : Promise.resolve();
+
+        await Promise.all([heroPromise, screenshotPromise]);
       } catch { /* ignore */ }
       setLoading(false);
     }
@@ -105,9 +111,19 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
     return <div className={styles.loading}>Keine Spieldaten verfügbar</div>;
   }
 
-  if (!gameInfo || !heroUrl) {
-    return <div className={styles.loading}>Kein Bild verfügbar</div>;
-  }
+  // Fall back to RA's own images if no SGDB hero found (skip placeholders)
+  const isPlaceholderImg = (img: string) => !img || /\/Images\/00000[0-9]\.png$/.test(img);
+  const backgroundUrl = heroUrl
+    || (!isPlaceholderImg(gameInfo.ImageIngame) ? `${RA_MEDIA}${gameInfo.ImageIngame}` : null)
+    || (!isPlaceholderImg(gameInfo.ImageTitle) ? `${RA_MEDIA}${gameInfo.ImageTitle}` : null)
+    || (!isPlaceholderImg(gameInfo.ImageBoxArt) ? `${RA_MEDIA}${gameInfo.ImageBoxArt}` : null);
+
+  const useFallback = !backgroundUrl;
+  const iconUrl = `${RA_MEDIA}${gameInfo.ImageIcon}`;
+
+  // Screenshot fallback: IGDB > RA ingame (if not placeholder)
+  const displayScreenshot = screenshotUrl
+    || (!isPlaceholderImg(gameInfo.ImageIngame) ? `${RA_MEDIA}${gameInfo.ImageIngame}` : null);
 
   const progress = gameInfo.NumAchievements > 0
     ? Math.round((gameInfo.NumAwardedToUser / gameInfo.NumAchievements) * 100)
@@ -115,10 +131,16 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
 
   return (
     <div className={styles.showcaseContainer} data-testid="retro-showcase-view">
-      <div
-        className={styles.showcaseImage}
-        style={{ backgroundImage: `url(${heroUrl})` }}
-      />
+      {useFallback ? (
+        <div className={styles.showcaseFallback}>
+          <img src={iconUrl} alt="" className={styles.showcaseFallbackIcon} />
+        </div>
+      ) : (
+        <div
+          className={styles.showcaseImage}
+          style={{ backgroundImage: `url(${backgroundUrl})` }}
+        />
+      )}
       <div className={styles.showcaseOverlay}>
         <div className={styles.showcaseInfo}>
           <div className={styles.showcaseTitle}>{gameInfo.Title}</div>
@@ -134,9 +156,9 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
             </div>
           )}
         </div>
-        {screenshotUrl && (
+        {displayScreenshot && (
           <div className={styles.showcaseScreenshot}>
-            <img src={screenshotUrl} alt={`${gameInfo.Title} screenshot`} />
+            <img src={displayScreenshot} alt={`${gameInfo.Title} screenshot`} />
           </div>
         )}
       </div>

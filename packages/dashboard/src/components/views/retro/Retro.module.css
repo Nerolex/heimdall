@@ -440,6 +440,23 @@
   background-repeat: no-repeat;
 }
 
+.showcaseFallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.showcaseFallbackIcon {
+  width: 30vh;
+  height: 30vh;
+  object-fit: contain;
+  border-radius: 16px;
+  box-shadow: 0 0 80px rgba(100, 140, 255, 0.3), 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
 .showcaseOverlay {
   position: absolute;
   bottom: 0;

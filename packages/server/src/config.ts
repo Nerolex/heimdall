@@ -58,6 +58,10 @@ export function loadConfig(configPath: string): ConfigResult {
     views: parsed.views,
     ...(parsed.weather ? { weather: parsed.weather } : {}),
     ...(parsed.showFullscreenButton != null ? { showFullscreenButton: parsed.showFullscreenButton } : {}),
+    ...((parsed as Record<string, unknown>).retro ? { retro: (parsed as Record<string, unknown>).retro } : {}),
+    ...((parsed as Record<string, unknown>).steam ? { steam: (parsed as Record<string, unknown>).steam } : {}),
+    ...((parsed as Record<string, unknown>).calendar ? { calendar: (parsed as Record<string, unknown>).calendar } : {}),
+    ...((parsed as Record<string, unknown>).lastfm ? { lastfm: (parsed as Record<string, unknown>).lastfm } : {}),
   };
 
   return { config };

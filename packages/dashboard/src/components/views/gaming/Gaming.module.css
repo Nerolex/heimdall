@@ -1,0 +1,443 @@
+.loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  background: #111;
+}
+
+.container {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #fff;
+  padding-top: calc(var(--overlay-height, 0px) + 2vw);
+  padding-left: 3vw;
+  padding-right: 3vw;
+  padding-bottom: 2vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+  margin-bottom: 2.5vw;
+}
+
+.headerIcon {
+  font-size: 4vw;
+}
+
+.headerTitle {
+  font-size: 4vw;
+  font-weight: 700;
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 2.5vw;
+}
+
+/* === Now Playing View === */
+.nowContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+.nowHero {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.nowOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 40%, transparent 70%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 4vw;
+}
+
+.nowBadge {
+  font-size: 2vw;
+  color: #4ade80;
+  font-weight: 600;
+  margin-bottom: 1vw;
+  display: flex;
+  align-items: center;
+  gap: 0.8vw;
+}
+
+.nowGameName {
+  font-size: 5vw;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  margin-bottom: 1vw;
+}
+
+.nowRichPresence {
+  font-size: 2.2vw;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1vw;
+}
+
+.nowSource {
+  font-size: 1.5vw;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nowIdle {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2vw;
+}
+
+.nowIdleIcon {
+  font-size: 8vw;
+  opacity: 0.3;
+}
+
+.nowIdleText {
+  font-size: 3vw;
+  color: #666;
+}
+
+/* === Recent Achievements View === */
+.heroAch {
+  display: flex;
+  align-items: center;
+  gap: 2vw;
+  padding: 2vw;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1.5vw;
+  margin-bottom: 2vw;
+}
+
+.heroAchIcon {
+  width: 8vw;
+  height: 8vw;
+  border-radius: 1vw;
+  object-fit: cover;
+}
+
+.heroAchIconPlaceholder {
+  width: 8vw;
+  height: 8vw;
+  border-radius: 1vw;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4vw;
+}
+
+.heroAchInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.heroAchTitle {
+  font-size: 2.5vw;
+  font-weight: 700;
+  margin-bottom: 0.3vw;
+}
+
+.heroAchDesc {
+  font-size: 1.6vw;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.3vw;
+}
+
+.heroAchGame {
+  font-size: 1.4vw;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.heroAchMeta {
+  text-align: right;
+}
+
+.heroAchPoints {
+  font-size: 2.5vw;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.heroAchTime {
+  font-size: 1.3vw;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.achList {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8vw;
+}
+
+.achRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+  padding: 1vw 1.5vw;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 1vw;
+}
+
+.achBadge {
+  width: 4.5vw;
+  height: 4.5vw;
+  border-radius: 0.8vw;
+  object-fit: cover;
+}
+
+.achBadgePlaceholder {
+  width: 4.5vw;
+  height: 4.5vw;
+  border-radius: 0.8vw;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5vw;
+}
+
+.achInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.achTitle {
+  font-size: 1.8vw;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.achGame {
+  font-size: 1.3vw;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.achMeta {
+  text-align: right;
+}
+
+.achPoints {
+  font-size: 1.8vw;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.achTime {
+  font-size: 1.2vw;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.hardcoreStar {
+  margin-left: 0.5vw;
+  font-size: 0.8em;
+}
+
+/* === Showcase View === */
+.showcaseContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.showcaseBg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+}
+
+.showcaseFallbackBg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+}
+
+.showcaseOverlay {
+  position: absolute;
+  inset: 0;
+  padding: clamp(16px, 3vw, 40px);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.3) 40%, transparent 70%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.showcaseInfo {
+  max-width: 60%;
+}
+
+.showcaseSource {
+  font-size: 1.8vw;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5vw;
+}
+
+.showcaseTitle {
+  font-size: 4.5vw;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  margin-bottom: 1vw;
+}
+
+.showcaseProgress {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+}
+
+.showcaseProgressBar {
+  flex: 1;
+  height: 1vw;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0.5vw;
+  overflow: hidden;
+}
+
+.showcaseProgressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #4ade80, #22d3ee);
+  border-radius: 0.5vw;
+  transition: width 0.5s ease;
+}
+
+.showcaseProgressLabel {
+  font-size: 1.5vw;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+
+.showcaseScreenshot {
+  position: absolute;
+  bottom: clamp(16px, 3vw, 40px);
+  right: clamp(16px, 3vw, 40px);
+  width: clamp(200px, 30vw, 500px);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.showcaseScreenshot img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* === Achievement Showcase View === */
+.achShowcaseOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 70%);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding: 4vw;
+}
+
+.achShowcaseFallbackBg {
+  position: absolute;
+  inset: 0;
+  background: url('/assets/gaming-fallback.jpg') center / cover no-repeat;
+  filter: brightness(0.5);
+}
+
+.achShowcaseBadge {
+  flex-shrink: 0;
+}
+
+.achShowcaseIcon {
+  width: 12vw;
+  height: 12vw;
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 1.5vw;
+  object-fit: cover;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 40px rgba(251, 191, 36, 0.15);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+}
+
+.achShowcaseIconPlaceholder {
+  width: 12vw;
+  height: 12vw;
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 1.5vw;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5vw;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+}
+
+.achShowcaseContent {
+  max-width: 70%;
+}
+
+.achShowcaseTitle {
+  font-size: 3.5vw;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  margin-bottom: 0.5vw;
+}
+
+.achShowcaseDesc {
+  font-size: 2vw;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 1vw;
+}
+
+.achShowcaseGame {
+  font-size: 1.8vw;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5vw;
+}
+
+.achShowcaseMeta {
+  display: flex;
+  gap: 2vw;
+  align-items: center;
+}
+
+.achShowcasePoints {
+  font-size: 2vw;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.achShowcaseTime {
+  font-size: 1.5vw;
+  color: rgba(255, 255, 255, 0.4);
+}
