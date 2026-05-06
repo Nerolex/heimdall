@@ -52,12 +52,10 @@ export function MusicNowPlayingView({ settings }: Props): React.ReactElement {
     return <div className={styles.loading}>Last.fm nicht konfiguriert</div>;
   }
 
-  const featured = nowPlaying || recent[0];
+  const featured = nowPlaying || recent[Math.floor(Math.random() * recent.length)];
   if (!featured) {
     return <div className={styles.loading}>Keine Musik-Daten verfügbar</div>;
   }
-
-  const recentList = nowPlaying ? recent.slice(0, 5) : recent.slice(1, 6);
 
   return (
     <div className={styles.container} data-testid="music-now-playing-view">
@@ -80,22 +78,6 @@ export function MusicNowPlayingView({ settings }: Props): React.ReactElement {
             <div className={styles.albumName}>{featured.album}</div>
           </div>
         </div>
-
-        {recentList.length > 0 && (
-          <div className={styles.recentList}>
-            {recentList.map((track, i) => (
-              <div key={`${track.name}-${i}`} className={styles.recentRow}>
-                {track.image && (
-                  <img src={track.image} alt="" className={styles.recentArt} />
-                )}
-                <div className={styles.recentInfo}>
-                  <div className={styles.recentTrack}>{track.name}</div>
-                  <div className={styles.recentArtist}>{track.artist}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
