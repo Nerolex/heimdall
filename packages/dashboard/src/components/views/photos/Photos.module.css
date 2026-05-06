@@ -111,9 +111,10 @@
 .randomDate {
   z-index: 3;
   position: absolute;
-  bottom: 2vw;
-  left: 3vw;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1.5vw;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  bottom: 3vw;
+  right: 3vw;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 3vw;
+  font-weight: 300;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
 }
