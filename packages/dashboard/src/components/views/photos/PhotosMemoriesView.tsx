@@ -10,7 +10,6 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
   const [memories, setMemories] = useState<Record<string, PhotoEntry[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [activeMemory, setActiveMemory] = useState(0);
 
   const dir = settings.dir as string | undefined;
   const queryParam = dir ? `?dir=${encodeURIComponent(dir)}` : '';
@@ -28,29 +27,17 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
       }
     }
     fetchMemories();
-    const interval = setInterval(fetchMemories, 30 * 60 * 1000);
-    return () => { cancelled = true; clearInterval(interval); };
+    return () => { cancelled = true; };
   }, [queryParam]);
-
-  // Flatten into slideshow
-  const slides: { label: string; photo: PhotoEntry }[] = [];
-  const sorted = Object.entries(memories).sort((a, b) => {
-    const aNum = parseInt(a[0].match(/\d+/)?.[0] || '0', 10);
-    const bNum = parseInt(b[0].match(/\d+/)?.[0] || '0', 10);
-    return aNum - bNum;
-  });
-  for (const [label, photos] of sorted) {
-    for (const photo of photos) slides.push({ label, photo });
-  }
-
-  useEffect(() => {
-    if (slides.length <= 1) return;
-    const timer = setInterval(() => setActiveMemory((prev) => (prev + 1) % slides.length), 8000);
-    return () => clearInterval(timer);
-  }, [slides.length]);
 
   if (loading) return <div className={styles.loading}>Loading memories…</div>;
   if (error) return <div className={styles.loading}>Photos unavailable</div>;
+
+  // Flatten all memories and pick one at random
+  const slides: { label: string; photo: PhotoEntry }[] = [];
+  for (const [label, photos] of Object.entries(memories)) {
+    for (const photo of photos) slides.push({ label, photo });
+  }
 
   if (slides.length === 0) {
     const dateStr = new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
@@ -62,20 +49,17 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
     );
   }
 
-  const current = slides[activeMemory % slides.length];
+  const current = slides[Math.floor(Math.random() * slides.length)];
   const dateStr = new Date(current.photo.dateTaken).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
     <div className={styles.container} data-testid="photos-memories-view">
-      <img key={`bg-${current.photo.id}`} src={current.photo.url} alt="" className={styles.blurredBg} />
-      <img key={current.photo.id} src={current.photo.url} alt={current.photo.filename} className={styles.photo} />
+      <img src={current.photo.url} alt="" className={styles.blurredBg} />
+      <img src={current.photo.url} alt={current.photo.filename} className={styles.photo} />
       <div className={styles.memoriesGradient} />
       <div className={styles.memoriesText}>
         <div className={styles.memoriesLabel}>{current.label}</div>
         <div className={styles.memoriesDate}>{dateStr}</div>
-        {slides.length > 1 && (
-          <div className={styles.memoriesCounter}>{(activeMemory % slides.length) + 1} / {slides.length}</div>
-        )}
       </div>
     </div>
   );

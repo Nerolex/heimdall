@@ -17,10 +17,14 @@ RUN pnpm build
 # --- Production image ---
 FROM node:20-slim
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# heif-convert needed for HEIC→JPEG conversion on arm64
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libheif-examples \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
+# Copy entire node_modules (preserves pnpm symlinks and native bindings like sharp)
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
 COPY --from=build /app/pnpm-workspace.yaml ./

@@ -2,10 +2,42 @@ import { type FastifyInstance } from 'fastify';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
+import { execSync } from 'node:child_process';
 import sharp from 'sharp';
 import type { PhotoEntry } from '@heimdall/shared';
 
 const SUPPORTED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.tiff', '.tif']);
+
+// Cache directory for converted HEIC files
+const CACHE_DIR = path.join(process.env.CACHE_DIR || '/tmp', 'heimdall-photo-cache');
+if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
+
+/** Convert HEIC/HEIF to JPEG, returning the JPEG buffer. Uses cache. */
+async function convertHeicToJpeg(filePath: string): Promise<Buffer> {
+  const hash = crypto.createHash('md5').update(filePath).digest('hex');
+  const cachedPath = path.join(CACHE_DIR, `${hash}.jpg`);
+
+  // Return cached conversion if available
+  if (fs.existsSync(cachedPath)) {
+    return fs.readFileSync(cachedPath);
+  }
+
+  // Try sharp first (works on x86, may fail on arm64)
+  try {
+    const buffer = await sharp(filePath).jpeg({ quality: 90 }).toBuffer();
+    fs.writeFileSync(cachedPath, buffer);
+    return buffer;
+  } catch {
+    // Fall back to heif-convert CLI tool
+  }
+
+  try {
+    execSync(`heif-convert -q 90 "${filePath}" "${cachedPath}"`, { stdio: 'pipe' });
+    return fs.readFileSync(cachedPath);
+  } catch {
+    throw new Error(`Cannot convert HEIC file: ${filePath}`);
+  }
+}
 
 interface PhotoIndex {
   photos: PhotoEntry[];
@@ -49,7 +81,7 @@ async function getDateTaken(filePath: string): Promise<Date> {
       }
     }
   } catch {
-    // Fall through to mtime
+    // sharp may fail on HEIC (arm64), try exiftool or fall through to mtime
   }
   const stat = fs.statSync(filePath);
   return stat.mtime;
@@ -197,7 +229,7 @@ export async function photosRoute(fastify: FastifyInstance): Promise<void> {
 
     // For HEIC/HEIF, convert to JPEG for browser compatibility
     if (ext === '.heic' || ext === '.heif') {
-      const buffer = await sharp(filePath).jpeg({ quality: 90 }).toBuffer();
+      const buffer = await convertHeicToJpeg(filePath);
       return reply.type('image/jpeg').send(buffer);
     }
 
