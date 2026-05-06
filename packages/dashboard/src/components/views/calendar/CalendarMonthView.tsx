@@ -27,14 +27,15 @@ export function CalendarMonthView({ settings }: Props): React.ReactElement {
     <div className={styles.container} data-testid="calendar-month-view">
       <div className={styles.monthTitle}>{monthName}</div>
 
-      <div className={styles.weekdayHeaders}>
-        {WEEKDAY_LABELS.map((label) => (
-          <div key={label} className={styles.weekdayLabel}>{label}</div>
-        ))}
-      </div>
+      <div className={styles.monthContent}>
+        <div className={styles.weekdayHeaders}>
+          {WEEKDAY_LABELS.map((label) => (
+            <div key={label} className={styles.weekdayLabel}>{label}</div>
+          ))}
+        </div>
 
-      <div className={styles.monthGrid} style={{ gridTemplateRows: `repeat(${weeks.length}, 1fr)` }}>
-        {weeks.map((week, wi) => (
+        <div className={styles.monthGrid} style={{ gridTemplateRows: `repeat(${weeks.length}, 1fr)` }}>
+          {weeks.map((week, wi) => (
           <div key={wi} className={styles.weekRow}>
             {week.map((date, di) => {
               if (!date) return <div key={di} className={styles.dayCellEmpty} />;
@@ -42,11 +43,16 @@ export function CalendarMonthView({ settings }: Props): React.ReactElement {
               const isToday = date.toDateString() === todayStr;
               const dayEvents = getEventsForDay(events, date);
               const isPast = date < new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              const isWeekend = di >= 5;
+
+              let cellClass = styles.dayCellNormal;
+              if (isToday) cellClass = styles.dayCellToday;
+              else if (isWeekend) cellClass = styles.dayCellWeekend;
 
               return (
                 <div
                   key={di}
-                  className={isToday ? styles.dayCellToday : styles.dayCellNormal}
+                  className={cellClass}
                   style={{ opacity: isPast ? 0.5 : 1 }}
                 >
                   <div className={`${styles.dayNumber} ${isToday ? styles.dayNumberToday : ''}`}>
@@ -86,6 +92,7 @@ export function CalendarMonthView({ settings }: Props): React.ReactElement {
             })}
           </div>
         ))}
+        </div>
       </div>
     </div>
   );
