@@ -24,7 +24,7 @@ async function convertHeicToJpeg(filePath: string): Promise<Buffer> {
 
   // Try sharp first (works on x86, may fail on arm64)
   try {
-    const buffer = await sharp(filePath).jpeg({ quality: 90 }).toBuffer();
+    const buffer = await sharp(filePath).rotate().jpeg({ quality: 90 }).toBuffer();
     fs.writeFileSync(cachedPath, buffer);
     return buffer;
   } catch {
@@ -32,8 +32,13 @@ async function convertHeicToJpeg(filePath: string): Promise<Buffer> {
   }
 
   try {
-    execSync(`heif-convert -q 90 "${filePath}" "${cachedPath}"`, { stdio: 'pipe' });
-    return fs.readFileSync(cachedPath);
+    const tmpPath = cachedPath + '.tmp.jpg';
+    execSync(`heif-convert -q 90 "${filePath}" "${tmpPath}"`, { stdio: 'pipe' });
+    // Apply EXIF rotation via sharp
+    const buffer = await sharp(tmpPath).rotate().jpeg({ quality: 90 }).toBuffer();
+    fs.writeFileSync(cachedPath, buffer);
+    fs.unlinkSync(tmpPath);
+    return buffer;
   } catch {
     throw new Error(`Cannot convert HEIC file: ${filePath}`);
   }
@@ -231,6 +236,12 @@ export async function photosRoute(fastify: FastifyInstance): Promise<void> {
     if (ext === '.heic' || ext === '.heif') {
       const buffer = await convertHeicToJpeg(filePath);
       return reply.type('image/jpeg').send(buffer);
+    }
+
+    // For JPEG/TIFF, apply EXIF auto-rotation
+    if (ext === '.jpg' || ext === '.jpeg' || ext === '.tiff' || ext === '.tif') {
+      const buffer = await sharp(filePath).rotate().toBuffer();
+      return reply.type(contentType).send(buffer);
     }
 
     const stream = fs.createReadStream(filePath);
