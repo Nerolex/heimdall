@@ -68,6 +68,7 @@ export function App(): React.ReactElement {
   const [config, setConfig] = useState<DashboardConfig | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [activeViewIndex, setActiveViewIndex] = useState(0);
+  const [nextViewIndex, setNextViewIndex] = useState<number | null>(null);
   const [visible, setVisible] = useState(true);
   const [clockVisible, setClockVisible] = useState(true);
   const [weatherVisible, setWeatherVisible] = useState(true);
@@ -107,6 +108,33 @@ export function App(): React.ReactElement {
       });
   }, []);
 
+  // Get next view index (sequential or random with frequency weighting)
+  function getNextIndex(currentIdx: number): number {
+    if (!config) return 0;
+    const viewOrder = normalizeViewOrder(config.viewOrder);
+    if (viewOrder === 'random') {
+      const weights = config.views.map((v, i) => {
+        if (i === currentIdx) return 0;
+        const freq = v.frequency || 'normal';
+        return freq === 'high' ? 3 : freq === 'low' ? 0.5 : 1;
+      });
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+      let r = Math.random() * totalWeight;
+      for (let i = 0; i < weights.length; i++) {
+        r -= weights[i];
+        if (r <= 0) return i;
+      }
+      return (currentIdx + 1) % config.views.length;
+    }
+    return (currentIdx + 1) % config.views.length;
+  }
+
+  // Preload the next view whenever active view changes
+  useEffect(() => {
+    if (!config || config.views.length <= 1) return;
+    setNextViewIndex(getNextIndex(activeViewIndex));
+  }, [config, activeViewIndex]);
+
   // Transition to a specific view index with fade
   function transitionTo(nextIdx: number): void {
     if (!config || isTransitioning.current) return;
@@ -129,27 +157,6 @@ export function App(): React.ReactElement {
     }, FADE_DURATION);
   }
 
-  // Get next view index (sequential or random with frequency weighting)
-  function getNextIndex(currentIdx: number): number {
-    if (!config) return 0;
-    const viewOrder = normalizeViewOrder(config.viewOrder);
-    if (viewOrder === 'random') {
-      const weights = config.views.map((v, i) => {
-        if (i === currentIdx) return 0;
-        const freq = v.frequency || 'normal';
-        return freq === 'high' ? 3 : freq === 'low' ? 0.5 : 1;
-      });
-      const totalWeight = weights.reduce((a, b) => a + b, 0);
-      let r = Math.random() * totalWeight;
-      for (let i = 0; i < weights.length; i++) {
-        r -= weights[i];
-        if (r <= 0) return i;
-      }
-      return (currentIdx + 1) % config.views.length;
-    }
-    return (currentIdx + 1) % config.views.length;
-  }
-
   // Handle tap/click navigation
   function handleNavClick(e: React.MouseEvent<HTMLDivElement>): void {
     if (!config || config.views.length <= 1) return;
@@ -168,8 +175,8 @@ export function App(): React.ReactElement {
         transitionTo(prevIdx);
       }
     } else {
-      // Go forward
-      const nextIdx = getNextIndex(activeViewIndex);
+      // Go forward to preloaded next view
+      const nextIdx = nextViewIndex ?? getNextIndex(activeViewIndex);
       viewHistory.current.push(nextIdx);
       transitionTo(nextIdx);
     }
@@ -183,7 +190,7 @@ export function App(): React.ReactElement {
 
     function scheduleCycle(): void {
       cycleTimer.current = setTimeout(() => {
-        const nextIdx = getNextIndex(activeViewIndex);
+        const nextIdx = nextViewIndex ?? getNextIndex(activeViewIndex);
         viewHistory.current.push(nextIdx);
         transitionTo(nextIdx);
         scheduleCycle();
@@ -214,6 +221,7 @@ export function App(): React.ReactElement {
   }
 
   const view = config!.views[activeViewIndex];
+  const nextView = nextViewIndex != null ? config!.views[nextViewIndex] : null;
   const hasOverlay = clockVisible || weatherVisible;
 
   return (
@@ -234,6 +242,7 @@ export function App(): React.ReactElement {
         weatherConfig={config!.weather}
         showFullscreenButton={config!.showFullscreenButton}
       />
+      {/* Active view */}
       <div
         style={{
           width: '100%',
@@ -244,6 +253,24 @@ export function App(): React.ReactElement {
       >
         <ViewRenderer type={view.type} settings={mergeViewSettings(config!, view)} />
       </div>
+      {/* Preloaded next view (hidden, fetches data in background) */}
+      {nextView && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            opacity: 0,
+            pointerEvents: 'none',
+            zIndex: -1,
+          }}
+        >
+          <ViewRenderer type={nextView.type} settings={mergeViewSettings(config!, nextView)} />
+        </div>
+      )}
     </div>
   );
 }
