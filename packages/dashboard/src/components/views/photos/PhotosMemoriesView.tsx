@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import type { PhotoEntry, MemoriesResponse } from '@heimdall/shared';
 import styles from './Photos.module.css';
 
@@ -30,16 +30,20 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
     return () => { cancelled = true; };
   }, [queryParam]);
 
+  // Pick one random memory, stable across re-renders
+  const current = useMemo(() => {
+    const slides: { label: string; photo: PhotoEntry }[] = [];
+    for (const [label, photos] of Object.entries(memories)) {
+      for (const photo of photos) slides.push({ label, photo });
+    }
+    if (slides.length === 0) return null;
+    return slides[Math.floor(Math.random() * slides.length)];
+  }, [memories]);
+
   if (loading) return <div className={styles.loading}>Loading memories…</div>;
   if (error) return <div className={styles.loading}>Photos unavailable</div>;
 
-  // Flatten all memories and pick one at random
-  const slides: { label: string; photo: PhotoEntry }[] = [];
-  for (const [label, photos] of Object.entries(memories)) {
-    for (const photo of photos) slides.push({ label, photo });
-  }
-
-  if (slides.length === 0) {
+  if (!current) {
     const dateStr = new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
     return (
       <div className={styles.emptyContainer}>
@@ -49,7 +53,6 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
     );
   }
 
-  const current = slides[Math.floor(Math.random() * slides.length)];
   const dateStr = new Date(current.photo.dateTaken).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
