@@ -5,6 +5,7 @@ import { ViewRenderer } from './components/shared/ViewRenderer';
 import { EmptyState } from './components/shared/EmptyState';
 import { ErrorState } from './components/shared/ErrorState';
 import { Overlay } from './components/overlay/Overlay';
+import { KeepAwake } from './components/keepawake';
 
 type AppState = 'loading' | 'ready' | 'empty' | 'error';
 
@@ -212,6 +213,7 @@ export function App(): React.ReactElement {
         '--overlay-height': hasOverlay ? '8vw' : '0px',
       } as React.CSSProperties}
     >
+      <KeepAwake mode={(config as Record<string, unknown>).keepAwake as boolean | 'auto' | undefined} />
       <Overlay
         clockVisible={clockVisible}
         weatherVisible={weatherVisible}

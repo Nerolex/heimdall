@@ -59,6 +59,7 @@ export function loadConfig(configPath: string): ConfigResult {
     views: parsed.views,
     ...(parsed.weather ? { weather: parsed.weather } : {}),
     ...(extra.showFullscreenButton != null ? { showFullscreenButton: extra.showFullscreenButton } : {}),
+    ...(extra.keepAwake != null ? { keepAwake: extra.keepAwake } : {}),
     ...(extra.retro ? { retro: extra.retro } : {}),
     ...(extra.steam ? { steam: extra.steam } : {}),
     ...(extra.calendar ? { calendar: extra.calendar } : {}),
