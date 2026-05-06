@@ -1,0 +1,84 @@
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #111;
+  overflow: hidden;
+}
+
+.bgPhoto {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 1;
+}
+
+.bgBlurred {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(20px) brightness(0.7);
+  transform: scale(1.05);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.3) 40%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+}
+
+.content {
+  position: absolute;
+  bottom: 4vh;
+  left: 4vw;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5vh;
+}
+
+.infoBar {
+  display: flex;
+  align-items: center;
+  gap: 1.2vw;
+  font-size: 3.5vw;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  font-weight: 300;
+}
+
+.weatherInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.6vw;
+}
+
+.separator {
+  width: 1px;
+  height: 3.5vw;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.dateInfo {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.clock {
+  font-size: 14vw;
+  font-weight: 200;
+  color: #fff;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}

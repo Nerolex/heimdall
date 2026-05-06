@@ -44,6 +44,10 @@ function mergeViewSettings(config: DashboardConfig, view: DashboardConfig['views
   if (type.startsWith('weather') && config.weather) {
     return { ...config.weather as Record<string, unknown>, ...base };
   }
+  if (type === 'clock' && config.weather) {
+    const w = config.weather as Record<string, unknown>;
+    return { weatherApiKey: w.apiKey, weatherCity: w.city, weatherUnits: w.units, ...base };
+  }
   return base as Record<string, unknown>;
 }
 
@@ -125,13 +129,23 @@ export function App(): React.ReactElement {
     }, FADE_DURATION);
   }
 
-  // Get next view index (sequential or random)
+  // Get next view index (sequential or random with frequency weighting)
   function getNextIndex(currentIdx: number): number {
     if (!config) return 0;
     const viewOrder = normalizeViewOrder(config.viewOrder);
     if (viewOrder === 'random') {
-      const candidates = Array.from({ length: config.views.length }, (_, i) => i).filter((i) => i !== currentIdx);
-      return candidates[Math.floor(Math.random() * candidates.length)];
+      const weights = config.views.map((v, i) => {
+        if (i === currentIdx) return 0;
+        const freq = v.frequency || 'normal';
+        return freq === 'high' ? 3 : freq === 'low' ? 0.5 : 1;
+      });
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+      let r = Math.random() * totalWeight;
+      for (let i = 0; i < weights.length; i++) {
+        r -= weights[i];
+        if (r <= 0) return i;
+      }
+      return (currentIdx + 1) % config.views.length;
     }
     return (currentIdx + 1) % config.views.length;
   }

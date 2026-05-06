@@ -10,6 +10,7 @@ export {
   type MemoriesResponse,
   type RandomPhotoResponse,
   type ViewEntry,
+  type ViewFrequency,
   type DashboardConfig,
   type ComponentProps,
   DEFAULT_CYCLE_INTERVAL,

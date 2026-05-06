@@ -32,6 +32,9 @@ export interface WeatherConfig {
   refreshInterval?: number;
 }
 
+/** View frequency — how often a view appears relative to others */
+export type ViewFrequency = 'high' | 'normal' | 'low';
+
 /** A single view in the dashboard rotation */
 export interface ViewEntry {
   /** Component type identifier (e.g., "image") */
@@ -40,6 +43,8 @@ export interface ViewEntry {
   settings?: Record<string, unknown>;
   /** Which overlay elements to show on this view. Defaults to "both". */
   overlay?: OverlayMode;
+  /** How often this view appears in rotation. Defaults to "normal". */
+  frequency?: ViewFrequency;
 }
 
 /** Top-level dashboard configuration */
