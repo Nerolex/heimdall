@@ -59,6 +59,8 @@ export interface DashboardConfig {
   weather?: WeatherConfig;
   /** Show fullscreen toggle button in overlay */
   showFullscreenButton?: boolean;
+  /** Plex server configuration */
+  plex?: { url: string; token: string };
 }
 
 /** A calendar source (iCal URL) */

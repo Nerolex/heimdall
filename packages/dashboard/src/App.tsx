@@ -166,7 +166,7 @@ export function App(): React.ReactElement {
 
   // Handle tap/click navigation (3 zones: left=prev, middle=detail, right=next)
   function handleNavClick(e: React.MouseEvent<HTMLDivElement>): void {
-    if (!config || config.views.length <= 1) return;
+    if (!config) return;
     if (detailMode) return; // Don't navigate while in detail mode
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;

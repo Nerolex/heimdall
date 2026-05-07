@@ -64,6 +64,7 @@ export function loadConfig(configPath: string): ConfigResult {
     ...(extra.steam ? { steam: extra.steam } : {}),
     ...(extra.calendar ? { calendar: extra.calendar } : {}),
     ...(extra.lastfm ? { lastfm: extra.lastfm } : {}),
+    ...(extra.plex ? { plex: extra.plex } : {}),
   } as DashboardConfig;
 
   return { config };

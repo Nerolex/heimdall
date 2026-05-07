@@ -1,0 +1,207 @@
+.container {
+  width: 100%;
+  height: 100%;
+  background: #0f1419;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bgArt {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(40px) brightness(0.3);
+  transform: scale(1.2);
+  z-index: 0;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 4vw;
+  padding: 4vw;
+  width: 90%;
+  max-width: 90%;
+}
+
+.poster {
+  width: clamp(120px, 20vw, 280px);
+  height: auto;
+  border-radius: 1vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.tracklist {
+  width: clamp(120px, 20vw, 280px);
+  max-height: clamp(120px, 20vw, 280px);
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 1vw;
+  padding: 0.5vw 0;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.trackItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6vw;
+  padding: 0.4vw 1vw;
+  cursor: pointer;
+  font-size: clamp(11px, 1.4vw, 15px);
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.trackItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.trackItemActive {
+  color: #e5a00d;
+  font-weight: 600;
+}
+
+.trackIndex {
+  min-width: 1.5em;
+  text-align: right;
+  opacity: 0.5;
+}
+
+.trackTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2vh;
+  min-width: 0;
+  flex: 1;
+}
+
+.title {
+  font-size: clamp(20px, 4vw, 42px);
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subtitle {
+  font-size: clamp(14px, 2.5vw, 26px);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playerName {
+  font-size: clamp(11px, 1.5vw, 16px);
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 300;
+  margin-top: 0.5vh;
+}
+
+.progressContainer {
+  display: flex;
+  align-items: center;
+  gap: 1.5vw;
+  margin-top: 1.5vh;
+}
+
+.progressBar {
+  flex: 1;
+  height: clamp(4px, 0.6vw, 8px);
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #e5a00d;
+  border-radius: 4px;
+}
+
+.time {
+  font-size: clamp(11px, 1.4vw, 15px);
+  color: rgba(255, 255, 255, 0.5);
+  font-variant-numeric: tabular-nums;
+  min-width: 4vw;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 2vw;
+  margin-top: 2vh;
+}
+
+.controlBtn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: clamp(16px, 2.5vw, 28px);
+  width: clamp(40px, 5vw, 56px);
+  height: clamp(40px, 5vw, 56px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+  line-height: 1;
+  text-align: center;
+  padding: 0;
+  margin: 0;
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.controlBtnLarge {
+  composes: controlBtn;
+  width: clamp(52px, 7vw, 72px);
+  height: clamp(52px, 7vw, 72px);
+  font-size: clamp(20px, 3.5vw, 36px);
+  background: rgba(229, 160, 13, 0.3);
+  border-color: rgba(229, 160, 13, 0.5);
+  padding: 2px 0 0 3px;
+}
+
+.controlBtnLarge:hover {
+  background: rgba(229, 160, 13, 0.5);
+}
+
+.idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2vh;
+}
+
+.idleIcon {
+  font-size: clamp(40px, 8vw, 80px);
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.idleText {
+  font-size: clamp(16px, 3vw, 28px);
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 300;
+}

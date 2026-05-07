@@ -12,6 +12,7 @@ import { igdbRoute } from './routes/igdb.js';
 import { lastfmRoute } from './routes/lastfm.js';
 import { steamRoute } from './routes/steam.js';
 import { gamingRoute } from './routes/gaming.js';
+import { plexRoute } from './routes/plex.js';
 
 const server = Fastify({ logger: true });
 
@@ -43,6 +44,7 @@ async function start(): Promise<void> {
   await server.register(lastfmRoute);
   await server.register(steamRoute);
   await server.register(gamingRoute);
+  await server.register(plexRoute);
 
   // Serve static assets from assets/ directory
   const assetsDir = path.resolve(PROJECT_ROOT, 'assets');

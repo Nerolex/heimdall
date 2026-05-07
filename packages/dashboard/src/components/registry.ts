@@ -46,6 +46,7 @@ import { RetroRecentView, RetroPlayingView, RetroProfileView, RetroShowcaseView 
 import { MusicNowPlayingView } from './views/music';
 import { GamingNowView, GamingRecentView, GamingShowcaseView, GamingAchievementView } from './views/gaming';
 import { ClockView } from './views/clock';
+import { PlexNowPlayingView, PlexDetailView } from './views/plex';
 import { PhotoSlideshow } from './detail';
 registerComponent('image', ImageView);
 registerComponent('weather', WeatherView);
@@ -66,6 +67,8 @@ registerComponent('gaming-recent', GamingRecentView);
 registerComponent('gaming-showcase', GamingShowcaseView);
 registerComponent('gaming-achievement', GamingAchievementView);
 registerComponent('clock', ClockView);
+registerComponent('plex-now-playing', PlexNowPlayingView);
 registerDetailComponent('clock', PhotoSlideshow);
 registerDetailComponent('photos-random', PhotoSlideshow);
 registerDetailComponent('photos-memories', PhotoSlideshow);
+registerDetailComponent('plex-now-playing', PlexDetailView);
