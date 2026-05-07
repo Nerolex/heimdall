@@ -1,6 +1,6 @@
-FROM node:20-slim AS build
+FROM node:22-slim AS build
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
@@ -15,7 +15,7 @@ COPY packages/ packages/
 RUN pnpm build
 
 # --- Production image ---
-FROM node:20-slim
+FROM node:22-slim
 
 # heif-convert needed for HEIC→JPEG conversion on arm64
 RUN apt-get update && apt-get install -y --no-install-recommends \
