@@ -1,1 +1,1 @@
-export { ClockView } from './ClockView';
+export { ClockView, clockCurrentPhotoId } from './ClockView';

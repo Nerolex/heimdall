@@ -209,6 +209,32 @@ export async function photosRoute(fastify: FastifyInstance): Promise<void> {
     return { photos: shuffled.slice(0, count) };
   });
 
+  // GET /api/photos/timeline?id=<photoId>&count=5&dir=<optional>
+  // Returns N photos before and N photos after the given photo, sorted by dateTaken
+  fastify.get<{ Querystring: { id: string; count?: string; dir?: string } }>('/api/photos/timeline', async (request) => {
+    const { id, dir: dirParam } = request.query;
+    const count = Math.min(parseInt(request.query.count || '5', 10) || 5, 20);
+    const photosDir = dirParam || findPhotosDir();
+    const index = await getPhotoIndex(photosDir);
+
+    // Sort all photos by date
+    const sorted = [...index.photos].sort(
+      (a, b) => new Date(a.dateTaken).getTime() - new Date(b.dateTaken).getTime()
+    );
+
+    const centerIdx = sorted.findIndex(p => p.id === id);
+    if (centerIdx === -1) {
+      return { photos: [], centerIndex: 0 };
+    }
+
+    const start = Math.max(0, centerIdx - count);
+    const end = Math.min(sorted.length, centerIdx + count + 1);
+    const photos = sorted.slice(start, end);
+    const centerInSlice = centerIdx - start;
+
+    return { photos, centerIndex: centerInSlice };
+  });
+
   // GET /api/photos/file/:id — serve actual image file
   fastify.get<{ Params: { id: string } }>('/api/photos/file/:id', async (request, reply) => {
     const { id } = request.params;

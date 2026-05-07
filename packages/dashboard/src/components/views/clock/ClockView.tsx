@@ -7,6 +7,9 @@ interface WeatherData {
   iconCode: string;
 }
 
+/** Shared state so the detail view can pick up the clock's current photo */
+export let clockCurrentPhotoId: string | null = null;
+
 const WEEKDAYS = ['SO', 'MO', 'DI', 'MI', 'DO', 'FR', 'SA'];
 const MONTHS = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.'];
 
@@ -109,6 +112,7 @@ export function ClockView({ settings }: ComponentProps): React.ReactElement {
         const photo = data.photo || data.photos?.[0];
         if (photo) {
           setPhotoUrl(`/api/photos/file/${photo.id}`);
+          clockCurrentPhotoId = photo.id;
         }
       })
       .catch(() => {});
