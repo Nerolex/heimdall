@@ -68,7 +68,9 @@ export function App(): React.ReactElement {
   const [config, setConfig] = useState<DashboardConfig | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [activeViewIndex, setActiveViewIndex] = useState(0);
+  const activeViewIndexRef = useRef(0);
   const [nextViewIndex, setNextViewIndex] = useState<number | null>(null);
+  const nextViewIndexRef = useRef<number | null>(null);
   const [visible, setVisible] = useState(true);
   const [clockVisible, setClockVisible] = useState(true);
   const [weatherVisible, setWeatherVisible] = useState(true);
@@ -132,7 +134,9 @@ export function App(): React.ReactElement {
   // Preload the next view whenever active view changes
   useEffect(() => {
     if (!config || config.views.length <= 1) return;
-    setNextViewIndex(getNextIndex(activeViewIndex));
+    const next = getNextIndex(activeViewIndex);
+    setNextViewIndex(next);
+    nextViewIndexRef.current = next;
   }, [config, activeViewIndex]);
 
   // Transition to a specific view index with fade
@@ -149,6 +153,7 @@ export function App(): React.ReactElement {
     if (showsWeather(currentMode) && !showsWeather(nextMode)) setWeatherVisible(false);
 
     setTimeout(() => {
+      activeViewIndexRef.current = nextIdx;
       setActiveViewIndex(nextIdx);
       setVisible(true);
       setClockVisible(showsClock(nextMode));
@@ -190,7 +195,7 @@ export function App(): React.ReactElement {
 
     function scheduleCycle(): void {
       cycleTimer.current = setTimeout(() => {
-        const nextIdx = nextViewIndex ?? getNextIndex(activeViewIndex);
+        const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
         viewHistory.current.push(nextIdx);
         transitionTo(nextIdx);
         scheduleCycle();
@@ -202,7 +207,7 @@ export function App(): React.ReactElement {
     return () => {
       if (cycleTimer.current) clearTimeout(cycleTimer.current);
     };
-  }, [config, activeViewIndex]);
+  }, [config]);
 
   if (state === 'loading') {
     return (
