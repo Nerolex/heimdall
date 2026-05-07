@@ -9,7 +9,6 @@ COPY packages/server/package.json packages/server/
 COPY packages/dashboard/package.json packages/dashboard/
 
 RUN pnpm install --frozen-lockfile
-RUN pnpm approve-builds --all
 
 COPY packages/ packages/
 RUN pnpm build
