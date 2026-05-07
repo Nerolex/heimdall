@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { CalendarSource } from '@heimdall/shared';
 import { useCalendarEvents } from '../../../hooks/useCalendarEvents';
 import { getWeekDays, isEventOnDay, getHourPosition, formatTime } from './calendarUtils';
@@ -18,6 +18,19 @@ export function CalendarWeekView({ settings }: Props): React.ReactElement {
 
   const weekDays = getWeekDays();
   const today = new Date().toDateString();
+  const [nowPosition, setNowPosition] = useState(() => {
+    const n = new Date();
+    return ((n.getHours() + n.getMinutes() / 60) - START_HOUR) / TOTAL_HOURS * 100;
+  });
+
+  // Update now line every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const n = new Date();
+      setNowPosition(((n.getHours() + n.getMinutes() / 60) - START_HOUR) / TOTAL_HOURS * 100);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (loading || error) {
     return <div className={styles.loading}>{error ? 'Calendar unavailable' : 'Loading calendar…'}</div>;
@@ -65,6 +78,11 @@ export function CalendarWeekView({ settings }: Props): React.ReactElement {
                 {timeLabels.map((hour) => (
                   <div key={hour} className={styles.ttHourLine} style={{ top: `${((hour - START_HOUR) / TOTAL_HOURS) * 100}%` }} />
                 ))}
+
+                {/* Current time indicator */}
+                {isToday && nowPosition >= 0 && nowPosition <= 100 && (
+                  <div className={styles.ttNowLine} style={{ top: `${nowPosition}%` }} />
+                )}
 
                 {/* Events */}
                 {dayEvents.map((event) => {
