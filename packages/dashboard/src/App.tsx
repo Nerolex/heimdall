@@ -6,6 +6,7 @@ import { EmptyState } from './components/shared/EmptyState';
 import { ErrorState } from './components/shared/ErrorState';
 import { Overlay } from './components/overlay/Overlay';
 import { KeepAwake } from './components/keepawake';
+import { getDetailComponent } from './components/registry';
 
 type AppState = 'loading' | 'ready' | 'empty' | 'error';
 
@@ -71,6 +72,7 @@ export function App(): React.ReactElement {
   const activeViewIndexRef = useRef(0);
   const [nextViewIndex, setNextViewIndex] = useState<number | null>(null);
   const nextViewIndexRef = useRef<number | null>(null);
+  const [detailMode, setDetailMode] = useState(false);
   const [visible, setVisible] = useState(true);
   const [clockVisible, setClockVisible] = useState(true);
   const [weatherVisible, setWeatherVisible] = useState(true);
@@ -162,34 +164,48 @@ export function App(): React.ReactElement {
     }, FADE_DURATION);
   }
 
-  // Handle tap/click navigation
+  // Handle tap/click navigation (3 zones: left=prev, middle=detail, right=next)
   function handleNavClick(e: React.MouseEvent<HTMLDivElement>): void {
     if (!config || config.views.length <= 1) return;
+    if (detailMode) return; // Don't navigate while in detail mode
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const isLeftHalf = x < rect.width / 2;
+    const zone = x / rect.width;
 
     // Reset auto-cycle timer
     if (cycleTimer.current) clearTimeout(cycleTimer.current);
 
-    if (isLeftHalf) {
-      // Go back in history
+    if (zone < 0.3) {
+      // Left zone: go back in history
       if (viewHistory.current.length > 1) {
         viewHistory.current.pop();
         const prevIdx = viewHistory.current[viewHistory.current.length - 1];
         transitionTo(prevIdx);
       }
-    } else {
-      // Go forward to preloaded next view
+    } else if (zone > 0.7) {
+      // Right zone: go forward
       const nextIdx = nextViewIndex ?? getNextIndex(activeViewIndex);
       viewHistory.current.push(nextIdx);
       transitionTo(nextIdx);
+    } else {
+      // Middle zone: open detail mode if view supports it
+      const view = config.views[activeViewIndex];
+      const DetailComp = getDetailComponent(view.type);
+      if (DetailComp) {
+        setDetailMode(true);
+      }
     }
   }
 
-  // View cycling with fade transition
+  function handleDetailClose(): void {
+    setDetailMode(false);
+    // Restart cycling
+    if (cycleTimer.current) clearTimeout(cycleTimer.current);
+  }
+
+  // View cycling with fade transition (paused during detail mode)
   useEffect(() => {
-    if (!config || config.views.length <= 1) return;
+    if (!config || config.views.length <= 1 || detailMode) return;
 
     const interval = normalizeCycleInterval(config.cycleInterval) * 1000;
 
@@ -207,7 +223,7 @@ export function App(): React.ReactElement {
     return () => {
       if (cycleTimer.current) clearTimeout(cycleTimer.current);
     };
-  }, [config]);
+  }, [config, detailMode]);
 
   if (state === 'loading') {
     return (
@@ -228,6 +244,7 @@ export function App(): React.ReactElement {
   const view = config!.views[activeViewIndex];
   const nextView = nextViewIndex != null ? config!.views[nextViewIndex] : null;
   const hasOverlay = clockVisible || weatherVisible;
+  const DetailComponent = detailMode ? getDetailComponent(view.type) : null;
 
   return (
     <div
@@ -275,6 +292,10 @@ export function App(): React.ReactElement {
         >
           <ViewRenderer type={nextView.type} settings={mergeViewSettings(config!, nextView)} />
         </div>
+      )}
+      {/* Detail mode overlay */}
+      {DetailComponent && (
+        <DetailComponent settings={mergeViewSettings(config!, view)} onClose={handleDetailClose} />
       )}
     </div>
   );
