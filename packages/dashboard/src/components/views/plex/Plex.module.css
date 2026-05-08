@@ -339,6 +339,8 @@
 .repeatOff {
   display: none;
 }
+
+.idle {
   display: flex;
   flex-direction: column;
   align-items: center;
