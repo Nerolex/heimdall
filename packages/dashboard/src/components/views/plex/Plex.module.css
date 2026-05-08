@@ -77,9 +77,9 @@
 .navOverlay {
   position: absolute;
   left: 0;
-  top: var(--overlay-height, 8vw);
+  top: 0;
   width: 33.33vw;
-  height: calc(100% - var(--overlay-height, 8vw));
+  height: 100%;
   z-index: 10;
   display: flex;
   flex-direction: column;
