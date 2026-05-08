@@ -73,6 +73,7 @@ function DayAccent({ conditionId }: { conditionId: number }): React.ReactElement
 
   // Few/scattered clouds (801-802): sun behind procedural clouds
   if (conditionId >= 801 && conditionId <= 802) {
+    const density = conditionId === 801 ? 0.0 : 0.22;
     return (
       <>
         {/* Sun orb behind clouds */}
@@ -82,7 +83,7 @@ function DayAccent({ conditionId }: { conditionId: number }): React.ReactElement
           background: 'radial-gradient(circle, #fff8c4 0%, #ffd700 40%, rgba(255,215,0,0.2) 70%, transparent 85%)',
           boxShadow: '0 0 40px 10px rgba(255,215,0,0.2)',
         }} />
-        <CloudCanvas sunPhase="day" opacity={0.6} />
+        <CloudCanvas sunPhase="day" opacity={0.6} density={density} />
       </>
     );
   }
@@ -112,6 +113,7 @@ function GoldenAccent({ conditionId }: { conditionId: number }): React.ReactElem
 
   // Few clouds at sunset: warm sun behind procedural clouds
   if (conditionId >= 801 && conditionId <= 802) {
+    const density = conditionId === 801 ? 0.0 : 0.22;
     return (
       <>
         {/* Sun behind clouds — warm orange */}
@@ -121,7 +123,7 @@ function GoldenAccent({ conditionId }: { conditionId: number }): React.ReactElem
           background: 'radial-gradient(circle, #ffe8c0 0%, #ff8c00 35%, rgba(255,140,0,0.2) 60%, transparent 80%)',
           boxShadow: '0 0 50px 15px rgba(255,140,0,0.2)',
         }} />
-        <CloudCanvas sunPhase="golden" opacity={0.6} />
+        <CloudCanvas sunPhase="golden" opacity={0.6} density={density} />
       </>
     );
   }
@@ -150,6 +152,7 @@ function NightAccent({ conditionId }: { conditionId: number }): React.ReactEleme
 
   // Partially cloudy night: moon behind procedural clouds
   if (conditionId >= 801 && conditionId <= 802) {
+    const density = conditionId === 801 ? 0.0 : 0.22;
     return (
       <>
         {/* Moon behind clouds */}
@@ -159,7 +162,7 @@ function NightAccent({ conditionId }: { conditionId: number }): React.ReactEleme
           backgroundColor: 'rgba(255,255,255,0.7)',
           boxShadow: '0px 0px 60px 30px lightblue',
         }} />
-        <CloudCanvas sunPhase="night" opacity={0.5} />
+        <CloudCanvas sunPhase="night" opacity={0.5} density={density} />
       </>
     );
   }
