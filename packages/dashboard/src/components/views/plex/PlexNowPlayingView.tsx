@@ -349,7 +349,8 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
   async function handleArtistSelect(artist: PlexSession): Promise<void> {
     setNavLoading(true);
     try {
-      const res = await fetch(`/api/plex/children?path=${encodeURIComponent(artist.key + '/children')}`);
+      // artist.key is already "/library/metadata/{id}/children"
+      const res = await fetch(`/api/plex/children?path=${encodeURIComponent(artist.key)}`);
       const data = await res.json();
       const albums = (data?.MediaContainer?.Metadata || []).filter((a: PlexSession) => a.type === 'album');
       setNavStack(s => [...s, { kind: 'albums', items: albums, label: artist.title }]);
@@ -407,7 +408,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
   const progress = durationMs > 0 ? (progressMs / durationMs) * 100 : 0;
 
   return (
-    <div className={detailStyles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div className={detailStyles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setNavStack([])}>
       <audio ref={audioRef} preload="none" />
       {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} />}
       <div className={styles.content}>
