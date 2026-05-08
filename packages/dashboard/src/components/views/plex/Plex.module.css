@@ -87,12 +87,22 @@
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  border-radius: 0 16px 16px 0;
   animation: navSlideIn 0.22s ease-out;
+}
+
+.navOverlayClosing {
+  animation: navSlideOut 0.21s ease-in forwards;
 }
 
 @keyframes navSlideIn {
   from { transform: translateX(-100%); opacity: 0; }
   to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes navSlideOut {
+  from { transform: translateX(0);     opacity: 1; }
+  to   { transform: translateX(-100%); opacity: 0; }
 }
 
 .navList {

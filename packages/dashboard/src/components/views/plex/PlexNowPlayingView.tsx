@@ -212,6 +212,16 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
   const [localDuration, setLocalDuration] = useState(0);
   const [navStack, setNavStack] = useState<NavEntry[]>([]);
   const [navLoading, setNavLoading] = useState(false);
+  const [navClosing, setNavClosing] = useState(false);
+  const navCloseTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  function closeNav() {
+    setNavClosing(true);
+    navCloseTimer.current = setTimeout(() => {
+      setNavStack([]);
+      setNavClosing(false);
+    }, 210);
+  }
   const [currentTrack, setCurrentTrack] = useState<PlexSession | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -376,7 +386,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
       audioRef.current.src = `/api/plex/stream?path=${encodeURIComponent(partKey)}`;
       audioRef.current.play();
       setLocalPlaying(true);
-      setNavStack([]);
+      closeNav();
     }
   }
 
@@ -408,13 +418,13 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
   const progress = durationMs > 0 ? (progressMs / durationMs) * 100 : 0;
 
   return (
-    <div className={detailStyles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setNavStack([])}>
+    <div className={detailStyles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={closeNav}>
       <audio ref={audioRef} preload="none" />
       {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} />}
 
       {/* Nav overlay — blurred list covering left third, below clock/weather */}
-      {navStack.length > 0 && (
-        <div className={styles.navOverlay} onClick={e => e.stopPropagation()}>
+      {(navStack.length > 0 || navClosing) && (
+        <div className={`${styles.navOverlay} ${navClosing ? styles.navOverlayClosing : ''}`} onClick={e => e.stopPropagation()}>
           <div className={styles.navHeader} onClick={handleNavBack}>
             <button className={styles.backBtn}>←</button>
             <span className={styles.navLabel}>{navStack[navStack.length - 1].label}</span>
@@ -447,7 +457,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
       )}
 
       <div className={styles.content} onClick={e => e.stopPropagation()}>
-        {!navStack.length && thumb && (
+        {thumb && (
           <img
             src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`}
             alt=""
