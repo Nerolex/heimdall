@@ -30,8 +30,8 @@ export function RetroRecentView({ settings }: Props): React.ReactElement {
       try {
         const res = await fetch(`/api/retro/recent-achievements?apiUser=${apiUser}&apiKey=${apiKey}&user=${user}&minutes=43200`);
         const data = await res.json();
-        const maxItems = window.innerHeight > 900 ? 8 : window.innerHeight > 600 ? 6 : 5;
-        if (Array.isArray(data)) setAchievements(data.slice(0, maxItems));
+        // Hero + max 2 compact rows — keeps it readable at a glance on small screens
+        if (Array.isArray(data)) setAchievements(data.slice(0, 3));
       } catch { /* ignore */ }
       setLoading(false);
     }
