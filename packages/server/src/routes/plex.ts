@@ -195,6 +195,26 @@ export async function plexRoute(fastify: FastifyInstance): Promise<void> {
     return res.json();
   });
 
+  // GET /api/plex/artists — all artists from the music library section
+  fastify.get('/api/plex/artists', async (request, reply) => {
+    const plex = getPlexConfig();
+    if (!plex) return reply.status(503).send({ error: 'Plex not configured' });
+    const sectionsRes = await fetch(`${plex.url}/library/sections?X-Plex-Token=${plex.token}`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!sectionsRes.ok) return reply.status(sectionsRes.status).send({ error: 'Sections fetch failed' });
+    const sectionsData = await sectionsRes.json();
+    const sections = sectionsData?.MediaContainer?.Directory || [];
+    const musicSection = sections.find((s: { type: string }) => s.type === 'artist');
+    if (!musicSection) return reply.status(404).send({ error: 'No music library found' });
+    const artistsRes = await fetch(
+      `${plex.url}/library/sections/${musicSection.key}/all?X-Plex-Token=${plex.token}`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (!artistsRes.ok) return reply.status(artistsRes.status).send({ error: 'Artists fetch failed' });
+    return artistsRes.json();
+  });
+
   // GET /api/plex/history — recently played music for primary account
   fastify.get<{ Querystring: { limit?: string } }>('/api/plex/history', async (request, reply) => {
     const plex = getPlexConfig();

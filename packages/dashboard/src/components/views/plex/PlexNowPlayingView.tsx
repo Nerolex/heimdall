@@ -159,17 +159,38 @@ export function PlexNowPlayingView({ settings }: Props): React.ReactElement {
   const { title, subtitle, thumb, art } = getDisplayInfo(displayItem);
   const playerName = session?.Player?.title || '';
 
+  // Up to 2 *different album* covers from history, behind the current one
+  const currentAlbum = displayItem.parentRatingKey || displayItem.parentKey || '';
+  const recentThumbs = history
+    .filter((h, i) => {
+      if (i === historyIndex) return false;
+      const album = h.parentRatingKey || h.parentKey || '';
+      return album !== currentAlbum && album !== '';
+    })
+    .filter((h, i, arr) => {
+      // dedupe by album
+      const album = h.parentRatingKey || h.parentKey || '';
+      return arr.findIndex(x => (x.parentRatingKey || x.parentKey) === album) === i;
+    })
+    .slice(0, 2)
+    .map(h => getDisplayInfo(h).thumb)
+    .filter(Boolean);
+
   return (
     <div className={styles.container}>
       {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} />}
       <div className={styles.content}>
-        {thumb && (
-          <img
-            src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`}
-            alt=""
-            className={styles.poster}
-          />
-        )}
+        <div className={styles.coverStack}>
+          {recentThumbs[1] && (
+            <img src={`/api/plex/thumb?path=${encodeURIComponent(recentThumbs[1])}`} alt="" className={styles.coverBack2} />
+          )}
+          {recentThumbs[0] && (
+            <img src={`/api/plex/thumb?path=${encodeURIComponent(recentThumbs[0])}`} alt="" className={styles.coverBack1} />
+          )}
+          {thumb && (
+            <img src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`} alt="" className={styles.coverFront} />
+          )}
+        </div>
         <div className={styles.info}>
           <div className={styles.title}>{title}</div>
           {subtitle && <div className={styles.subtitle}>{subtitle}</div>}
@@ -180,16 +201,17 @@ export function PlexNowPlayingView({ settings }: Props): React.ReactElement {
   );
 }
 
+type NavKind = 'artists' | 'albums' | 'tracks';
+interface NavEntry { kind: NavKind; items: PlexSession[]; label: string; }
+
 /** Detail view — full media player with controls */
 export function PlexDetailView({ settings, onClose }: { settings: Record<string, unknown>; onClose: () => void }): React.ReactElement {
   const { session, history, historyIndex, setHistoryIndex, loading } = usePlexSession(true);
   const [localPlaying, setLocalPlaying] = useState(false);
   const [localProgress, setLocalProgress] = useState(0);
   const [localDuration, setLocalDuration] = useState(0);
-  const [showTracklist, setShowTracklist] = useState(false);
-  const [albumTracks, setAlbumTracks] = useState<PlexSession[]>([]);
-  const [showAlbumList, setShowAlbumList] = useState(false);
-  const [artistAlbums, setArtistAlbums] = useState<PlexSession[]>([]);
+  const [navStack, setNavStack] = useState<NavEntry[]>([]);
+  const [navLoading, setNavLoading] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<PlexSession | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -292,27 +314,57 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
     audioRef.current.currentTime = (pct * localDuration) / 1000;
   }
 
-  async function handleAlbumClick(): Promise<void> {
-    if (showTracklist) {
-      setShowTracklist(false);
-      return;
-    }
+  async function handlePosterClick(e: React.MouseEvent): Promise<void> {
+    e.stopPropagation();
     if (!displayItem) return;
-    // History items use parentKey, sessions use parentRatingKey
-    let albumPath: string | null = null;
-    if (displayItem.parentRatingKey) {
-      albumPath = `/library/metadata/${displayItem.parentRatingKey}/children`;
-    } else if (displayItem.parentKey) {
-      albumPath = `${displayItem.parentKey}/children`;
-    }
-    if (!albumPath) return;
+    setNavLoading(true);
     try {
-      const res = await fetch(`/api/plex/children?path=${encodeURIComponent(albumPath)}`);
-      const data = await res.json();
-      const tracks = data?.MediaContainer?.Metadata || [];
-      setAlbumTracks(tracks);
-      setShowTracklist(true);
+      const albumPath = displayItem.parentRatingKey
+        ? `/library/metadata/${displayItem.parentRatingKey}/children`
+        : displayItem.parentKey ? `${displayItem.parentKey}/children` : null;
+      const artistKey = displayItem.grandparentKey;
+
+      const [artistsRes, albumsRes, tracksRes] = await Promise.all([
+        fetch('/api/plex/artists'),
+        artistKey ? fetch(`/api/plex/children?path=${encodeURIComponent(artistKey + '/children')}`) : Promise.resolve(null),
+        albumPath ? fetch(`/api/plex/children?path=${encodeURIComponent(albumPath)}`) : Promise.resolve(null),
+      ]);
+
+      const artists = (await artistsRes.json())?.MediaContainer?.Metadata || [];
+      const albums = albumsRes ? ((await albumsRes.json())?.MediaContainer?.Metadata || []).filter((a: PlexSession) => a.type === 'album') : [];
+      const tracks = tracksRes ? (await tracksRes.json())?.MediaContainer?.Metadata || [] : [];
+
+      // Build full stack: artists → artist's albums → current album's tracks
+      const stack: NavEntry[] = [
+        { kind: 'artists', items: artists, label: 'Artists' },
+      ];
+      if (albums.length) stack.push({ kind: 'albums', items: albums, label: displayItem.grandparentTitle || 'Albums' });
+      if (tracks.length) stack.push({ kind: 'tracks', items: tracks, label: displayItem.parentTitle || 'Tracks' });
+
+      setNavStack(stack);
     } catch {}
+    setNavLoading(false);
+  }
+
+  async function handleArtistSelect(artist: PlexSession): Promise<void> {
+    setNavLoading(true);
+    try {
+      const res = await fetch(`/api/plex/children?path=${encodeURIComponent(artist.key + '/children')}`);
+      const data = await res.json();
+      const albums = (data?.MediaContainer?.Metadata || []).filter((a: PlexSession) => a.type === 'album');
+      setNavStack(s => [...s, { kind: 'albums', items: albums, label: artist.title }]);
+    } catch {}
+    setNavLoading(false);
+  }
+
+  async function handleAlbumSelect(album: PlexSession): Promise<void> {
+    setNavLoading(true);
+    try {
+      const res = await fetch(`/api/plex/children?path=${encodeURIComponent(`/library/metadata/${album.ratingKey}/children`)}`);
+      const data = await res.json();
+      setNavStack(s => [...s, { kind: 'tracks', items: data?.MediaContainer?.Metadata || [], label: album.title }]);
+    } catch {}
+    setNavLoading(false);
   }
 
   async function handleTrackSelect(track: PlexSession): Promise<void> {
@@ -323,51 +375,12 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
       audioRef.current.src = `/api/plex/stream?path=${encodeURIComponent(partKey)}`;
       audioRef.current.play();
       setLocalPlaying(true);
-      setShowTracklist(false);
+      setNavStack([]);
     }
   }
 
-  async function handleArtistClick(): Promise<void> {
-    if (showAlbumList) {
-      setShowAlbumList(false);
-      return;
-    }
-    if (!displayItem) return;
-    const artistKey = displayItem.grandparentKey
-      ? `${displayItem.grandparentKey}/children`
-      : null;
-    if (!artistKey) return;
-    try {
-      const res = await fetch(`/api/plex/children?path=${encodeURIComponent(artistKey)}`);
-      const data = await res.json();
-      const albums = (data?.MediaContainer?.Metadata || []).filter(
-        (a: PlexSession) => a.type === 'album'
-      );
-      setArtistAlbums(albums);
-      setShowAlbumList(true);
-    } catch {}
-  }
-
-  async function handleAlbumSelect(album: PlexSession): Promise<void> {
-    if (!audioRef.current) return;
-    try {
-      const res = await fetch(`/api/plex/children?path=${encodeURIComponent(`/library/metadata/${album.ratingKey}/children`)}`);
-      const data = await res.json();
-      const tracks = data?.MediaContainer?.Metadata || [];
-      setAlbumTracks(tracks);
-      setShowAlbumList(false);
-      setShowTracklist(true);
-      if (tracks.length > 0) {
-        const firstTrack = tracks[0];
-        const partKey = firstTrack.Media?.[0]?.Part?.[0]?.key;
-        if (partKey) {
-          setCurrentTrack(firstTrack);
-          audioRef.current.src = `/api/plex/stream?path=${encodeURIComponent(partKey)}`;
-          audioRef.current.play();
-          setLocalPlaying(true);
-        }
-      }
-    } catch {}
+  function handleNavBack(): void {
+    setNavStack(s => s.slice(0, -1));
   }
 
   function formatTime(ms: number): string {
@@ -394,39 +407,36 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
   const progress = durationMs > 0 ? (progressMs / durationMs) * 100 : 0;
 
   return (
-    <div className={detailStyles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => { setShowTracklist(false); setShowAlbumList(false); }}>
+    <div className={detailStyles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <audio ref={audioRef} preload="none" />
       {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} />}
       <div className={styles.content}>
-        {showAlbumList ? (
-          <div className={styles.tracklist}>
-            {artistAlbums.map((album) => (
+        {navStack.length > 0 ? (
+          <div className={styles.tracklist} onClick={e => e.stopPropagation()}>
+            <div className={styles.navHeader}>
+              <button className={styles.backBtn} onClick={handleNavBack}>←</button>
+              <span className={styles.navLabel}>{navStack[navStack.length - 1].label}</span>
+            </div>
+            {navLoading ? (
+              <div className={styles.trackItem} style={{ opacity: 0.5 }}>Loading…</div>
+            ) : navStack[navStack.length - 1].items.map(item => (
               <div
-                key={album.ratingKey}
-                className={styles.trackItem}
-                onClick={(e) => { e.stopPropagation(); handleAlbumSelect(album); }}
+                key={item.ratingKey}
+                className={`${styles.trackItem} ${item.ratingKey === displayItem?.ratingKey ? styles.trackItemActive : ''}`}
+                onClick={() => {
+                  const kind = navStack[navStack.length - 1].kind;
+                  if (kind === 'artists') handleArtistSelect(item);
+                  else if (kind === 'albums') handleAlbumSelect(item);
+                  else handleTrackSelect(item);
+                }}
               >
-                {album.thumb && (
-                  <img
-                    src={`/api/plex/thumb?path=${encodeURIComponent(album.thumb)}`}
-                    alt=""
-                    className={styles.albumThumb}
-                  />
+                {(navStack[navStack.length - 1].kind !== 'tracks') && item.thumb && (
+                  <img src={`/api/plex/thumb?path=${encodeURIComponent(item.thumb)}`} alt="" className={styles.albumThumb} />
                 )}
-                <span className={styles.trackTitle}>{album.title}</span>
-              </div>
-            ))}
-          </div>
-        ) : showTracklist ? (
-          <div className={styles.tracklist}>
-            {albumTracks.map((track) => (
-              <div
-                key={track.ratingKey}
-                className={`${styles.trackItem} ${track.ratingKey === displayItem.ratingKey ? styles.trackItemActive : ''}`}
-                onClick={(e) => { e.stopPropagation(); handleTrackSelect(track); }}
-              >
-                <span className={styles.trackIndex}>{track.index || '·'}</span>
-                <span className={styles.trackTitle}>{track.title}</span>
+                {navStack[navStack.length - 1].kind === 'tracks' && (
+                  <span className={styles.trackIndex}>{item.index ?? '·'}</span>
+                )}
+                <span className={styles.trackTitle}>{item.title}</span>
               </div>
             ))}
           </div>
@@ -436,7 +446,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
               src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`}
               alt=""
               className={styles.poster}
-              onClick={(e) => { e.stopPropagation(); handleAlbumClick(); }}
+              onClick={handlePosterClick}
               style={{ cursor: 'pointer' }}
             />
           )
@@ -444,7 +454,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
         <div className={styles.info} onClick={(e) => e.stopPropagation()}>
           <div className={styles.title}>{title}</div>
           {subtitle && (
-            <div className={styles.subtitle} onClick={handleArtistClick} style={{ cursor: 'pointer' }}>
+            <div className={styles.subtitle}>
               {subtitle}
             </div>
           )}
@@ -460,7 +470,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
 
           <div className={styles.controls}>
             <button className={styles.controlBtn} onClick={() => handleSkip(-1)}>⏮</button>
-            <button className={styles.controlBtnLarge} onClick={handlePlay}>
+            <button className={`${styles.controlBtnLarge} ${localPlaying ? styles.controlBtnPause : styles.controlBtnPlay}`} onClick={handlePlay}>
               {localPlaying ? '⏸' : '▶'}
             </button>
             <button className={styles.controlBtn} onClick={() => handleSkip(1)}>⏭</button>

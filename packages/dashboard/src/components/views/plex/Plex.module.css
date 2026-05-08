@@ -40,6 +40,72 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
+.coverStack {
+  position: relative;
+  width: clamp(120px, 20vw, 280px);
+  flex-shrink: 0;
+}
+
+.coverStack img {
+  width: 100%;
+  height: auto;
+  border-radius: 1vw;
+  display: block;
+}
+
+.coverBack2 {
+  position: absolute;
+  top: 0; left: 0;
+  transform: translate(-28px, 20px) rotate(-14deg) scale(0.88);
+  opacity: 0.5;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.coverBack1 {
+  position: absolute;
+  top: 0; left: 0;
+  transform: translate(-14px, 10px) rotate(-7deg) scale(0.94);
+  opacity: 0.7;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+
+.coverFront {
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.navHeader {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 16px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 4px;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: clamp(20px, 3vw, 26px);
+  cursor: pointer;
+  padding: 0 8px 0 0;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.backBtn:active {
+  color: #fff;
+}
+
+.navLabel {
+  font-size: clamp(12px, 1.6vw, 15px);
+  color: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .tracklist {
   width: clamp(220px, 40vw, 420px);
   max-height: clamp(300px, 70vh, 560px);
@@ -174,15 +240,16 @@
   justify-content: center;
   gap: 16px;
   margin-top: 2vh;
+  width: 100%;
 }
 
 .controlBtn {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #fff;
-  font-size: clamp(18px, 3vw, 30px);
-  width: clamp(48px, 7vw, 64px);
-  height: clamp(48px, 7vw, 64px);
+  font-size: clamp(14px, 2vw, 22px);
+  width: clamp(38px, 5.5vw, 52px);
+  height: clamp(38px, 5.5vw, 52px);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -207,7 +274,16 @@
   font-size: clamp(24px, 4vw, 38px);
   background: rgba(229, 160, 13, 0.3);
   border-color: rgba(229, 160, 13, 0.5);
-  padding: 2px 0 0 3px;
+  padding: 0;
+}
+
+.controlBtnPlay {
+  padding: 2px 0 0 6px; /* ▶ nudge right */
+}
+
+.controlBtnPause {
+  padding: 0 0 2px 1px; /* ⏸ nudge left and up */
+  font-size: clamp(32px, 5vw, 50px); /* bigger */
 }
 
 .controlBtnLarge:active {

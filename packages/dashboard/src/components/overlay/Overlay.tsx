@@ -37,7 +37,7 @@ export function Overlay({ clockVisible, weatherVisible, weatherConfig, showFulls
         top: '1.5rem',
         left: '1.5rem',
         right: '1.5rem',
-        zIndex: 10,
+        zIndex: 200,
         display: 'flex',
         alignItems: 'center',
         gap: '1rem',

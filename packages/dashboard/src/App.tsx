@@ -175,14 +175,14 @@ export function App(): React.ReactElement {
     // Reset auto-cycle timer
     if (cycleTimer.current) clearTimeout(cycleTimer.current);
 
-    if (zone < 0.3) {
+    if (zone < 0.08) {
       // Left zone: go back in history
       if (viewHistory.current.length > 1) {
         viewHistory.current.pop();
         const prevIdx = viewHistory.current[viewHistory.current.length - 1];
         transitionTo(prevIdx);
       }
-    } else if (zone > 0.7) {
+    } else if (zone > 0.92) {
       // Right zone: go forward
       const nextIdx = nextViewIndex ?? getNextIndex(activeViewIndex);
       viewHistory.current.push(nextIdx);
@@ -258,13 +258,16 @@ export function App(): React.ReactElement {
       } as React.CSSProperties}
     >
       <KeepAwake mode={(config as Record<string, unknown>).keepAwake as boolean | 'auto' | undefined} />
+      {/* Detail mode overlay */}
+      {DetailComponent && (
+        <DetailComponent settings={mergeViewSettings(config!, view)} onClose={handleDetailClose} />
+      )}
       <Overlay
         clockVisible={clockVisible}
         weatherVisible={weatherVisible}
         weatherConfig={config!.weather}
         showFullscreenButton={config!.showFullscreenButton}
       />
-      {/* Active view */}
       <div
         style={{
           width: '100%',
