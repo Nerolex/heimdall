@@ -411,13 +411,15 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
     <div className={detailStyles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setNavStack([])}>
       <audio ref={audioRef} preload="none" />
       {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} />}
-      <div className={styles.content}>
-        {navStack.length > 0 ? (
-          <div className={styles.tracklist} onClick={e => e.stopPropagation()}>
-            <div className={styles.navHeader}>
-              <button className={styles.backBtn} onClick={handleNavBack}>←</button>
-              <span className={styles.navLabel}>{navStack[navStack.length - 1].label}</span>
-            </div>
+
+      {/* Nav overlay — transparent list covering left third, below clock/weather */}
+      {navStack.length > 0 && (
+        <div className={styles.navOverlay} onClick={e => e.stopPropagation()}>
+          <div className={styles.navHeader}>
+            <button className={styles.backBtn} onClick={handleNavBack}>←</button>
+            <span className={styles.navLabel}>{navStack[navStack.length - 1].label}</span>
+          </div>
+          <div className={styles.navList}>
             {navLoading ? (
               <div className={styles.trackItem} style={{ opacity: 0.5 }}>Loading…</div>
             ) : navStack[navStack.length - 1].items.map(item => (
@@ -441,16 +443,18 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
               </div>
             ))}
           </div>
-        ) : (
-          thumb && (
-            <img
-              src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`}
-              alt=""
-              className={styles.poster}
-              onClick={handlePosterClick}
-              style={{ cursor: 'pointer' }}
-            />
-          )
+        </div>
+      )}
+
+      <div className={styles.content} onClick={e => e.stopPropagation()}>
+        {thumb && (
+          <img
+            src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`}
+            alt=""
+            className={styles.poster}
+            onClick={handlePosterClick}
+            style={{ cursor: 'pointer' }}
+          />
         )}
         <div className={styles.info} onClick={(e) => e.stopPropagation()}>
           <div className={styles.title}>{title}</div>
