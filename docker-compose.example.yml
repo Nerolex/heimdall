@@ -14,3 +14,15 @@ services:
     environment:
       - PORT=3000
       - HOST=0.0.0.0
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_POLL_INTERVAL=300   # check every 5 minutes
+      - WATCHTOWER_CLEANUP=true        # remove old images after update
+      - WATCHTOWER_INCLUDE_RESTARTING=true
+    command: heimdall                  # only watch the heimdall container
