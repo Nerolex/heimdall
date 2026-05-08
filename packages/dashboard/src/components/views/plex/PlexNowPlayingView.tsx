@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './Plex.module.css';
 import detailStyles from '../../detail/Detail.module.css';
 
@@ -422,17 +423,17 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
       <audio ref={audioRef} preload="none" />
       {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} />}
 
-      {/* Nav overlay — blurred list covering left third, below clock/weather */}
-      {(navStack.length > 0 || navClosing) && (
+      {/* Nav overlay — portalled to body to escape detail stacking context */}
+      {(navStack.length > 0 || navClosing) && createPortal(
         <div className={`${styles.navOverlay} ${navClosing ? styles.navOverlayClosing : ''}`} onClick={e => e.stopPropagation()}>
           <div className={styles.navHeader} onClick={handleNavBack}>
             <button className={styles.backBtn}>←</button>
-            <span className={styles.navLabel}>{navStack[navStack.length - 1].label}</span>
+            <span className={styles.navLabel}>{navStack[navStack.length - 1]?.label}</span>
           </div>
           <div className={styles.navList}>
             {navLoading ? (
               <div className={styles.trackItem} style={{ opacity: 0.5 }}>Loading…</div>
-            ) : navStack[navStack.length - 1].items.map(item => (
+            ) : navStack[navStack.length - 1]?.items.map(item => (
               <div
                 key={item.ratingKey}
                 className={`${styles.trackItem} ${item.ratingKey === displayItem?.ratingKey ? styles.trackItemActive : ''}`}
@@ -453,7 +454,8 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
               </div>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <div className={styles.content} onClick={e => e.stopPropagation()}>

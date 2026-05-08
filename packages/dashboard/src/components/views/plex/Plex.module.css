@@ -75,7 +75,7 @@
 }
 
 .navOverlay {
-  position: absolute;
+  position: fixed;
   left: 0;
   top: 0;
   width: 33.33vw;
