@@ -28,6 +28,10 @@ export function PhotoSlideshow({ settings, onClose }: Props): React.ReactElement
   const [loading, setLoading] = useState(true);
   const isTransitioning = useRef(false);
   const cycleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const activeIndexRef = useRef(0);
+
+  // Keep ref in sync so timer callbacks always read current index
+  useEffect(() => { activeIndexRef.current = activeIndex; }, [activeIndex]);
 
   const timelineCount = (settings.timelineCount as number) || 5;
   const dir = settings.dir as string | undefined;
@@ -88,19 +92,19 @@ export function PhotoSlideshow({ settings, onClose }: Props): React.ReactElement
     transitionTo(nextIdx);
   }
 
-  function scheduleCycle(): void {
+  function scheduleCycle(photosLength: number): void {
     if (cycleTimer.current) clearTimeout(cycleTimer.current);
-    if (photos.length <= 1) return;
+    if (photosLength <= 1) return;
     cycleTimer.current = setTimeout(() => {
-      const nextIdx = (activeIndex + 1) % photos.length;
+      const nextIdx = (activeIndexRef.current + 1) % photosLength;
       transitionTo(nextIdx);
-      scheduleCycle();
+      // useEffect will reschedule once activeIndex state updates
     }, SLIDE_INTERVAL);
   }
 
   useEffect(() => {
     if (photos.length <= 1) return;
-    scheduleCycle();
+    scheduleCycle(photos.length);
     return () => {
       if (cycleTimer.current) clearTimeout(cycleTimer.current);
     };
@@ -130,10 +134,8 @@ export function PhotoSlideshow({ settings, onClose }: Props): React.ReactElement
     const x = (e.clientX - rect.left) / rect.width;
     if (x < 0.3) {
       goTo(-1);
-      scheduleCycle();
     } else if (x > 0.7) {
       goTo(1);
-      scheduleCycle();
     }
   }
 
@@ -160,7 +162,7 @@ export function PhotoSlideshow({ settings, onClose }: Props): React.ReactElement
           <span
             key={i}
             className={i === activeIndex ? styles.dotActive : styles.dot}
-            onClick={(e) => { e.stopPropagation(); if (i !== activeIndex) { transitionTo(i); scheduleCycle(); } }}
+            onClick={(e) => { e.stopPropagation(); if (i !== activeIndex) transitionTo(i); }}
           />
         ))}
       </div>

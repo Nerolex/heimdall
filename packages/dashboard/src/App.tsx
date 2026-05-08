@@ -182,14 +182,14 @@ export function App(): React.ReactElement {
     // Reset auto-cycle timer
     if (cycleTimer.current) clearTimeout(cycleTimer.current);
 
-    if (zone < 0.08) {
+    if (zone < 0.25) {
       // Left zone: go back in history
       if (viewHistory.current.length > 1) {
         viewHistory.current.pop();
         const prevIdx = viewHistory.current[viewHistory.current.length - 1];
         transitionTo(prevIdx);
       }
-    } else if (zone > 0.92) {
+    } else if (zone > 0.75) {
       // Right zone: go forward
       const nextIdx = nextViewIndex ?? getNextIndex(activeViewIndex);
       // Clear any stale snapshot at the new history position (fresh visit)
