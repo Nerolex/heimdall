@@ -412,11 +412,11 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
       <audio ref={audioRef} preload="none" />
       {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} />}
 
-      {/* Nav overlay — transparent list covering left third, below clock/weather */}
+      {/* Nav overlay — blurred list covering left third, below clock/weather */}
       {navStack.length > 0 && (
         <div className={styles.navOverlay} onClick={e => e.stopPropagation()}>
-          <div className={styles.navHeader}>
-            <button className={styles.backBtn} onClick={handleNavBack}>←</button>
+          <div className={styles.navHeader} onClick={handleNavBack}>
+            <button className={styles.backBtn}>←</button>
             <span className={styles.navLabel}>{navStack[navStack.length - 1].label}</span>
           </div>
           <div className={styles.navList}>
@@ -447,7 +447,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
       )}
 
       <div className={styles.content} onClick={e => e.stopPropagation()}>
-        {thumb && (
+        {!navStack.length && thumb && (
           <img
             src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`}
             alt=""
