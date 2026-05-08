@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import type { DashboardConfig, OverlayMode } from '@heimdall/shared';
 import { normalizeCycleInterval, normalizeOverlayMode, normalizeViewOrder } from '@heimdall/shared';
 import { ViewRenderer } from './components/shared/ViewRenderer';
@@ -79,6 +79,13 @@ export function App(): React.ReactElement {
   const cycleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTransitioning = useRef(false);
   const viewHistory = useRef<number[]>([0]);
+  // Maps history-stack position → saved view state (e.g. which photo was shown)
+  const viewSnapshots = useRef<Map<number, unknown>>(new Map());
+  // Stable callback so views can save their state without causing re-renders
+  const currentHistoryPos = useRef(0);
+  const onActiveViewStateChange = useCallback((state: unknown) => {
+    viewSnapshots.current.set(currentHistoryPos.current, state);
+  }, []);
 
   // Fetch config on mount
   useEffect(() => {
@@ -185,6 +192,8 @@ export function App(): React.ReactElement {
     } else if (zone > 0.92) {
       // Right zone: go forward
       const nextIdx = nextViewIndex ?? getNextIndex(activeViewIndex);
+      // Clear any stale snapshot at the new history position (fresh visit)
+      viewSnapshots.current.delete(viewHistory.current.length);
       viewHistory.current.push(nextIdx);
       transitionTo(nextIdx);
     } else {
@@ -212,6 +221,7 @@ export function App(): React.ReactElement {
     function scheduleCycle(): void {
       cycleTimer.current = setTimeout(() => {
         const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
+        viewSnapshots.current.delete(viewHistory.current.length);
         viewHistory.current.push(nextIdx);
         transitionTo(nextIdx);
         scheduleCycle();
@@ -246,6 +256,14 @@ export function App(): React.ReactElement {
   const hasOverlay = clockVisible || weatherVisible;
   const DetailComponent = detailMode ? getDetailComponent(view.type) : null;
 
+  // Keep historyPos ref in sync for the stable onActiveViewStateChange callback
+  currentHistoryPos.current = viewHistory.current.length - 1;
+  const activeSettings = {
+    ...mergeViewSettings(config!, view),
+    __savedState: viewSnapshots.current.get(currentHistoryPos.current),
+    __onStateChange: onActiveViewStateChange,
+  };
+
   return (
     <div
       onClick={handleNavClick}
@@ -276,7 +294,7 @@ export function App(): React.ReactElement {
           transition: `opacity ${FADE_DURATION}ms ease-in-out`,
         }}
       >
-        <ViewRenderer type={view.type} settings={mergeViewSettings(config!, view)} />
+        <ViewRenderer key={activeViewIndex} type={view.type} settings={activeSettings} />
       </div>
       {/* Preloaded next view (hidden, fetches data in background) */}
       {nextView && (

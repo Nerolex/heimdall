@@ -1,10 +1,12 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import type { PhotoEntry, MemoriesResponse } from '@heimdall/shared';
 import styles from './Photos.module.css';
 
 interface Props {
   settings: Record<string, unknown>;
 }
+
+type MemoryEntry = { label: string; photo: PhotoEntry };
 
 export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
   const [memories, setMemories] = useState<Record<string, PhotoEntry[]>>({});
@@ -14,7 +16,16 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
   const dir = settings.dir as string | undefined;
   const queryParam = dir ? `?dir=${encodeURIComponent(dir)}` : '';
 
+  // Capture savedState and callback once at mount
+  const savedStateRef = useRef(settings.__savedState as MemoryEntry | undefined);
+  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
+
   useEffect(() => {
+    // Skip fetch when restoring saved state (back navigation — instant restore)
+    if (savedStateRef.current) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     async function fetchMemories(): Promise<void> {
       try {
@@ -30,15 +41,21 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
     return () => { cancelled = true; };
   }, [queryParam]);
 
-  // Pick one random memory, stable across re-renders
-  const current = useMemo(() => {
-    const slides: { label: string; photo: PhotoEntry }[] = [];
+  // Restore saved memory or pick randomly — stable once memories are loaded
+  const current = useMemo((): MemoryEntry | null => {
+    if (savedStateRef.current) return savedStateRef.current;
+    const slides: MemoryEntry[] = [];
     for (const [label, photos] of Object.entries(memories)) {
       for (const photo of photos) slides.push({ label, photo });
     }
     if (slides.length === 0) return null;
     return slides[Math.floor(Math.random() * slides.length)];
   }, [memories]);
+
+  // Save state whenever current is determined
+  useEffect(() => {
+    if (current) onStateChangeRef.current?.(current);
+  }, [current]);
 
   if (loading) return <div className={styles.loading}>Loading memories…</div>;
   if (error) return <div className={styles.loading}>Photos unavailable</div>;

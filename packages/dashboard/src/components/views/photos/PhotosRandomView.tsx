@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import type { PhotoEntry } from '@heimdall/shared';
 import styles from './Photos.module.css';
 
@@ -14,12 +14,19 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
   const dir = settings.dir as string | undefined;
   const queryParam = dir ? `?dir=${encodeURIComponent(dir)}` : '';
 
+  // Capture savedState and callback once at mount — refs stay stable across re-renders
+  const savedStateRef = useRef(settings.__savedState as { photo: PhotoEntry } | undefined);
+  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
+
   const fetchPhoto = useCallback(async () => {
     try {
       const res = await fetch(`/api/photos/random${queryParam}`);
       if (!res.ok) throw new Error();
       const data = await res.json();
-      if (data.photo) setPhoto(data.photo);
+      if (data.photo) {
+        setPhoto(data.photo);
+        onStateChangeRef.current?.({ photo: data.photo });
+      }
       setLoading(false);
     } catch {
       setError(true);
@@ -27,7 +34,16 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
     }
   }, [queryParam]);
 
-  useEffect(() => { fetchPhoto(); }, [fetchPhoto]);
+  useEffect(() => {
+    // Restore previously shown photo when navigating back
+    if (savedStateRef.current?.photo) {
+      setPhoto(savedStateRef.current.photo);
+      onStateChangeRef.current?.({ photo: savedStateRef.current.photo });
+      setLoading(false);
+      return;
+    }
+    fetchPhoto();
+  }, [fetchPhoto]);
 
   if (loading) return <div className={styles.loading}>Loading photo…</div>;
   if (error || !photo) return <div className={styles.loading}>{error ? 'Photos unavailable' : 'No photos found'}</div>;
