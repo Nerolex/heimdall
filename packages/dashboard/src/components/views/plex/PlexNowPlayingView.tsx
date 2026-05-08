@@ -224,7 +224,59 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
     }, 210);
   }
   const [currentTrack, setCurrentTrack] = useState<PlexSession | null>(null);
+  const [repeatMode, setRepeatMode] = useState<0 | 1 | 2>(0); // 0=off, 1=all, 2=one
+  const [shuffleOn, setShuffleOn] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Sync favorite state from current track
+  useEffect(() => {
+    const item = currentTrack || session || history[historyIndex] || null;
+    setIsFavorited((item as PlexSession & { userRating?: number } | null)?.userRating === 10);
+  }, [currentTrack, session, historyIndex, history]);
+
+  function playerBody(extra?: Record<string, unknown>) {
+    const player = session?.Player;
+    return {
+      machineIdentifier: player?.machineIdentifier,
+      playerAddress: player?.address,
+      playerPort: player?.port,
+      playerLocal: player?.local,
+      ...extra,
+    };
+  }
+
+  async function handleRepeat(): Promise<void> {
+    const next = ((repeatMode + 1) % 3) as 0 | 1 | 2;
+    setRepeatMode(next);
+    await fetch('/api/plex/playback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(playerBody({ command: 'setRepeat', repeat: next })),
+    }).catch(() => {});
+  }
+
+  async function handleShuffle(): Promise<void> {
+    const next = !shuffleOn;
+    setShuffleOn(next);
+    await fetch('/api/plex/playback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(playerBody({ command: 'setShuffle', shuffle: next ? 1 : 0 })),
+    }).catch(() => {});
+  }
+
+  async function handleFavorite(): Promise<void> {
+    const item = currentTrack || session || history[historyIndex] || null;
+    if (!item) return;
+    const next = !isFavorited;
+    setIsFavorited(next);
+    await fetch('/api/plex/rate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ratingKey: item.ratingKey, rating: next ? 10 : 0 }),
+    }).catch(() => {});
+  }
 
   // Track local audio progress
   useEffect(() => {
@@ -491,6 +543,26 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
               {localPlaying ? '⏸' : '▶'}
             </button>
             <button className={styles.controlBtn} onClick={() => handleSkip(1)}>⏭</button>
+          </div>
+
+          <div className={styles.secondaryControls}>
+            <button
+              className={`${styles.controlBtn} ${isFavorited ? styles.controlBtnActive : ''}`}
+              onClick={handleFavorite}
+              title="Favorite"
+            >♥</button>
+            <button
+              className={`${styles.controlBtn} ${shuffleOn ? styles.controlBtnActive : styles.controlBtnDim}`}
+              onClick={handleShuffle}
+              title="Shuffle"
+            >⇄</button>
+            <button
+              className={`${styles.controlBtn} ${repeatMode > 0 ? styles.controlBtnActive : styles.controlBtnDim}`}
+              onClick={handleRepeat}
+              title="Repeat"
+            >
+              {repeatMode === 2 ? '🔂' : '🔁'}
+            </button>
           </div>
         </div>
       </div>

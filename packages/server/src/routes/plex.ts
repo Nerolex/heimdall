@@ -41,14 +41,14 @@ export async function plexRoute(fastify: FastifyInstance): Promise<void> {
   });
 
   // POST /api/plex/playback — control playback (play, pause, skipNext, skipPrevious, stop)
-  fastify.post<{ Body: { command: string; machineIdentifier?: string; playerAddress?: string; playerPort?: number; playerLocal?: boolean } }>(
+  fastify.post<{ Body: { command: string; machineIdentifier?: string; playerAddress?: string; playerPort?: number; playerLocal?: boolean; shuffle?: number; repeat?: number } }>(
     '/api/plex/playback',
     async (request, reply) => {
       const plex = getPlexConfig();
       if (!plex) return reply.status(503).send({ error: 'Plex not configured' });
 
-      const { command, machineIdentifier, playerAddress, playerPort, playerLocal } = request.body;
-      const validCommands = ['play', 'pause', 'stop', 'skipNext', 'skipPrevious'];
+      const { command, machineIdentifier, playerAddress, playerPort, playerLocal, shuffle, repeat } = request.body;
+      const validCommands = ['play', 'pause', 'stop', 'skipNext', 'skipPrevious', 'setShuffle', 'setRepeat'];
       if (!validCommands.includes(command)) {
         return reply.status(400).send({ error: `Invalid command. Valid: ${validCommands.join(', ')}` });
       }
@@ -61,6 +61,8 @@ export async function plexRoute(fastify: FastifyInstance): Promise<void> {
           type: 'music',
           'X-Plex-Client-Identifier': 'heimdall-dashboard',
         });
+        if (shuffle !== undefined) params.set('shuffle', String(shuffle));
+        if (repeat !== undefined) params.set('repeat', String(repeat));
         try {
           const res = await fetch(`${directUrl}?${params}`, {
             method: 'GET',
@@ -89,6 +91,8 @@ export async function plexRoute(fastify: FastifyInstance): Promise<void> {
             'X-Plex-Client-Identifier': 'heimdall-dashboard',
             'X-Plex-Target-Client-Identifier': machineIdentifier,
           });
+          if (shuffle !== undefined) params.set('shuffle', String(shuffle));
+          if (repeat !== undefined) params.set('repeat', String(repeat));
           const res = await fetch(`${proxyUrl}?${params}`, {
             method: 'GET',
             signal: AbortSignal.timeout(5000),
@@ -110,6 +114,8 @@ export async function plexRoute(fastify: FastifyInstance): Promise<void> {
           'X-Plex-Client-Identifier': 'heimdall-dashboard',
           'X-Plex-Target-Client-Identifier': machineIdentifier,
         });
+        if (shuffle !== undefined) params.set('shuffle', String(shuffle));
+        if (repeat !== undefined) params.set('repeat', String(repeat));
         try {
           const res = await fetch(`${pmsProxyUrl}?${params}`, {
             method: 'GET',
@@ -225,5 +231,16 @@ export async function plexRoute(fastify: FastifyInstance): Promise<void> {
     const res = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!res.ok) return reply.status(res.status).send({ error: 'History fetch failed' });
     return res.json();
+  });
+
+  // POST /api/plex/rate — set user rating (10 = favorite, 0 = unrate)
+  fastify.post<{ Body: { ratingKey: string; rating: number } }>('/api/plex/rate', async (request, reply) => {
+    const plex = getPlexConfig();
+    if (!plex) return reply.status(503).send({ error: 'Plex not configured' });
+    const { ratingKey, rating } = request.body;
+    const url = `${plex.url}/:/rate?key=${encodeURIComponent(ratingKey)}&identifier=com.plexapp.plugins.library&rating=${rating}&X-Plex-Token=${plex.token}`;
+    const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
+    if (!res.ok) return reply.status(res.status).send({ error: 'Rate failed' });
+    return { success: true, ratingKey, rating };
   });
 }
