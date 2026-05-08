@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { Heart, Shuffle, Repeat, Repeat1 } from 'lucide-react';
 import styles from './Plex.module.css';
 import detailStyles from '../../detail/Detail.module.css';
 
@@ -541,16 +542,19 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
             <button
               className={`${styles.glyphBtn} ${isFavorited ? styles.glyphBtnActive : ''}`}
               onClick={handleFavorite}
-            >{isFavorited ? '♥' : '♡'}</button>
+            ><Heart size="1em" fill={isFavorited ? 'currentColor' : 'none'} strokeWidth={1.5} /></button>
             <span className={styles.glyphRight}>
               <button
                 className={`${styles.glyphBtn} ${shuffleOn ? styles.glyphBtnActive : styles.glyphBtnDim}`}
                 onClick={handleShuffle}
-              >⇄</button>
+              ><Shuffle size="1em" strokeWidth={1.5} /></button>
               <button
                 className={`${styles.glyphBtn} ${repeatMode > 0 ? styles.glyphBtnActive : styles.glyphBtnDim}`}
                 onClick={handleRepeat}
-              >{repeatMode === 2 ? '↺¹' : '↻'}</button>
+              >{repeatMode === 2
+                ? <Repeat1 size="1em" strokeWidth={1.5} />
+                : <Repeat size="1em" strokeWidth={1.5} />
+              }</button>
             </span>
           </div>
 
