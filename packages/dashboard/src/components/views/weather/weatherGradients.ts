@@ -63,7 +63,13 @@ function conditionKey(conditionId: number): string {
   return 'atmosphere';
 }
 
-/** Get background gradient CSS for a given weather condition + sun phase */
+/** Returns true for conditions/phases where background is light enough to need dark text */
+export function isLightBackground(conditionId: number, sunPhase: SunPhase): boolean {
+  if (sunPhase === 'night' || sunPhase === 'golden') return false;
+  const key = conditionKey(conditionId);
+  // Daytime overcast and snow are the lightest backgrounds
+  return key === 'overcast' || key === 'snow' || key === 'fewClouds';
+}
 export function getGradient(conditionId: number, sunPhase: SunPhase): string {
   const key = conditionKey(conditionId);
 
