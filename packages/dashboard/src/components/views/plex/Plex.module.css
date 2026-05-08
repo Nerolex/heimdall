@@ -318,25 +318,44 @@
   background: rgba(229, 160, 13, 0.5);
 }
 
-.secondaryControls {
+.glyphRow {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 1vh;
+  justify-content: space-between;
+  margin-top: 0.8vh;
 }
 
-.controlBtnActive {
+.glyphRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.glyphBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: clamp(14px, 1.8vw, 20px);
+  cursor: pointer;
+  padding: 4px 6px;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+
+.glyphBtn:active {
+  color: #fff;
+}
+
+.glyphBtnActive {
   color: #e5a00d;
-  border-color: rgba(229, 160, 13, 0.5);
-  background: rgba(229, 160, 13, 0.15);
 }
 
-.controlBtnDim {
-  opacity: 0.35;
+.glyphBtnDim {
+  opacity: 0.3;
 }
 
-.repeatOff {
+.secondaryControls {
   display: none;
 }
 

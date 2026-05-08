@@ -537,32 +537,29 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
             <span className={styles.time}>{formatTime(durationMs)}</span>
           </div>
 
+          <div className={styles.glyphRow}>
+            <button
+              className={`${styles.glyphBtn} ${isFavorited ? styles.glyphBtnActive : ''}`}
+              onClick={handleFavorite}
+            >{isFavorited ? '♥' : '♡'}</button>
+            <span className={styles.glyphRight}>
+              <button
+                className={`${styles.glyphBtn} ${shuffleOn ? styles.glyphBtnActive : styles.glyphBtnDim}`}
+                onClick={handleShuffle}
+              >⇄</button>
+              <button
+                className={`${styles.glyphBtn} ${repeatMode > 0 ? styles.glyphBtnActive : styles.glyphBtnDim}`}
+                onClick={handleRepeat}
+              >{repeatMode === 2 ? '↺¹' : '↻'}</button>
+            </span>
+          </div>
+
           <div className={styles.controls}>
             <button className={styles.controlBtn} onClick={() => handleSkip(-1)}>⏮</button>
             <button className={`${styles.controlBtnLarge} ${localPlaying ? styles.controlBtnPause : styles.controlBtnPlay}`} onClick={handlePlay}>
               {localPlaying ? '⏸' : '▶'}
             </button>
             <button className={styles.controlBtn} onClick={() => handleSkip(1)}>⏭</button>
-          </div>
-
-          <div className={styles.secondaryControls}>
-            <button
-              className={`${styles.controlBtn} ${isFavorited ? styles.controlBtnActive : ''}`}
-              onClick={handleFavorite}
-              title="Favorite"
-            >♥</button>
-            <button
-              className={`${styles.controlBtn} ${shuffleOn ? styles.controlBtnActive : styles.controlBtnDim}`}
-              onClick={handleShuffle}
-              title="Shuffle"
-            >⇄</button>
-            <button
-              className={`${styles.controlBtn} ${repeatMode > 0 ? styles.controlBtnActive : styles.controlBtnDim}`}
-              onClick={handleRepeat}
-              title="Repeat"
-            >
-              {repeatMode === 2 ? '🔂' : '🔁'}
-            </button>
           </div>
         </div>
       </div>
