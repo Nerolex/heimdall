@@ -1,0 +1,1 @@
+export { GameTrailersView } from './GameTrailersView';
