@@ -41,46 +41,60 @@
 }
 
 .tracklist {
-  width: clamp(120px, 20vw, 280px);
-  max-height: clamp(120px, 20vw, 280px);
+  width: clamp(220px, 40vw, 420px);
+  max-height: clamp(300px, 70vh, 560px);
   overflow-y: auto;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 1vw;
-  padding: 0.5vw 0;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  -webkit-overflow-scrolling: touch;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  padding: 8px 0;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
 .trackItem {
   display: flex;
   align-items: center;
-  gap: 0.6vw;
-  padding: 0.4vw 1vw;
+  gap: 12px;
+  padding: 12px 16px;
+  min-height: 44px;
   cursor: pointer;
-  font-size: clamp(11px, 1.4vw, 15px);
-  color: rgba(255, 255, 255, 0.7);
+  font-size: clamp(13px, 1.8vw, 16px);
+  color: rgba(255, 255, 255, 0.8);
   white-space: nowrap;
   overflow: hidden;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
 }
 
-.trackItem:hover {
-  background: rgba(255, 255, 255, 0.1);
+.trackItem:active {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .trackItemActive {
   color: #e5a00d;
   font-weight: 600;
+  background: rgba(229, 160, 13, 0.1);
 }
 
 .trackIndex {
-  min-width: 1.5em;
+  min-width: 1.8em;
   text-align: right;
   opacity: 0.5;
+  font-size: 0.9em;
 }
 
 .trackTitle {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.albumThumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .info {
@@ -119,16 +133,26 @@
 .progressContainer {
   display: flex;
   align-items: center;
-  gap: 1.5vw;
+  gap: 12px;
   margin-top: 1.5vh;
 }
 
 .progressBar {
   flex: 1;
-  height: clamp(4px, 0.6vw, 8px);
+  height: 8px;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
   overflow: hidden;
+  position: relative;
+}
+
+.progressBar::before {
+  content: '';
+  position: absolute;
+  top: -18px;
+  bottom: -18px;
+  left: 0;
+  right: 0;
 }
 
 .progressFill {
@@ -138,16 +162,17 @@
 }
 
 .time {
-  font-size: clamp(11px, 1.4vw, 15px);
+  font-size: clamp(12px, 1.6vw, 16px);
   color: rgba(255, 255, 255, 0.5);
   font-variant-numeric: tabular-nums;
-  min-width: 4vw;
+  min-width: 3.5em;
 }
 
 .controls {
   display: flex;
   align-items: center;
-  gap: 2vw;
+  justify-content: center;
+  gap: 16px;
   margin-top: 2vh;
 }
 
@@ -155,36 +180,37 @@
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: #fff;
-  font-size: clamp(16px, 2.5vw, 28px);
-  width: clamp(40px, 5vw, 56px);
-  height: clamp(40px, 5vw, 56px);
+  font-size: clamp(18px, 3vw, 30px);
+  width: clamp(48px, 7vw, 64px);
+  height: clamp(48px, 7vw, 64px);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
   line-height: 1;
   text-align: center;
   padding: 0;
   margin: 0;
 }
 
-.controlBtn:hover {
-  background: rgba(255, 255, 255, 0.2);
+.controlBtn:active {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .controlBtnLarge {
   composes: controlBtn;
-  width: clamp(52px, 7vw, 72px);
-  height: clamp(52px, 7vw, 72px);
-  font-size: clamp(20px, 3.5vw, 36px);
+  width: clamp(60px, 9vw, 80px);
+  height: clamp(60px, 9vw, 80px);
+  font-size: clamp(24px, 4vw, 38px);
   background: rgba(229, 160, 13, 0.3);
   border-color: rgba(229, 160, 13, 0.5);
   padding: 2px 0 0 3px;
 }
 
-.controlBtnLarge:hover {
+.controlBtnLarge:active {
   background: rgba(229, 160, 13, 0.5);
 }
 

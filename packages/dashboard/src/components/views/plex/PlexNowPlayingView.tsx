@@ -406,6 +406,13 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
                 className={styles.trackItem}
                 onClick={(e) => { e.stopPropagation(); handleAlbumSelect(album); }}
               >
+                {album.thumb && (
+                  <img
+                    src={`/api/plex/thumb?path=${encodeURIComponent(album.thumb)}`}
+                    alt=""
+                    className={styles.albumThumb}
+                  />
+                )}
                 <span className={styles.trackTitle}>{album.title}</span>
               </div>
             ))}
@@ -441,7 +448,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
               {subtitle}
             </div>
           )}
-          {localPlaying && <div className={styles.playerName}>🔊 Playing here</div>}
+          {/* audio indicator handled by controls */}
 
           <div className={styles.progressContainer}>
             <span className={styles.time}>{formatTime(progressMs)}</span>
