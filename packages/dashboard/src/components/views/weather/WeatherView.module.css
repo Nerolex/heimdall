@@ -23,12 +23,12 @@
 .content {
   position: relative;
   z-index: 1;
-  font-family: -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  font-family: inherit;
 }
 
 .temperature {
   font-size: 14vw;
-  font-weight: 400;
+  font-weight: 200;
   line-height: 1;
   letter-spacing: -0.02em;
 }
