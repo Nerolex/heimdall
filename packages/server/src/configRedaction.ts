@@ -16,21 +16,21 @@ export function redactConfigForClient(config: DashboardConfig): DashboardConfig 
     apiKey: undefined,
   }) : undefined;
   const lastfm = cfg.lastfm ? stripUndefined({
-    ...(cfg.lastfm as Record<string, unknown>),
+    ...cfg.lastfm,
     apiKey: undefined,
   }) : undefined;
   const steam = cfg.steam ? stripUndefined({
-    ...(cfg.steam as Record<string, unknown>),
+    ...cfg.steam,
     apiKey: undefined,
   }) : undefined;
   const retro = cfg.retro ? stripUndefined({
-    ...(cfg.retro as Record<string, unknown>),
+    ...cfg.retro,
     apiKey: undefined,
     igdbClientSecret: undefined,
     sgdbApiKey: undefined,
   }) : undefined;
   const plex = cfg.plex ? stripUndefined({
-    ...(cfg.plex as Record<string, unknown>),
+    ...cfg.plex,
     token: undefined,
   }) : undefined;
 
