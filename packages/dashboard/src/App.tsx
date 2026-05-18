@@ -87,6 +87,18 @@ export function App(): React.ReactElement {
     viewSnapshots.current.set(currentHistoryPos.current, state);
   }, []);
 
+  // Called by views that have no content to show (requires skipIfEmpty: true on the view config)
+  const onActiveViewEmpty = useCallback(() => {
+    if (!config) return;
+    const view = config.views[activeViewIndexRef.current];
+    if (!view?.skipIfEmpty) return;
+    if (cycleTimer.current) clearTimeout(cycleTimer.current);
+    const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
+    viewSnapshots.current.delete(viewHistory.current.length);
+    viewHistory.current.push(nextIdx);
+    transitionTo(nextIdx);
+  }, [config]);
+
   // Fetch config on mount
   useEffect(() => {
     fetch('/api/config')
@@ -258,6 +270,7 @@ export function App(): React.ReactElement {
     ...mergeViewSettings(config!, view),
     __savedState: viewSnapshots.current.get(currentHistoryPos.current),
     __onStateChange: onActiveViewStateChange,
+    __onEmpty: onActiveViewEmpty,
   };
 
   return (

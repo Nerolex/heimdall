@@ -19,6 +19,7 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
   // Capture savedState and callback once at mount
   const savedStateRef = useRef(settings.__savedState as MemoryEntry | undefined);
   const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
+  const onEmptyRef = useRef(settings.__onEmpty as (() => void) | undefined);
 
   useEffect(() => {
     // Skip fetch when restoring saved state (back navigation — instant restore)
@@ -61,6 +62,7 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
   if (error) return <div className={styles.loading}>Photos unavailable</div>;
 
   if (!current) {
+    onEmptyRef.current?.();
     const dateStr = new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
     return (
       <div className={styles.emptyContainer}>

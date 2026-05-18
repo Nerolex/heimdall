@@ -45,6 +45,12 @@ export interface ViewEntry {
   overlay?: OverlayMode;
   /** How often this view appears in rotation. Defaults to "normal". */
   frequency?: ViewFrequency;
+  /**
+   * When true, the view is skipped automatically if it has no content
+   * (e.g. photos-memories with no memories today, calendar-day with no events).
+   * The view must call settings.__onEmpty() to signal it has nothing to show.
+   */
+  skipIfEmpty?: boolean;
 }
 
 /** Top-level dashboard configuration */

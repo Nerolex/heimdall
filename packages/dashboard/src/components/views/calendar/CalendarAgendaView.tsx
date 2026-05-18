@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import type { CalendarSource } from '@heimdall/shared';
 import { useCalendarEvents } from '../../../hooks/useCalendarEvents';
 import { formatDate, formatTime, groupByDay } from './calendarUtils';
@@ -11,6 +11,7 @@ interface Props {
 export function CalendarAgendaView({ settings }: Props): React.ReactElement {
   const sources = (settings.sources || []) as CalendarSource[];
   const daysAhead = (settings.daysAhead as number) || 7;
+  const onEmptyRef = useRef((settings.__onEmpty as (() => void) | undefined));
   const { events, loading, error } = useCalendarEvents(sources, daysAhead);
 
   if (loading || error) {
@@ -20,6 +21,10 @@ export function CalendarAgendaView({ settings }: Props): React.ReactElement {
   const grouped = groupByDay(events);
   const maxItems = window.innerHeight > 800 ? 8 : window.innerHeight > 500 ? 6 : 4;
   const todayStr = new Date().toDateString();
+
+  if (events.length === 0) {
+    onEmptyRef.current?.();
+  }
 
   // Calculate days from today for proximity scaling
   function daysFromToday(dateStr: string): number {

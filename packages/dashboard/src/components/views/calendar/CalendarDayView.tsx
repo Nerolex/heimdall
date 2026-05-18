@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import type { CalendarSource } from '@heimdall/shared';
 import { useCalendarEvents } from '../../../hooks/useCalendarEvents';
 import { getHourPosition } from './calendarUtils';
@@ -19,6 +19,7 @@ function formatHour(hour: number): string {
 
 export function CalendarDayView({ settings }: Props): React.ReactElement {
   const sources = (settings.sources || []) as CalendarSource[];
+  const onEmptyRef = useRef((settings.__onEmpty as (() => void) | undefined));
   const { events, loading, error } = useCalendarEvents(sources, 1);
   const quote = useMemo(() => getRandomQuote(), []);
 
@@ -34,6 +35,10 @@ export function CalendarDayView({ settings }: Props): React.ReactElement {
 
   if (loading || error) {
     return <div className={styles.loading}>{error ? 'Calendar unavailable' : 'Loading calendar…'}</div>;
+  }
+
+  if (isEmpty) {
+    onEmptyRef.current?.();
   }
 
   return (
