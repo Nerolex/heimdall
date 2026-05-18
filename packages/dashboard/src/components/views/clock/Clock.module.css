@@ -14,6 +14,7 @@
   height: 100%;
   object-fit: contain;
   z-index: 1;
+  image-orientation: from-image;
 }
 
 .bgBlurred {
@@ -26,6 +27,7 @@
   filter: blur(20px) brightness(0.7);
   transform: scale(1.05);
   z-index: 0;
+  image-orientation: from-image;
 }
 
 .overlay {

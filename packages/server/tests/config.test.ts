@@ -43,6 +43,59 @@ describe('loadConfig', () => {
     expect(result.config!.cycleInterval).toBe(30);
   });
 
+  it('loads grouped v2 config and maps provider sections to runtime shape', () => {
+    const groupedConfig = JSON.stringify({
+      schemaVersion: 2,
+      app: {
+        cycleInterval: 25,
+        viewOrder: 'random',
+        keepAwake: 'auto',
+        showFullscreenButton: true,
+      },
+      providers: {
+        weather: {
+          apiKey: 'weather-key',
+          city: 'Dortmund',
+          units: 'metric',
+        },
+        calendar: {
+          sources: [{ url: 'https://calendar.example.com/feed.ics', name: 'Main' }],
+        },
+        music: {
+          lastfm: { apiKey: 'lastfm-key', user: 'listener' },
+        },
+        gaming: {
+          retro: { apiUser: 'ra-api', apiKey: 'ra-key', user: 'ra-user' },
+          steam: { apiKey: 'steam-key', steamId: 'steam-id' },
+          igdb: { clientId: 'igdb-id', clientSecret: 'igdb-secret' },
+          sgdb: { apiKey: 'sgdb-key' },
+        },
+        plex: { url: 'http://127.0.0.1:32400', token: 'plex-token' },
+      },
+      views: [{ type: 'weather' }],
+    });
+    vi.mocked(fs.existsSync).mockReturnValue(true);
+    vi.mocked(fs.readFileSync).mockReturnValue(groupedConfig);
+
+    const result = loadConfig('/fake/config.json');
+    expect(result.error).toBeUndefined();
+    expect(result.config).toBeDefined();
+    expect(result.config!.schemaVersion).toBe(2);
+    expect(result.config!.cycleInterval).toBe(25);
+    expect(result.config!.viewOrder).toBe('random');
+    expect(result.config!.keepAwake).toBe('auto');
+    expect(result.config!.showFullscreenButton).toBe(true);
+    expect(result.config!.weather?.apiKey).toBe('weather-key');
+    expect(result.config!.calendar?.sources[0]?.name).toBe('Main');
+    expect(result.config!.lastfm?.apiKey).toBe('lastfm-key');
+    expect(result.config!.steam?.steamId).toBe('steam-id');
+    expect(result.config!.retro?.apiUser).toBe('ra-api');
+    expect(result.config!.retro?.igdbClientId).toBe('igdb-id');
+    expect(result.config!.retro?.igdbClientSecret).toBe('igdb-secret');
+    expect(result.config!.retro?.sgdbApiKey).toBe('sgdb-key');
+    expect(result.config!.plex?.token).toBe('plex-token');
+  });
+
   it('returns config_not_found error when file does not exist', () => {
     vi.mocked(fs.existsSync).mockReturnValue(false);
 

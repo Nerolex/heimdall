@@ -33,36 +33,53 @@ Create a `config.json` in the project root:
 
 ```json
 {
-  "cycleInterval": 15,
-  "viewOrder": "random",
-  "showFullscreenButton": true,
-  "keepAwake": "auto",
-  "weather": {
-    "apiKey": "<OpenWeatherMap API key>",
-    "city": "Berlin",
-    "units": "metric",
-    "refreshInterval": 15
+  "schemaVersion": 2,
+  "app": {
+    "cycleInterval": 15,
+    "viewOrder": "random",
+    "showFullscreenButton": true,
+    "keepAwake": "auto"
   },
-  "calendar": {
-    "sources": [
-      { "url": "https://calendar.example.com/feed.ics", "name": "Main", "color": "#4a90d9" }
-    ]
-  },
-  "lastfm": {
-    "apiKey": "<Last.fm API key>",
-    "user": "<Last.fm username>"
-  },
-  "retro": {
-    "apiUser": "<RetroAchievements username>",
-    "apiKey": "<RetroAchievements API key>",
-    "user": "<RetroAchievements username>",
-    "igdbClientId": "<Twitch/IGDB client ID>",
-    "igdbClientSecret": "<Twitch/IGDB client secret>",
-    "sgdbApiKey": "<SteamGridDB API key>"
-  },
-  "steam": {
-    "apiKey": "<Steam Web API key>",
-    "steamId": "<Steam64 ID>"
+  "providers": {
+    "weather": {
+      "apiKey": "<OpenWeatherMap API key>",
+      "city": "Berlin",
+      "units": "metric",
+      "refreshInterval": 15
+    },
+    "calendar": {
+      "sources": [
+        { "url": "https://calendar.example.com/feed.ics", "name": "Main", "color": "#4a90d9" }
+      ]
+    },
+    "music": {
+      "lastfm": {
+        "apiKey": "<Last.fm API key>",
+        "user": "<Last.fm username>"
+      }
+    },
+    "gaming": {
+      "retro": {
+        "apiUser": "<RetroAchievements username>",
+        "apiKey": "<RetroAchievements API key>",
+        "user": "<RetroAchievements username>"
+      },
+      "steam": {
+        "apiKey": "<Steam Web API key>",
+        "steamId": "<Steam64 ID>"
+      },
+      "igdb": {
+        "clientId": "<Twitch/IGDB client ID>",
+        "clientSecret": "<Twitch/IGDB client secret>"
+      },
+      "sgdb": {
+        "apiKey": "<SteamGridDB API key>"
+      }
+    },
+    "plex": {
+      "url": "http://127.0.0.1:32400",
+      "token": "<Plex token>"
+    }
   },
   "views": [
     { "type": "clock", "overlay": "none", "frequency": "high" },
@@ -73,6 +90,8 @@ Create a `config.json` in the project root:
   ]
 }
 ```
+
+`schemaVersion: 2` is the recommended grouped format. Legacy top-level provider keys (`weather`, `calendar`, `lastfm`, `retro`, `steam`, `plex`) are still supported for backward compatibility.
 
 ### Security notes
 
@@ -89,10 +108,10 @@ This strips sensitive keys from `/api/config` responses (`weather.apiKey`, `last
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `cycleInterval` | number | `30` | Seconds between view transitions |
-| `viewOrder` | `"sequential"` \| `"random"` | `"sequential"` | View cycling order |
-| `showFullscreenButton` | boolean | `false` | Show fullscreen toggle in overlay |
-| `keepAwake` | `true` \| `false` \| `"auto"` | `"auto"` | Keep browser awake (auto-detects Silk/Echo Show) |
+| `app.cycleInterval` | number | `30` | Seconds between view transitions |
+| `app.viewOrder` | `"sequential"` \| `"random"` | `"sequential"` | View cycling order |
+| `app.showFullscreenButton` | boolean | `false` | Show fullscreen toggle in overlay |
+| `app.keepAwake` | `true` \| `false` \| `"auto"` | `"auto"` | Keep browser awake (auto-detects Silk/Echo Show) |
 
 ## Available Views
 
@@ -108,13 +127,13 @@ Large readable clock with a random photo background, current weather, and date.
 
 Full-screen weather display with current conditions, temperature, and animated icon.
 
-- Requires `weather` config section
+- Requires `providers.weather` config section
 
 ### Calendar (`calendar-day`, `calendar-week`, `calendar-month`, `calendar-agenda`)
 
 Four calendar layouts pulling events from iCal/ICS sources.
 
-- Requires `calendar` config section with `sources` array
+- Requires `providers.calendar` config section with `sources` array
 
 ### Photos (`photos-random`, `photos-memories`)
 
@@ -127,7 +146,7 @@ Photos are served from the `photos/` directory. Supports EXIF date extraction.
 
 Shows currently playing track (or random recent track) from Last.fm with album art background.
 
-- Requires `lastfm` config section
+- Requires `providers.music.lastfm` config section
 
 ### Gaming (`gaming-recent`, `gaming-showcase`, `gaming-achievement`, `gaming-now`)
 
@@ -138,13 +157,13 @@ Unified views merging Steam + RetroAchievements data:
 - **gaming-achievement** — Random achievement with game background and badge icon
 - **gaming-now** — Currently playing game (live)
 
-Requires `retro` and/or `steam` config sections.
+Requires `providers.gaming.retro` and/or `providers.gaming.steam` config sections.
 
 ### Retro (`retro-recent`, `retro-playing`, `retro-profile`, `retro-showcase`)
 
 RetroAchievements-only views (legacy — prefer unified `gaming-*` views):
 
-- Requires `retro` config section
+- Requires `providers.gaming.retro` config section
 
 ## View Options
 

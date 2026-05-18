@@ -32,6 +32,42 @@ export interface WeatherConfig {
   refreshInterval?: number;
 }
 
+/** Last.fm API configuration */
+export interface LastfmConfig {
+  apiKey: string;
+  user: string;
+}
+
+/** Steam Web API configuration */
+export interface SteamConfig {
+  apiKey: string;
+  steamId: string;
+}
+
+/** RetroAchievements and related gaming API configuration */
+export interface RetroConfig {
+  apiUser: string;
+  apiKey: string;
+  user: string;
+  igdbClientId?: string;
+  igdbClientSecret?: string;
+  sgdbApiKey?: string;
+}
+
+/** Calendar provider configuration */
+export interface CalendarConfig {
+  sources: CalendarSource[];
+}
+
+/** Plex server configuration */
+export interface PlexConfig {
+  url: string;
+  token: string;
+}
+
+/** Keep-awake mode for kiosk devices */
+export type KeepAwakeMode = boolean | 'auto';
+
 /** View frequency — how often a view appears relative to others */
 export type ViewFrequency = 'high' | 'normal' | 'low';
 
@@ -55,18 +91,30 @@ export interface ViewEntry {
 
 /** Top-level dashboard configuration */
 export interface DashboardConfig {
+  /** Config schema version (2 for grouped config format) */
+  schemaVersion?: number;
   /** Seconds between view transitions. Defaults to 30. Must be > 0. */
   cycleInterval?: number;
   /** View cycling order. Defaults to "sequential". */
   viewOrder?: ViewOrder;
-  /** Ordered list of views to display */
-  views: ViewEntry[];
-  /** Weather configuration (required for weather overlay) */
-  weather?: WeatherConfig;
+  /** Keep browser awake to avoid kiosk sleep */
+  keepAwake?: KeepAwakeMode;
   /** Show fullscreen toggle button in overlay */
   showFullscreenButton?: boolean;
+  /** Ordered list of views to display */
+  views: ViewEntry[];
+  /** Weather provider configuration */
+  weather?: WeatherConfig;
+  /** Calendar provider configuration */
+  calendar?: CalendarConfig;
+  /** Last.fm provider configuration */
+  lastfm?: LastfmConfig;
+  /** RetroAchievements / gaming provider configuration */
+  retro?: RetroConfig;
+  /** Steam provider configuration */
+  steam?: SteamConfig;
   /** Plex server configuration */
-  plex?: { url: string; token: string };
+  plex?: PlexConfig;
 }
 
 /** A calendar source (iCal URL) */

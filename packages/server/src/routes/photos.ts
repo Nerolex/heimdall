@@ -11,12 +11,20 @@ const SUPPORTED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic',
 // Cache directory for converted HEIC files
 const CACHE_DIR = path.join(process.env.CACHE_DIR || '/tmp', 'heimdall-photo-cache');
 // Bump this version to invalidate stale cached HEIC conversions
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
+
+function cacheKey(filePath: string, suffix: string): string {
+  const stat = fs.statSync(filePath);
+  return crypto
+    .createHash('md5')
+    .update(`${filePath}:${stat.mtimeMs}:${suffix}`)
+    .digest('hex');
+}
 
 /** Convert HEIC/HEIF to JPEG, returning the JPEG buffer. Uses cache. */
 async function convertHeicToJpeg(filePath: string): Promise<Buffer> {
-  const hash = crypto.createHash('md5').update(filePath).digest('hex');
+  const hash = cacheKey(filePath, 'heic-jpeg');
   const cachedPath = path.join(CACHE_DIR, `${CACHE_VERSION}-${hash}.jpg`);
 
   // Return cached conversion if available
@@ -44,6 +52,62 @@ async function convertHeicToJpeg(filePath: string): Promise<Buffer> {
   } catch {
     throw new Error(`Cannot convert HEIC file: ${filePath}`);
   }
+}
+
+type OutputFormat = {
+  format: 'jpeg' | 'png' | 'webp';
+  contentType: string;
+  ext: string;
+};
+
+function outputFormatFor(ext: string): OutputFormat {
+  if (ext === '.png') {
+    return { format: 'png', contentType: 'image/png', ext: 'png' };
+  }
+  if (ext === '.webp') {
+    return { format: 'webp', contentType: 'image/webp', ext: 'webp' };
+  }
+  return { format: 'jpeg', contentType: 'image/jpeg', ext: 'jpg' };
+}
+
+/**
+ * Return an auto-oriented image buffer when orientation normalization is needed.
+ * Returns null when raw streaming is safe.
+ */
+async function normalizeOrientationIfNeeded(filePath: string, ext: string): Promise<{ buffer: Buffer; contentType: string } | null> {
+  if (ext === '.heic' || ext === '.heif') {
+    return { buffer: await convertHeicToJpeg(filePath), contentType: 'image/jpeg' };
+  }
+
+  let orientation: number | undefined;
+  try {
+    orientation = (await sharp(filePath).metadata()).orientation;
+  } catch {
+    return null;
+  }
+
+  if (!orientation || orientation === 1) {
+    return null;
+  }
+
+  const output = outputFormatFor(ext);
+  const hash = cacheKey(filePath, `auto-orient-${output.ext}`);
+  const cachedPath = path.join(CACHE_DIR, `${CACHE_VERSION}-${hash}.${output.ext}`);
+  if (fs.existsSync(cachedPath)) {
+    return { buffer: fs.readFileSync(cachedPath), contentType: output.contentType };
+  }
+
+  const pipeline = sharp(filePath).rotate();
+  let buffer: Buffer;
+  if (output.format === 'jpeg') {
+    buffer = await pipeline.jpeg({ quality: 90 }).toBuffer();
+  } else if (output.format === 'png') {
+    buffer = await pipeline.png().toBuffer();
+  } else {
+    buffer = await pipeline.webp({ quality: 90 }).toBuffer();
+  }
+  fs.writeFileSync(cachedPath, buffer);
+  return { buffer, contentType: output.contentType };
 }
 
 interface PhotoIndex {
@@ -260,15 +324,12 @@ export async function photosRoute(fastify: FastifyInstance): Promise<void> {
 
     const contentType = mimeTypes[ext] || 'application/octet-stream';
 
-    // For HEIC/HEIF, convert to JPEG for browser compatibility
-    if (ext === '.heic' || ext === '.heif') {
-      const buffer = await convertHeicToJpeg(filePath);
-      return reply.type('image/jpeg').send(buffer);
+    const normalized = await normalizeOrientationIfNeeded(filePath, ext);
+    if (normalized) {
+      return reply.type(normalized.contentType).send(normalized.buffer);
     }
 
-    // Serve all other formats as raw streams; the browser applies EXIF orientation
-    // via its default image-orientation: from-image behaviour. This is more reliable
-    // than server-side rotation (sharp EXIF support varies across ARM/x86 builds).
+    // Serve raw stream when orientation normalization is not needed.
     const stream = fs.createReadStream(filePath);
     return reply.type(contentType).send(stream);
   });

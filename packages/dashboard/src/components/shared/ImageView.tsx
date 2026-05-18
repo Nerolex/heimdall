@@ -64,6 +64,7 @@ export function ImageView({ settings }: ImageViewProps): React.ReactElement {
           height: '100%',
           objectFit: objectFit as React.CSSProperties['objectFit'],
           objectPosition: 'center',
+          imageOrientation: 'from-image',
           display: 'block',
         }}
       />

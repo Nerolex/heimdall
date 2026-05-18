@@ -12,6 +12,54 @@ export interface ConfigResult {
   message?: string;
 }
 
+type JsonObject = Record<string, unknown>;
+
+function isObject(value: unknown): value is JsonObject {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getObject(value: unknown): JsonObject | undefined {
+  return isObject(value) ? value : undefined;
+}
+
+function normalizeGroupedShape(parsed: JsonObject): JsonObject {
+  const app = getObject(parsed.app);
+  const providers = getObject(parsed.providers);
+  const music = getObject(providers?.music);
+  const gaming = getObject(providers?.gaming);
+  const weather = getObject(providers?.weather) ?? getObject(parsed.weather);
+  const calendar = getObject(providers?.calendar) ?? getObject(parsed.calendar);
+  const lastfm = getObject(music?.lastfm) ?? getObject(parsed.lastfm);
+  const steam = getObject(gaming?.steam) ?? getObject(parsed.steam);
+  const plex = getObject(providers?.plex) ?? getObject(parsed.plex);
+  const legacyRetro = getObject(parsed.retro);
+  const groupedRetro = getObject(gaming?.retro);
+  const igdb = getObject(gaming?.igdb);
+  const sgdb = getObject(gaming?.sgdb);
+  const retro = {
+    ...(legacyRetro || {}),
+    ...(groupedRetro || {}),
+    ...(igdb?.clientId != null ? { igdbClientId: igdb.clientId } : {}),
+    ...(igdb?.clientSecret != null ? { igdbClientSecret: igdb.clientSecret } : {}),
+    ...(sgdb?.apiKey != null ? { sgdbApiKey: sgdb.apiKey } : {}),
+  };
+
+  return {
+    schemaVersion: parsed.schemaVersion,
+    cycleInterval: app?.cycleInterval ?? parsed.cycleInterval,
+    viewOrder: app?.viewOrder ?? parsed.viewOrder,
+    keepAwake: app?.keepAwake ?? parsed.keepAwake,
+    showFullscreenButton: app?.showFullscreenButton ?? parsed.showFullscreenButton,
+    views: parsed.views,
+    ...(weather ? { weather } : {}),
+    ...(calendar ? { calendar } : {}),
+    ...(lastfm ? { lastfm } : {}),
+    ...(Object.keys(retro).length > 0 ? { retro } : {}),
+    ...(steam ? { steam } : {}),
+    ...(plex ? { plex } : {}),
+  };
+}
+
 /**
  * Load and validate a dashboard config from a JSON file.
  * Returns normalized config or an error descriptor.
@@ -44,27 +92,35 @@ export function loadConfig(configPath: string): ConfigResult {
     };
   }
 
-  if (!isValidDashboardConfig(parsed)) {
+  if (!isObject(parsed)) {
+    return {
+      error: 'config_invalid',
+      message: 'Configuration file is invalid: root must be a JSON object.',
+    };
+  }
+
+  const normalizedParsed = normalizeGroupedShape(parsed);
+
+  if (!isValidDashboardConfig(normalizedParsed)) {
     return {
       error: 'config_invalid',
       message: 'Configuration file is invalid: "views" must be an array.',
     };
   }
 
-  // Pass through extra config sections for view settings
-  const extra = parsed as unknown as Record<string, unknown>;
-  const config = {
-    cycleInterval: normalizeCycleInterval(parsed.cycleInterval),
-    viewOrder: normalizeViewOrder(parsed.viewOrder),
-    views: parsed.views,
-    ...(parsed.weather ? { weather: parsed.weather } : {}),
-    ...(extra.showFullscreenButton != null ? { showFullscreenButton: extra.showFullscreenButton } : {}),
-    ...(extra.keepAwake != null ? { keepAwake: extra.keepAwake } : {}),
-    ...(extra.retro ? { retro: extra.retro } : {}),
-    ...(extra.steam ? { steam: extra.steam } : {}),
-    ...(extra.calendar ? { calendar: extra.calendar } : {}),
-    ...(extra.lastfm ? { lastfm: extra.lastfm } : {}),
-    ...(extra.plex ? { plex: extra.plex } : {}),
+  const config: DashboardConfig = {
+    ...(typeof normalizedParsed.schemaVersion === 'number' ? { schemaVersion: normalizedParsed.schemaVersion } : {}),
+    cycleInterval: normalizeCycleInterval(normalizedParsed.cycleInterval),
+    viewOrder: normalizeViewOrder(normalizedParsed.viewOrder),
+    views: normalizedParsed.views as DashboardConfig['views'],
+    ...(normalizedParsed.weather ? { weather: normalizedParsed.weather as DashboardConfig['weather'] } : {}),
+    ...(normalizedParsed.showFullscreenButton != null ? { showFullscreenButton: normalizedParsed.showFullscreenButton as boolean } : {}),
+    ...(normalizedParsed.keepAwake != null ? { keepAwake: normalizedParsed.keepAwake } : {}),
+    ...(normalizedParsed.retro ? { retro: normalizedParsed.retro } : {}),
+    ...(normalizedParsed.steam ? { steam: normalizedParsed.steam } : {}),
+    ...(normalizedParsed.calendar ? { calendar: normalizedParsed.calendar } : {}),
+    ...(normalizedParsed.lastfm ? { lastfm: normalizedParsed.lastfm } : {}),
+    ...(normalizedParsed.plex ? { plex: normalizedParsed.plex } : {}),
   } as DashboardConfig;
 
   return { config };
