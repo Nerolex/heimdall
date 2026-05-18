@@ -10,12 +10,14 @@ const SUPPORTED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic',
 
 // Cache directory for converted HEIC files
 const CACHE_DIR = path.join(process.env.CACHE_DIR || '/tmp', 'heimdall-photo-cache');
+// Bump this version to invalidate stale cached HEIC conversions
+const CACHE_VERSION = 'v2';
 if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
 
 /** Convert HEIC/HEIF to JPEG, returning the JPEG buffer. Uses cache. */
 async function convertHeicToJpeg(filePath: string): Promise<Buffer> {
   const hash = crypto.createHash('md5').update(filePath).digest('hex');
-  const cachedPath = path.join(CACHE_DIR, `${hash}.jpg`);
+  const cachedPath = path.join(CACHE_DIR, `${CACHE_VERSION}-${hash}.jpg`);
 
   // Return cached conversion if available
   if (fs.existsSync(cachedPath)) {
@@ -264,12 +266,9 @@ export async function photosRoute(fastify: FastifyInstance): Promise<void> {
       return reply.type('image/jpeg').send(buffer);
     }
 
-    // For JPEG/TIFF, apply EXIF auto-rotation
-    if (ext === '.jpg' || ext === '.jpeg' || ext === '.tiff' || ext === '.tif') {
-      const buffer = await sharp(filePath).rotate().toBuffer();
-      return reply.type(contentType).send(buffer);
-    }
-
+    // Serve all other formats as raw streams; the browser applies EXIF orientation
+    // via its default image-orientation: from-image behaviour. This is more reliable
+    // than server-side rotation (sharp EXIF support varies across ARM/x86 builds).
     const stream = fs.createReadStream(filePath);
     return reply.type(contentType).send(stream);
   });

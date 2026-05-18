@@ -71,6 +71,13 @@ function usePlexSession(isDetail = false) {
     setHistoryIndexState(idx);
   }
 
+  function replaceHistory(items: PlexSession[], idx: number) {
+    sharedHistory = items;
+    sharedHistoryIndex = idx;
+    setHistory(items);
+    setHistoryIndexState(idx);
+  }
+
   useEffect(() => {
     async function fetchSessions(): Promise<void> {
       try {
@@ -122,7 +129,7 @@ function usePlexSession(isDetail = false) {
       .catch(() => {});
   }, [isDetail]);
 
-  return { session, history, historyIndex, setHistoryIndex, loading };
+  return { session, history, historyIndex, setHistoryIndex, replaceHistory, loading };
 }
 
 function getDisplayInfo(session: PlexSession | null) {
@@ -208,7 +215,7 @@ interface NavEntry { kind: NavKind; items: PlexSession[]; label: string; }
 
 /** Detail view — full media player with controls */
 export function PlexDetailView({ settings, onClose }: { settings: Record<string, unknown>; onClose: () => void }): React.ReactElement {
-  const { session, history, historyIndex, setHistoryIndex, loading } = usePlexSession(true);
+  const { session, history, historyIndex, setHistoryIndex, replaceHistory, loading } = usePlexSession(true);
   const [localPlaying, setLocalPlaying] = useState(false);
   const [localProgress, setLocalProgress] = useState(0);
   const [localDuration, setLocalDuration] = useState(0);
@@ -341,6 +348,8 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
 
   function handleSkip(direction: number): void {
     if (!history.length) return;
+    // Clear currentTrack so displayItem falls through to history[historyIndex]
+    setCurrentTrack(null);
     if (audioRef.current) {
       audioRef.current.pause();
       setLocalProgress(0);
@@ -432,16 +441,22 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
     setNavLoading(false);
   }
 
-  async function handleTrackSelect(track: PlexSession): Promise<void> {
+  async function handleTrackSelect(track: PlexSession, allTracks?: PlexSession[]): Promise<void> {
     if (!audioRef.current) return;
     const partKey = track.Media?.[0]?.Part?.[0]?.key;
-    if (partKey) {
-      setCurrentTrack(track);
-      audioRef.current.src = `/api/plex/stream?path=${encodeURIComponent(partKey)}`;
-      audioRef.current.play();
-      setLocalPlaying(true);
-      closeNav();
-    }
+    if (!partKey) return;
+
+    // Replace the play queue with the full album so skip navigates within the album
+    const queue = allTracks && allTracks.length > 0 ? allTracks : [track];
+    const idx = queue.findIndex(t => t.ratingKey === track.ratingKey);
+    replaceHistory(queue, idx >= 0 ? idx : 0);
+    // Don't set currentTrack — displayItem will use history[historyIndex]
+    setCurrentTrack(null);
+
+    audioRef.current.src = `/api/plex/stream?path=${encodeURIComponent(partKey)}`;
+    audioRef.current.play();
+    setLocalPlaying(true);
+    closeNav();
   }
 
   function handleNavBack(): void {
@@ -494,7 +509,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
                   const kind = navStack[navStack.length - 1].kind;
                   if (kind === 'artists') handleArtistSelect(item);
                   else if (kind === 'albums') handleAlbumSelect(item);
-                  else handleTrackSelect(item);
+                  else handleTrackSelect(item, navStack[navStack.length - 1].items);
                 }}
               >
                 {(navStack[navStack.length - 1].kind !== 'tracks') && item.thumb && (

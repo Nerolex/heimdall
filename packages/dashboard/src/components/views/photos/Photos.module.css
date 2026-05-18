@@ -47,6 +47,7 @@
   left: 0;
   filter: blur(20px) brightness(0.7);
   transform: scale(1.05);
+  image-orientation: from-image;
 }
 
 .photo {
@@ -57,6 +58,7 @@
   top: 0;
   left: 0;
   z-index: 1;
+  image-orientation: from-image;
 }
 
 .gradientOverlay {

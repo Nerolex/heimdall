@@ -212,28 +212,24 @@ export function App(): React.ReactElement {
     if (cycleTimer.current) clearTimeout(cycleTimer.current);
   }
 
-  // View cycling with fade transition (paused during detail mode)
+  // View cycling with fade transition (paused during detail mode).
+  // Depends on activeViewIndex so the timer resets after both auto and manual transitions.
   useEffect(() => {
     if (!config || config.views.length <= 1 || detailMode) return;
 
     const interval = normalizeCycleInterval(config.cycleInterval) * 1000;
 
-    function scheduleCycle(): void {
-      cycleTimer.current = setTimeout(() => {
-        const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
-        viewSnapshots.current.delete(viewHistory.current.length);
-        viewHistory.current.push(nextIdx);
-        transitionTo(nextIdx);
-        scheduleCycle();
-      }, interval - FADE_DURATION);
-    }
-
-    scheduleCycle();
+    cycleTimer.current = setTimeout(() => {
+      const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
+      viewSnapshots.current.delete(viewHistory.current.length);
+      viewHistory.current.push(nextIdx);
+      transitionTo(nextIdx);
+    }, interval - FADE_DURATION);
 
     return () => {
       if (cycleTimer.current) clearTimeout(cycleTimer.current);
     };
-  }, [config, detailMode]);
+  }, [config, detailMode, activeViewIndex]);
 
   if (state === 'loading') {
     return (
