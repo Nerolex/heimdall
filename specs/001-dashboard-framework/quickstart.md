@@ -61,10 +61,7 @@ pnpm start
 
 ## Run (Headed / Electron Mode)
 
-```bash
-pnpm start:electron
-# Opens dashboard in a native window
-```
+Headed Electron runtime wiring is not yet implemented in this branch. Use browser/headless mode for now (`pnpm start`).
 
 ## Verify
 
@@ -78,7 +75,7 @@ pnpm start:electron
 | Field              | Type   | Default     | Description                          |
 |--------------------|--------|-------------|--------------------------------------|
 | `cycleInterval`    | number | `30`        | Seconds between view transitions     |
-| `views[].type`     | string | —           | Component type (currently: `"image"`) |
+| `views[].type`     | string | —           | Component type (e.g., `"image"`, `"clock"`, `"photos-random"`, `"calendar-day"`, `"plex-now-playing"`) |
 | `views[].settings` | object | `{}`        | Component-specific config            |
 
 ### Image Component Settings

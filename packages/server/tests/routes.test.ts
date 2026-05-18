@@ -8,6 +8,7 @@ vi.mock('../src/config.js');
 describe('GET /api/config', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   async function buildApp() {
@@ -59,5 +60,32 @@ describe('GET /api/config', () => {
     expect(res.statusCode).toBe(422);
     const body = JSON.parse(res.payload);
     expect(body.error).toBe('config_invalid');
+  });
+
+  it('redacts sensitive fields when HEIMDALL_REDACT_CONFIG=true', async () => {
+    vi.stubEnv('HEIMDALL_REDACT_CONFIG', 'true');
+    vi.mocked(configModule.loadConfig).mockReturnValue({
+      config: {
+        cycleInterval: 10,
+        views: [{ type: 'image', settings: { src: '/assets/test.png' } }],
+        weather: { apiKey: 'secret-weather', city: 'Dortmund', units: 'metric' },
+        lastfm: { apiKey: 'secret-lastfm', user: 'mike' },
+        retro: { apiUser: 'u', apiKey: 'secret-retro', user: 'u', igdbClientSecret: 'secret-igdb' } as unknown as never,
+        steam: { apiKey: 'secret-steam', steamId: '123' } as unknown as never,
+        plex: { url: 'http://localhost:32400', token: 'secret-plex' } as unknown as never,
+      } as never,
+    });
+
+    const app = await buildApp();
+    const res = await app.inject({ method: 'GET', url: '/api/config' });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.payload);
+    expect(body.weather.apiKey).toBeUndefined();
+    expect(body.lastfm.apiKey).toBeUndefined();
+    expect(body.retro.apiKey).toBeUndefined();
+    expect(body.retro.igdbClientSecret).toBeUndefined();
+    expect(body.steam.apiKey).toBeUndefined();
+    expect(body.plex.token).toBeUndefined();
   });
 });

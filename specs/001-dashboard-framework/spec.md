@@ -2,8 +2,14 @@
 
 **Feature Branch**: `001-dashboard-framework`  
 **Created**: 2025-07-15  
-**Status**: Draft  
+**Status**: Active (core framework implemented; extended view families in production)  
 **Input**: User description: "I want the basic framework done. I should be able to add views to my dashboard, the dashboard should cycle through them. The dashboard has to be responsive (work on different displays). We could start by adding a simple image component that displays a configurable image. Config should be which image, how to display (stretch, center, etc)."
+
+## Phase 3 Alignment Note
+
+This specification remains the source of truth for the **core dashboard framework** (config loading, modular view registry, cycling, responsiveness, and base image view behavior).
+
+The running application now includes additional view families (calendar, photos, weather, retro, gaming, music, plex, trailers) implemented on the same modular/config-driven architecture. Those surfaces are currently governed by code + README conventions and should be split into dedicated feature specs when substantial domain changes are planned.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -130,6 +136,6 @@ A user adds an image view to their dashboard by specifying an image source and a
 - The configuration file is edited manually by the user (no GUI config editor in this feature scope).
 - Only one dashboard instance runs per device at a time.
 - View transitions are instant (simple swap); animated transitions between views are out of scope for this feature.
-- The image component is the only component delivered in this feature; additional components (clock, weather, etc.) are future features.
+- The image component is the baseline component in this feature. Additional components may exist in the codebase, but this spec's acceptance criteria still define the minimum required behavior for the framework.
 - Audio and video media types are out of scope for the image component.
 - The configuration file format and schema validation details will be determined during implementation planning, consistent with the constitution's preference for JSON or YAML.

@@ -14,6 +14,7 @@ interface RecentGame {
 interface GameInfo {
   Title: string;
   ConsoleName: string;
+  ImageIcon?: string;
   ImageIngame: string;
   ImageTitle: string;
   ImageBoxArt: string;

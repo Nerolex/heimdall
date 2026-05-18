@@ -7,15 +7,15 @@
 
 Build the foundational dashboard framework for Heimdall: a config-driven, full-screen view cycling system with a modular component architecture. The dashboard reads a JSON configuration file, renders views one at a time, cycles through them on a timer, and adapts to any screen size. An image component with four display modes (contain, cover, stretch, center) serves as the first concrete component, proving the architecture end-to-end.
 
-**Technical approach**: pnpm monorepo with three packages (shared types, Fastify server, React+Vite dashboard). Config is plain JSON read by the server and served via a single API endpoint. View cycling is a `setInterval` + React state. Image display modes map directly to CSS `object-fit`. Electron wraps the same web app for headed/kiosk mode.
+**Technical approach**: pnpm monorepo with three packages (shared types, Fastify server, React+Vite dashboard). Config is plain JSON read by the server and served via a single API endpoint. View cycling is a `setInterval` + React state. Image display modes map directly to CSS `object-fit`. Headless/browser mode is implemented; headed runtime packaging is tracked separately.
 
 ## Technical Context
 
 **Language/Version**: TypeScript 5.x, Node.js 20+ (LTS)
-**Primary Dependencies**: React 18, Vite 5, Fastify 4, @fastify/static, Electron (headed mode)
+**Primary Dependencies**: React 18, Vite 5, Fastify 4, @fastify/static
 **Storage**: JSON config file on local filesystem (`config.json`)
 **Testing**: Vitest (unit), Playwright (E2E)
-**Target Platform**: Local network — modern browser (headless) or Electron (headed)
+**Target Platform**: Local network — modern browser (headless). Headed Electron runtime is a tracked follow-up.
 **Project Type**: Full-stack desktop/web application (monorepo)
 **Performance Goals**: Instant view rendering (<100ms transition), smooth image loading
 **Constraints**: No cloud dependencies, minimal external packages, local-network-first
@@ -29,13 +29,14 @@ Build the foundational dashboard framework for Heimdall: a config-driven, full-s
 |-----------|--------|----------|
 | **I. Modular-First** | ✅ PASS | Each view component is self-contained with own config schema and rendering logic. Component registry allows add/remove without affecting others. |
 | **II. Configuration-Driven** | ✅ PASS | Dashboard layout, views, and component settings all defined in `config.json`. No code changes needed to reconfigure. |
-| **III. Dual-Mode Operation** | ✅ PASS | Same React app runs in browser (headless) or Electron window (headed). Mode is runtime, not build-time. |
+| **III. Dual-Mode Operation** | ⚠️ PARTIAL | Headless mode is implemented. Dashboard code is runtime-agnostic, but Electron runtime wiring is not yet implemented in this branch (tracked variance V-001). |
 | **IV. Local-Network-First** | ✅ PASS | No cloud dependencies. Server runs locally, serves local files. External URLs optional per-component. |
 | **V. Simplicity (YAGNI)** | ✅ PASS | Three packages (minimum viable split). No animation lib, no state management lib, no CSS framework. JSON config (no YAML dep). CSS object-fit for image modes (no custom rendering). |
 | **VI. Human-Maintainable** | ✅ PASS | Direct CSS mapping for display modes. Simple setInterval cycling. Flat component registry (a plain object). Every module testable in isolation. |
 
 **Technology Constraints check**:
-- ✅ Node.js 20+, TypeScript, React+Vite, Fastify, Electron, pnpm monorepo, Vitest+Playwright
+- ✅ Node.js 20+, TypeScript, React+Vite, Fastify, pnpm monorepo, Vitest+Playwright
+- ⚠️ Headed Electron runtime is planned but not yet wired
 - ✅ Minimal dependencies: only Fastify, @fastify/static, React, Vite, Electron — all justified by constitution
 
 **Post-Phase 1 re-check**: All gates still pass. Three-package monorepo is the minimum viable split. No abstraction layers beyond what the spec requires.

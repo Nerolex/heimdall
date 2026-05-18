@@ -3,6 +3,9 @@
 **Input**: Design documents from `/specs/001-dashboard-framework/`
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, contracts/api.md ✅, quickstart.md ✅
 
+> Phase 3 alignment note: this task list tracks the original dashboard-framework scope (US1–US4).  
+> The repository now includes additional view domains beyond this list; those are not retrofitted into this historical task ledger.
+
 **Tests**: Required — constitution principle VI (Human-Maintainable Code) mandates tests for every module.
 
 **Organization**: Tasks grouped by user story. US1 (Config & Launch) and US4 (Image Component) are both P1 and tightly coupled — US4 is the first concrete component that proves US1's architecture. They share a phase.

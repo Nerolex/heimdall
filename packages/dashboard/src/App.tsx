@@ -1,247 +1,28 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import type { DashboardConfig, OverlayMode } from '@heimdall/shared';
-import { normalizeCycleInterval, normalizeOverlayMode, normalizeViewOrder } from '@heimdall/shared';
+import React from 'react';
 import { ViewRenderer } from './components/shared/ViewRenderer';
 import { EmptyState } from './components/shared/EmptyState';
 import { ErrorState } from './components/shared/ErrorState';
 import { Overlay } from './components/overlay/Overlay';
 import { KeepAwake } from './components/keepawake';
 import { getDetailComponent } from './components/registry';
-
-type AppState = 'loading' | 'ready' | 'empty' | 'error';
-
-const FADE_DURATION = 1000;
-
-/** Merge top-level config sections into view settings so views inherit shared credentials */
-function mergeViewSettings(config: DashboardConfig, view: DashboardConfig['views'][number]): Record<string, unknown> {
-  const base = view.settings || {};
-  const type = view.type;
-  const cfg = config as Record<string, unknown>;
-  if (type.startsWith('retro') && cfg.retro) {
-    return { ...cfg.retro as Record<string, unknown>, ...base };
-  }
-  if (type.startsWith('gaming')) {
-    const retro = (cfg.retro as Record<string, unknown>) || {};
-    const steam = (cfg.steam as Record<string, unknown>) || {};
-    return {
-      raApiUser: retro.apiUser,
-      raApiKey: retro.apiKey,
-      raUser: retro.user,
-      steamApiKey: steam.apiKey,
-      steamId: steam.steamId,
-      igdbClientId: retro.igdbClientId,
-      igdbClientSecret: retro.igdbClientSecret,
-      sgdbApiKey: retro.sgdbApiKey,
-      ...base,
-    };
-  }
-  if (type.startsWith('calendar') && cfg.calendar) {
-    return { ...cfg.calendar as Record<string, unknown>, ...base };
-  }
-  if (type.startsWith('music') && cfg.lastfm) {
-    const lastfm = cfg.lastfm as Record<string, unknown>;
-    return { lastfmApiKey: lastfm.apiKey, lastfmUser: lastfm.user, ...base };
-  }
-  if (type.startsWith('weather') && config.weather) {
-    return { ...config.weather as Record<string, unknown>, ...base };
-  }
-  if (type === 'clock' && config.weather) {
-    const w = config.weather as Record<string, unknown>;
-    return { weatherApiKey: w.apiKey, weatherCity: w.city, weatherUnits: w.units, ...base };
-  }
-  return base as Record<string, unknown>;
-}
-
-function getOverlayMode(config: DashboardConfig, index: number): OverlayMode {
-  return normalizeOverlayMode(config.views[index]?.overlay);
-}
-
-function showsClock(mode: OverlayMode): boolean {
-  return mode === 'both' || mode === 'clock';
-}
-
-function showsWeather(mode: OverlayMode): boolean {
-  return mode === 'both' || mode === 'weather';
-}
+import { useDashboardConfig } from './app/useDashboardConfig';
+import { useViewCycle } from './app/useViewCycle';
+import { mergeViewSettings } from './app/viewSettings';
 
 export function App(): React.ReactElement {
-  const [state, setState] = useState<AppState>('loading');
-  const [config, setConfig] = useState<DashboardConfig | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [activeViewIndex, setActiveViewIndex] = useState(0);
-  const activeViewIndexRef = useRef(0);
-  const [nextViewIndex, setNextViewIndex] = useState<number | null>(null);
-  const nextViewIndexRef = useRef<number | null>(null);
-  const [detailMode, setDetailMode] = useState(false);
-  const [visible, setVisible] = useState(true);
-  const [clockVisible, setClockVisible] = useState(true);
-  const [weatherVisible, setWeatherVisible] = useState(true);
-  const cycleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isTransitioning = useRef(false);
-  const viewHistory = useRef<number[]>([0]);
-  // Maps history-stack position → saved view state (e.g. which photo was shown)
-  const viewSnapshots = useRef<Map<number, unknown>>(new Map());
-  // Stable callback so views can save their state without causing re-renders
-  const currentHistoryPos = useRef(0);
-  const onActiveViewStateChange = useCallback((state: unknown) => {
-    viewSnapshots.current.set(currentHistoryPos.current, state);
-  }, []);
-
-  // Called by views that have no content to show (requires skipIfEmpty: true on the view config)
-  const onActiveViewEmpty = useCallback(() => {
-    if (!config) return;
-    const view = config.views[activeViewIndexRef.current];
-    if (!view?.skipIfEmpty) return;
-    if (cycleTimer.current) clearTimeout(cycleTimer.current);
-    const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
-    viewSnapshots.current.delete(viewHistory.current.length);
-    viewHistory.current.push(nextIdx);
-    transitionTo(nextIdx);
-  }, [config]);
-
-  // Fetch config on mount
-  useEffect(() => {
-    fetch('/api/config')
-      .then(async (res) => {
-        if (res.status === 404) {
-          setState('empty');
-          return;
-        }
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({ message: 'Unknown error' }));
-          setErrorMessage(body.message || `Server error: ${res.status}`);
-          setState('error');
-          return;
-        }
-        const data: DashboardConfig = await res.json();
-        if (!data.views || data.views.length === 0) {
-          setState('empty');
-          return;
-        }
-        setConfig(data);
-        setState('ready');
-        // Set initial overlay visibility from first view
-        const firstOverlay = normalizeOverlayMode(data.views[0]?.overlay);
-        setClockVisible(showsClock(firstOverlay));
-        setWeatherVisible(showsWeather(firstOverlay));
-      })
-      .catch((err) => {
-        setErrorMessage(`Failed to connect to server: ${err.message}`);
-        setState('error');
-      });
-  }, []);
-
-  // Get next view index (sequential or random with frequency weighting)
-  function getNextIndex(currentIdx: number): number {
-    if (!config) return 0;
-    const viewOrder = normalizeViewOrder(config.viewOrder);
-    if (viewOrder === 'random') {
-      const weights = config.views.map((v, i) => {
-        if (i === currentIdx) return 0;
-        const freq = v.frequency || 'normal';
-        return freq === 'high' ? 3 : freq === 'low' ? 0.5 : 1;
-      });
-      const totalWeight = weights.reduce((a, b) => a + b, 0);
-      let r = Math.random() * totalWeight;
-      for (let i = 0; i < weights.length; i++) {
-        r -= weights[i];
-        if (r <= 0) return i;
-      }
-      return (currentIdx + 1) % config.views.length;
-    }
-    return (currentIdx + 1) % config.views.length;
-  }
-
-  // Preload the next view whenever active view changes
-  useEffect(() => {
-    if (!config || config.views.length <= 1) return;
-    const next = getNextIndex(activeViewIndex);
-    setNextViewIndex(next);
-    nextViewIndexRef.current = next;
-  }, [config, activeViewIndex]);
-
-  // Transition to a specific view index with fade
-  function transitionTo(nextIdx: number): void {
-    if (!config || isTransitioning.current) return;
-    isTransitioning.current = true;
-
-    const currentIdx = activeViewIndex;
-    const currentMode = getOverlayMode(config, currentIdx);
-    const nextMode = getOverlayMode(config, nextIdx);
-
-    setVisible(false);
-    if (showsClock(currentMode) && !showsClock(nextMode)) setClockVisible(false);
-    if (showsWeather(currentMode) && !showsWeather(nextMode)) setWeatherVisible(false);
-
-    setTimeout(() => {
-      activeViewIndexRef.current = nextIdx;
-      setActiveViewIndex(nextIdx);
-      setVisible(true);
-      setClockVisible(showsClock(nextMode));
-      setWeatherVisible(showsWeather(nextMode));
-      isTransitioning.current = false;
-    }, FADE_DURATION);
-  }
-
-  // Handle tap/click navigation (3 zones: left=prev, middle=detail, right=next)
-  function handleNavClick(e: React.MouseEvent<HTMLDivElement>): void {
-    if (!config) return;
-    if (detailMode) return; // Don't navigate while in detail mode
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const zone = x / rect.width;
-
-    // Reset auto-cycle timer
-    if (cycleTimer.current) clearTimeout(cycleTimer.current);
-
-    if (zone < 0.25) {
-      // Left zone: go back in history
-      if (viewHistory.current.length > 1) {
-        viewHistory.current.pop();
-        const prevIdx = viewHistory.current[viewHistory.current.length - 1];
-        transitionTo(prevIdx);
-      }
-    } else if (zone > 0.75) {
-      // Right zone: go forward
-      const nextIdx = nextViewIndex ?? getNextIndex(activeViewIndex);
-      // Clear any stale snapshot at the new history position (fresh visit)
-      viewSnapshots.current.delete(viewHistory.current.length);
-      viewHistory.current.push(nextIdx);
-      transitionTo(nextIdx);
-    } else {
-      // Middle zone: open detail mode if view supports it
-      const view = config.views[activeViewIndex];
-      const DetailComp = getDetailComponent(view.type);
-      if (DetailComp) {
-        setDetailMode(true);
-      }
-    }
-  }
-
-  function handleDetailClose(): void {
-    setDetailMode(false);
-    // Restart cycling
-    if (cycleTimer.current) clearTimeout(cycleTimer.current);
-  }
-
-  // View cycling with fade transition (paused during detail mode).
-  // Depends on activeViewIndex so the timer resets after both auto and manual transitions.
-  useEffect(() => {
-    if (!config || config.views.length <= 1 || detailMode) return;
-
-    const interval = normalizeCycleInterval(config.cycleInterval) * 1000;
-
-    cycleTimer.current = setTimeout(() => {
-      const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
-      viewSnapshots.current.delete(viewHistory.current.length);
-      viewHistory.current.push(nextIdx);
-      transitionTo(nextIdx);
-    }, interval - FADE_DURATION);
-
-    return () => {
-      if (cycleTimer.current) clearTimeout(cycleTimer.current);
-    };
-  }, [config, detailMode, activeViewIndex]);
+  const { state, config, errorMessage } = useDashboardConfig();
+  const {
+    activeViewIndex,
+    nextViewIndex,
+    detailMode,
+    visible,
+    clockVisible,
+    weatherVisible,
+    hasOverlay,
+    handleNavClick,
+    handleDetailClose,
+    withInternalSettings,
+  } = useViewCycle(config, (type) => !!getDetailComponent(type));
 
   if (state === 'loading') {
     return (
@@ -255,23 +36,17 @@ export function App(): React.ReactElement {
     return <EmptyState />;
   }
 
-  if (state === 'error') {
+  if (state === 'error' || !config) {
     return <ErrorState message={errorMessage} />;
   }
 
-  const view = config!.views[activeViewIndex];
-  const nextView = nextViewIndex != null ? config!.views[nextViewIndex] : null;
-  const hasOverlay = clockVisible || weatherVisible;
+  const view = config.views[activeViewIndex];
+  const nextView = nextViewIndex != null ? config.views[nextViewIndex] : null;
+  const shouldPreloadNext = nextView && nextView.type !== view.type;
   const DetailComponent = detailMode ? getDetailComponent(view.type) : null;
-
-  // Keep historyPos ref in sync for the stable onActiveViewStateChange callback
-  currentHistoryPos.current = viewHistory.current.length - 1;
-  const activeSettings = {
-    ...mergeViewSettings(config!, view),
-    __savedState: viewSnapshots.current.get(currentHistoryPos.current),
-    __onStateChange: onActiveViewStateChange,
-    __onEmpty: onActiveViewEmpty,
-  };
+  const baseSettings = mergeViewSettings(config, view);
+  const activeSettings = withInternalSettings(baseSettings);
+  const keepAwakeMode = (config as unknown as Record<string, unknown>).keepAwake as boolean | 'auto' | undefined;
 
   return (
     <div
@@ -284,29 +59,27 @@ export function App(): React.ReactElement {
         '--overlay-height': hasOverlay ? '8vw' : '0px',
       } as React.CSSProperties}
     >
-      <KeepAwake mode={(config as Record<string, unknown>).keepAwake as boolean | 'auto' | undefined} />
-      {/* Detail mode overlay */}
+      <KeepAwake mode={keepAwakeMode} />
       {DetailComponent && (
-        <DetailComponent settings={mergeViewSettings(config!, view)} onClose={handleDetailClose} />
+        <DetailComponent settings={baseSettings} onClose={handleDetailClose} />
       )}
       <Overlay
         clockVisible={clockVisible}
         weatherVisible={weatherVisible}
-        weatherConfig={config!.weather}
-        showFullscreenButton={config!.showFullscreenButton}
+        weatherConfig={config.weather}
+        showFullscreenButton={config.showFullscreenButton}
       />
       <div
         style={{
           width: '100%',
           height: '100%',
           opacity: visible ? 1 : 0,
-          transition: `opacity ${FADE_DURATION}ms ease-in-out`,
+          transition: 'opacity 1000ms ease-in-out',
         }}
       >
         <ViewRenderer key={activeViewIndex} type={view.type} settings={activeSettings} />
       </div>
-      {/* Preloaded next view (hidden, fetches data in background) */}
-      {nextView && (
+      {shouldPreloadNext && (
         <div
           aria-hidden="true"
           style={{
@@ -320,12 +93,8 @@ export function App(): React.ReactElement {
             zIndex: -1,
           }}
         >
-          <ViewRenderer type={nextView.type} settings={mergeViewSettings(config!, nextView)} />
+          <ViewRenderer type={nextView.type} settings={mergeViewSettings(config, nextView)} />
         </div>
-      )}
-      {/* Detail mode overlay */}
-      {DetailComponent && (
-        <DetailComponent settings={mergeViewSettings(config!, view)} onClose={handleDetailClose} />
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { loadConfig } from '../config.js';
+import { redactConfigForClient } from '../configRedaction.js';
 
 /** Walk up from cwd to find config.json (handles running from a sub-package). */
 function findConfigFile(): string {
@@ -35,6 +36,8 @@ export async function configRoute(fastify: FastifyInstance): Promise<void> {
       });
     }
 
-    return reply.status(200).send(result.config);
+    const shouldRedact = process.env.HEIMDALL_REDACT_CONFIG === 'true';
+    const payload = shouldRedact ? redactConfigForClient(result.config!) : result.config;
+    return reply.status(200).send(payload);
   });
 }

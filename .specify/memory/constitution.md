@@ -12,7 +12,7 @@ The dashboard layout, component selection, and component settings are defined en
 
 ### III. Dual-Mode Operation
 
-The application must support both headless (browser-only, no window) and headed (kiosk/window) modes from the same codebase. Mode selection is a runtime configuration, not a build-time decision.
+The application is designed to support both headless (browser-only, no window) and headed (kiosk/window) modes from the same codebase. Headless mode is required for core operation; headed mode can be delivered by a dedicated runtime package (Electron) without forking dashboard logic. Mode selection remains a runtime concern, not a build-time decision.
 
 ### IV. Local-Network-First
 
@@ -54,4 +54,11 @@ Code must be concise, tested, and immediately understandable by a solo maintaine
 - All code contributions must verify compliance with these principles.
 - Complexity beyond what the constitution allows must be justified in writing.
 
-**Version**: 1.0.0 | **Ratified**: 2026-04-28 | **Last Amended**: 2026-04-28
+### Variance Register
+
+- **V-001 Dual-mode runtime packaging**
+  - **Status**: Open
+  - **Scope**: Headless mode is implemented and operational. Headed Electron runtime wiring is not yet implemented in this branch.
+  - **Constraint**: Dashboard architecture must remain runtime-agnostic so Electron can be added without frontend fork.
+
+**Version**: 1.1.0 | **Ratified**: 2026-04-28 | **Last Amended**: 2026-05-18

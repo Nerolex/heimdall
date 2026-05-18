@@ -5,7 +5,7 @@ import { PhotosMemoriesView } from '../../src/components/views/photos/PhotosMemo
 import type { PhotoEntry } from '@heimdall/shared';
 
 function makePhoto(id: string): PhotoEntry {
-  return { url: `/photos/${id}.jpg`, filename: `${id}.jpg`, dateTaken: new Date('2021-06-15').getTime() };
+  return { id, url: `/photos/${id}.jpg`, filename: `${id}.jpg`, dateTaken: new Date('2021-06-15').toISOString() };
 }
 
 function makeMemoriesResponse(entries: Record<string, PhotoEntry[]>) {

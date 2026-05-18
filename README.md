@@ -74,6 +74,17 @@ Create a `config.json` in the project root:
 }
 ```
 
+### Security notes
+
+- **Do not commit real credentials** in `config.json`. Keep placeholders in git and inject real values only on your runtime host.
+- If your dashboard is reachable by untrusted clients, enable config redaction:
+
+```bash
+HEIMDALL_REDACT_CONFIG=true
+```
+
+This strips sensitive keys from `/api/config` responses (`weather.apiKey`, `lastfm.apiKey`, `retro.apiKey`, `retro.igdbClientSecret`, `retro.sgdbApiKey`, `steam.apiKey`, `plex.token`).
+
 ## Global Options
 
 | Option | Type | Default | Description |

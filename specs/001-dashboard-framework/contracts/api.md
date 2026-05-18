@@ -2,13 +2,17 @@
 
 **Feature**: 001-dashboard-framework | **Date**: 2025-07-15
 
-The Fastify server exposes a minimal API for the dashboard frontend.
+This document captures the **core bootstrap API contract** for the dashboard framework.
+
+Additional content integrations (calendar/photos/retro/gaming/music/plex/trailers) are implemented in the codebase with their own endpoints, but are intentionally out of scope for this contract file.
 
 ---
 
 ## GET /api/config
 
 Returns the current dashboard configuration.
+
+When `HEIMDALL_REDACT_CONFIG=true`, sensitive credential fields are stripped from the response.
 
 **Response** `200 OK`:
 
