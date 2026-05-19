@@ -48,5 +48,5 @@ Messages complete the sentence "This commit will…" — e.g., `add weather comp
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan at
-`specs/001-dashboard-framework/plan.md`
+`specs/002-supermarket-offers-view/plan.md`
 <!-- SPECKIT END -->
