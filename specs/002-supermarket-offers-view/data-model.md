@@ -10,42 +10,16 @@ Grouped configuration section under `config.json -> providers.supermarket`.
 
 | Field | Type | Required | Validation | Description |
 |---|---|---|---|---|
-| `region` | `RegionContext` | Yes | Non-empty object | Configurable locality context used in source requests (not hardcoded). |
-| `markets` | `MarketSourceConfig[]` | Yes | Length 1..2 | Enabled live source definitions (v1 scope). |
+| `postalCode` | `string` | Yes | Non-empty German PLZ | Locality context passed as `zipCode` to marktguru API. |
+| `retailers` | `string[]` | Yes | Length 1..2; valid marktguru slugs | Retailer slugs to include (e.g. `"rewe"`, `"lidl"`, `"aldi-sued"`). |
 | `products` | `TrackedProduct[]` | Yes | May be empty; de-duplicated by canonical normalized name | Product watchlist for matching. |
 
 **Validation rules**:
-- Must reject config when `markets.length < 1` or `markets.length > 2`.
-- Must reject config when any enabled market lacks required source identifier.
+- Must reject config when `retailers.length < 1` or `retailers.length > 2`.
+- Must reject config when `postalCode` is missing or empty.
 - Product list may be empty (renders explicit empty-configured state).
 
----
-
-### RegionContext
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `countryCode` | `string` | Yes | ISO-like region root (e.g., `DE`, `PL`) used by adapters. |
-| `postalCode` | `string` | No | Optional finer-grained location when supported by market source. |
-| `city` | `string` | No | Optional city override for source APIs requiring city names. |
-
-**Validation rules**:
-- At least one locality discriminator must be adapter-usable (`postalCode` or `city` or source-specific fallback key).
-- Invalid/unsupported region values must result in user-friendly error payload (FR-008).
-
----
-
-### MarketSourceConfig
-
-| Field | Type | Required | Validation | Description |
-|---|---|---|---|---|
-| `id` | `'market-a' \| 'market-b'` | Yes | One of supported source IDs | Identifies adapter implementation. |
-| `enabled` | `boolean` | No | Defaults `true` | Allows toggling source participation without deletion. |
-| `params` | `Record<string, unknown>` | No | Adapter-specific | Extra settings (store/channel/locale) passed to adapter. |
-
-**Validation rules**:
-- Only two supported IDs in v1.
-- Duplicate `id` entries are invalid.
+**Known valid retailer slugs**: `rewe`, `lidl`, `aldi-sued`, `aldi-nord`, `penny`, `netto-marken-discount`, `edeka`, `kaufland`, `norma`
 
 ---
 
@@ -63,17 +37,20 @@ Grouped configuration section under `config.json -> providers.supermarket`.
 
 ---
 
-### SourceOfferRecord (raw normalized source output)
+### SourceOfferRecord (raw normalized marktguru output)
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `sourceId` | `string` | Yes | Source identifier (`market-a` / `market-b`). |
-| `sourceOfferId` | `string` | Yes | Offer ID unique within source payload. |
-| `productTitle` | `string` | Yes | Source-provided product title prior to tracked-product mapping. |
-| `priceText` | `string` | Yes | Display-ready price/discount text. |
-| `validFrom` | `string \| null` | No | ISO date start when available. |
-| `validTo` | `string \| null` | No | ISO date end when available. |
-| `details` | `string \| null` | No | Optional offer detail snippet. |
+| `sourceId` | `'marktguru'` | Yes | Fixed source identifier. |
+| `sourceOfferId` | `string` | Yes | marktguru `offer.id` (numeric as string). |
+| `productTitle` | `string` | Yes | marktguru `offer.description` — used for matching. |
+| `retailer` | `string` | Yes | marktguru `offer.advertisers[0].name` (e.g. `"REWE"`). |
+| `retailerSlug` | `string` | Yes | Matched against config `retailers[]`. |
+| `price` | `number` | Yes | marktguru `offer.price`. |
+| `oldPrice` | `number \| null` | No | marktguru `offer.oldPrice`. |
+| `imageUrl` | `string \| null` | No | `https://mg2de.b-cdn.net/api/v1/offers/{id}/images/default/0/small.jpg` |
+| `validFrom` | `string \| null` | No | marktguru `offer.validityDates[0].from` (ISO date). |
+| `validTo` | `string \| null` | No | marktguru `offer.validityDates[0].to` (ISO date). |
 
 ---
 
@@ -82,13 +59,17 @@ Grouped configuration section under `config.json -> providers.supermarket`.
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `snapshotDate` | `string` | Yes | ISO date of refresh cycle. |
-| `market` | `string` | Yes | Human-readable source attribution label (FR-010). |
+| `retailer` | `string` | Yes | Human-readable retailer name for source attribution (FR-010), e.g. `"REWE"`. |
+| `retailerSlug` | `string` | Yes | Normalized slug matching the config entry, e.g. `"rewe"`. |
 | `trackedProductName` | `string` | Yes | Canonical configured product name that matched. |
 | `matchedBy` | `'name' \| 'alias'` | Yes | Indicates canonical or alias-based exact hit. |
-| `sourceProductTitle` | `string` | Yes | Original source title for transparency. |
-| `priceText` | `string` | Yes | Offer price/promo label to display. |
-| `validFrom` | `string \| null` | No | Offer validity start. |
-| `validTo` | `string \| null` | No | Offer validity end. |
+| `sourceProductTitle` | `string` | Yes | Original marktguru title for transparency. |
+| `price` | `number` | Yes | Offer price (numeric). |
+| `oldPrice` | `number \| null` | No | Pre-discount price when available. |
+| `priceText` | `string` | Yes | Display-ready price string (e.g. `"1,29 €"`). |
+| `imageUrl` | `string \| null` | No | marktguru image CDN URL; `null` if no image available. |
+| `validFrom` | `string \| null` | No | Offer validity start (ISO date). |
+| `validTo` | `string \| null` | No | Offer validity end (ISO date). |
 
 **Validation rules**:
 - Include record only when normalized `sourceProductTitle` exactly matches normalized canonical/alias key.
@@ -104,10 +85,11 @@ Grouped configuration section under `config.json -> providers.supermarket`.
 | `generatedAt` | `string` | Yes | ISO timestamp of latest refresh attempt. |
 | `lastSuccessfulAt` | `string \| null` | Yes | Last successful refresh timestamp. |
 | `stale` | `boolean` | Yes | `true` if latest attempt failed and prior data is served. |
-| `region` | `RegionContext` | Yes | Region context used for snapshot. |
+| `postalCode` | `string` | Yes | PLZ used for this snapshot. |
 | `offers` | `OfferRecord[]` | Yes | Consolidated matched offers from successful sources. |
 | `sourceStatuses` | `SourceRefreshStatus[]` | Yes | Per-source success/failure diagnostics. |
 | `errors` | `string[]` | Yes | User-safe error summaries for view state messaging. |
+| `configuredProductCount` | `number` | Yes | Total products in config at time of snapshot (distinguishes empty-config from no-match). |
 
 ---
 
@@ -124,14 +106,14 @@ Grouped configuration section under `config.json -> providers.supermarket`.
 
 ```text
 SupermarketProviderConfig
-  ├── region: RegionContext (1:1)
-  ├── markets: MarketSourceConfig[] (1:N, N in [1,2])
+  ├── postalCode: string (PLZ for marktguru)
+  ├── retailers: string[] (1..2 marktguru slugs)
   └── products: TrackedProduct[] (1:N)
 
 DailyOfferSnapshot
-  ├── region: RegionContext (1:1)
+  ├── postalCode: string
   ├── offers: OfferRecord[] (1:N)
-  └── sourceStatuses: SourceRefreshStatus[] (1:N, mirrors enabled markets)
+  └── sourceStatuses: SourceRefreshStatus[] (always 1 entry: marktguru)
 ```
 
 ## State Transitions

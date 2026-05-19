@@ -2,15 +2,39 @@
 
 **Feature**: 002-supermarket-offers-view | **Date**: 2026-05-19
 
+## R0: Data Source Selection
+
+**Decision**: Use **marktguru.de** as the single live data source via the [`sydev/marktguru`](https://github.com/sydev/marktguru) npm library.
+
+**Rationale**: marktguru aggregates all major German retailers (REWE, Lidl, Aldi, Penny, EDEKA, Netto, Kaufland, dm, Rossmann, …) behind a single PLZ-aware JSON API. The `sydev/marktguru` library is TypeScript-native, actively maintained (Jan 2025), and dynamically fetches API keys from the marktguru homepage — no hardcoded secrets. Retailer filtering via `allowedRetailers` in the query replaces the need for a second separate adapter.
+
+**Source investigation conducted 2026-05-19** — findings for all alternatives:
+- **REWE direct** (`rewerse-engineering`): Requires extracting an mTLS client cert from the REWE Android APK on every APK version bump — unacceptable operational burden for a personal dashboard.
+- **EDEKA direct** (`VinceDerPrince/Edeka-API`): Uses a hardcoded session cookie likely expired; fragile and stale (2022).
+- **kaufda.de / meinprospekt.de (Bonial)**: No known reverse-engineered API or open-source scraper; would require mobile app network interception.
+- **Lidl / Aldi direct**: No unofficial API found; both retailers are already covered by marktguru aggregation.
+
+**Key marktguru API facts**:
+- Endpoint: `https://api.marktguru.de/api/v1/offers/search?as=web&q={query}&zipCode={plz}&limit={n}`
+- Auth: `x-apikey` + `x-clientkey` headers fetched at runtime from marktguru homepage HTML (no stored secrets)
+- PLZ filtering: ✅ native `zipCode` parameter
+- Retailer filtering: ✅ `allowedRetailers` array (slugs: `rewe`, `lidl`, `aldi-sued`, `aldi-nord`, `penny`, `netto-marken-discount`, …)
+- Image CDN: `https://mg2de.b-cdn.net/api/v1/offers/{id}/images/default/0/small.jpg`
+- Offer fields available: `description`, `price`, `oldPrice`, `referencePrice`, `validityDates`, `advertisers`, `images`
+
+**ToS note**: Unofficial use. No public API terms. Acceptable for personal/self-hosted dashboard.
+
+---
+
 ## R1: Offer Source Integration Pattern
 
-**Decision**: Use one adapter module per market source behind a shared `fetchOffers(regionContext)` contract, with initial support capped at two adapters.
+**Decision**: Use a **single adapter** (`marktguru.ts`) behind the `fetchOffers(config)` contract. The adapter uses `sydev/marktguru` and applies retailer slug filtering per config. No second adapter in v1.
 
-**Rationale**: Keeps live-source differences isolated while preserving a single refresh pipeline. Matches the explicit scope limit (1-2 markets) without introducing a generalized plugin framework too early.
+**Rationale**: marktguru's multi-retailer aggregation eliminates the need for separate adapters per retailer. The adapter boundary is preserved so a second source (e.g. direct REWE) can be added later without changing the refresh pipeline.
 
 **Alternatives considered**:
-- **One generic parser for all markets**: Rejected because source payloads and transport details differ; would create brittle condition-heavy code.
-- **Unbounded provider plugin system now**: Rejected as over-engineering for initial 1-2 source scope.
+- **One adapter per retailer**: Rejected because marktguru already aggregates them.
+- **Unbounded plugin system now**: Rejected as over-engineering for initial single-source scope.
 
 ## R2: Daily Refresh Scheduling
 
