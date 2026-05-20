@@ -225,7 +225,7 @@ Each view entry supports:
 | `type` | string | — | View component identifier (see above) |
 | `overlay` | `"both"` \| `"clock"` \| `"weather"` \| `"none"` | `"both"` | Which overlay elements to show |
 | `frequency` | `"high"` \| `"normal"` \| `"low"` | `"normal"` | How often this view appears (3×, 1×, 0.5×) |
-| `skipIfEmpty` | boolean | `false` | Automatically skip this view when it has no content to show (e.g. `photos-memories` with no memories today, `plex-now-playing` when nothing is playing) |
+| `skipIfEmpty` | boolean | `false` | Automatically skip this view when it has no content to show. Only effective on views that implement empty signalling: `photos-memories`, `calendar-day`, `calendar-agenda` |
 | `settings` | object | `{}` | View-specific overrides |
 
 ## Deployment (Docker)
