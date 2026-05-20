@@ -120,8 +120,11 @@ This strips sensitive keys from `/api/config` responses (`weather.apiKey`, `last
 Large readable clock with a random photo background, current weather, and date.
 
 - Weather icon + temperature + weekday/date displayed above the clock
-- Photo uses blurred background fill (same as photos view)
-- Best with `"overlay": "none"` (has its own built-in clock)
+- Best with `"overlay": "none"` (has its own built-in clock display)
+
+```json
+{ "type": "clock", "overlay": "none", "settings": {} }
+```
 
 ### Weather (`weather`)
 
@@ -129,41 +132,89 @@ Full-screen weather display with current conditions, temperature, and animated i
 
 - Requires `providers.weather` config section
 
-### Calendar (`calendar-day`, `calendar-week`, `calendar-month`, `calendar-agenda`)
+```json
+{ "type": "weather", "overlay": "clock", "frequency": "high", "settings": {} }
+```
 
-Four calendar layouts pulling events from iCal/ICS sources.
+### Calendar
 
-- Requires `providers.calendar` config section with `sources` array
+Four layouts pulling events from iCal/ICS sources. Requires `providers.calendar`.
 
-### Photos (`photos-random`, `photos-memories`)
+```json
+{ "type": "calendar-day",    "overlay": "clock", "settings": {} },
+{ "type": "calendar-week",   "overlay": "clock", "settings": {} },
+{ "type": "calendar-month",  "overlay": "clock", "settings": {} },
+{ "type": "calendar-agenda", "overlay": "clock", "settings": {} }
+```
 
-- **photos-random** — Displays a random photo with blurred background fill and date
-- **photos-memories** — "Heute vor X Jahren" — photos from this day in previous years
+### Photos
+
+- **photos-random** — Random photo with blurred background fill
+- **photos-memories** — "Heute vor X Jahren" — photos from this day in past years
 
 Photos are served from the `photos/` directory. Supports EXIF date extraction.
 
+```json
+{ "type": "photos-random",   "overlay": "clock", "settings": {} },
+{ "type": "photos-memories", "overlay": "clock", "settings": {} }
+```
+
 ### Music (`music-now-playing`)
 
-Shows currently playing track (or random recent track) from Last.fm with album art background.
+Currently playing or recently played track from Last.fm with album art background.
 
 - Requires `providers.music.lastfm` config section
 
-### Gaming (`gaming-recent`, `gaming-showcase`, `gaming-achievement`, `gaming-now`)
+```json
+{ "type": "music-now-playing", "overlay": "clock", "settings": {} }
+```
 
-Unified views merging Steam + RetroAchievements data:
+### Gaming
+
+Unified views merging Steam + RetroAchievements data. Requires `providers.gaming.steam` and/or `providers.gaming.retro`.
 
 - **gaming-recent** — Recent achievements timeline across both platforms
 - **gaming-showcase** — Random game spotlight with hero art
 - **gaming-achievement** — Random achievement with game background and badge icon
 - **gaming-now** — Currently playing game (live)
 
-Requires `providers.gaming.retro` and/or `providers.gaming.steam` config sections.
+```json
+{ "type": "gaming-recent",      "overlay": "clock", "settings": {} },
+{ "type": "gaming-showcase",    "overlay": "clock", "settings": {} },
+{ "type": "gaming-achievement", "overlay": "clock", "settings": {} },
+{ "type": "gaming-now",         "overlay": "clock", "settings": {} }
+```
 
-### Retro (`retro-recent`, `retro-playing`, `retro-profile`, `retro-showcase`)
+### Retro (RetroAchievements only)
 
-RetroAchievements-only views (legacy — prefer unified `gaming-*` views):
+RetroAchievements-specific views. Prefer unified `gaming-*` views for new configs.
 
 - Requires `providers.gaming.retro` config section
+
+```json
+{ "type": "retro-recent",   "overlay": "clock", "settings": {} },
+{ "type": "retro-playing",  "overlay": "clock", "settings": {} },
+{ "type": "retro-profile",  "overlay": "clock", "settings": {} },
+{ "type": "retro-showcase", "overlay": "clock", "settings": {} }
+```
+
+### Plex (`plex-now-playing`)
+
+Shows currently playing media on your Plex server.
+
+- Requires `providers.plex` config section
+
+```json
+{ "type": "plex-now-playing", "overlay": "clock", "settings": {} }
+```
+
+### Game Trailers (`gametrailers`)
+
+Plays recent game trailers as a background video view.
+
+```json
+{ "type": "gametrailers", "overlay": "clock", "settings": {} }
+```
 
 ## View Options
 
