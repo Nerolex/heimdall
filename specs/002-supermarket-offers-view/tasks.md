@@ -20,11 +20,12 @@
 
 ## Phase 1: Setup
 
-**Purpose**: Wire the new feature into project-wide configuration so all downstream phases have a valid config context to work with.
+**Purpose**: Wire the new dependency and project-wide configuration so all downstream phases have a valid runtime context.
 
-- [ ] T001 Add `providers.supermarket` block (region, markets, products sample entries) and register `supermarket-offers` view type in the `views` array of `config.json`
+- [ ] T001 Add `marktguru` (`sydev/marktguru`) as a dependency to the server package by running `pnpm add marktguru --filter @heimdall/server` and confirming the entry appears in `packages/server/package.json`
+- [ ] T002 Add `providers.supermarket` block to `config.json` using the v2 shape — top-level fields `postalCode` (string, German PLZ), `retailers` (array of 1–2 marktguru slugs e.g. `["rewe","lidl"]`), and `products` (array of `{name, aliases[]}` sample entries) — and register `{ "type": "supermarket-offers", "overlay": "clock" }` in the `views` array
 
-**Checkpoint**: `config.json` is valid and the new view type is declared in the rotation before any implementation begins.
+**Checkpoint**: `marktguru` is resolvable in the server package; `config.json` is valid JSON and the new view type is declared in the rotation before any implementation begins.
 
 ---
 
@@ -34,12 +35,12 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T002 Add `RegionContext`, `MarketSourceConfig`, `TrackedProduct`, `SourceOfferRecord`, `OfferRecord`, `SourceRefreshStatus`, `DailyOfferSnapshot`, and `SupermarketProviderConfig` TypeScript interfaces to `packages/shared/src/types.ts`
-- [ ] T003 [P] Implement `normalizeProductName(raw: string): string` canonical normalization helper (lowercase, trim, collapse whitespace) in `packages/server/src/services/supermarket/normalize.ts`
-- [ ] T004 [P] Implement `snapshotStore.ts` with `getSnapshot()`, `setSnapshot()`, and JSON persistence read/write (load from / save to project data directory on disk) in `packages/server/src/services/supermarket/snapshotStore.ts`
-- [ ] T005 Add `providers.supermarket` config block parsing and structural validation (markets length 1–2, non-empty markets IDs, de-duplicated market IDs) to `packages/server/src/config.ts`
+- [ ] T003 Add the following TypeScript interfaces to `packages/shared/src/types.ts`, matching the data-model exactly — `SupermarketProviderConfig { postalCode: string; retailers: string[]; products: TrackedProduct[] }`, `TrackedProduct { name: string; aliases?: string[] }`, `SourceOfferRecord { sourceId: 'marktguru'; sourceOfferId: string; productTitle: string; retailer: string; retailerSlug: string; price: number; oldPrice: number | null; imageUrl: string | null; validFrom: string | null; validTo: string | null }`, `OfferRecord { snapshotDate: string; retailer: string; retailerSlug: string; trackedProductName: string; matchedBy: 'name' | 'alias'; sourceProductTitle: string; price: number; oldPrice: number | null; priceText: string; imageUrl: string | null; validFrom: string | null; validTo: string | null }`, `SourceRefreshStatus { sourceId: string; ok: boolean; fetchedAt: string | null; error: string | null }`, `DailyOfferSnapshot { generatedAt: string; lastSuccessfulAt: string | null; stale: boolean; postalCode: string; offers: OfferRecord[]; sourceStatuses: SourceRefreshStatus[]; errors: string[]; configuredProductCount: number }`
+- [ ] T004 [P] Implement `normalizeProductName(raw: string): string` canonical normalization helper (lowercase, trim, collapse internal whitespace to single space) exported from `packages/server/src/services/supermarket/normalize.ts`
+- [ ] T005 [P] Implement `snapshotStore.ts` exporting `getSnapshot(): DailyOfferSnapshot | null` and `setSnapshot(s: DailyOfferSnapshot): void`, with JSON persistence — on `setSnapshot` write to a snapshot file in the project data directory; on `getSnapshot` return the in-memory value or, on cold start, attempt to load and parse the persisted file (return `null` on missing/corrupt file) in `packages/server/src/services/supermarket/snapshotStore.ts`
+- [ ] T006 Add `providers.supermarket` config block parsing and structural validation to `packages/server/src/config.ts`: require `postalCode` to be a non-empty string, require `retailers` to be an array of length 1–2 containing only known valid marktguru slugs (`rewe`, `lidl`, `aldi-sued`, `aldi-nord`, `penny`, `netto-marken-discount`, `edeka`, `kaufland`, `norma`), de-duplicate `products[]` by normalized canonical name (keep first occurrence), and throw a structured error matching the `supermarket_config_invalid` shape from `contracts/api.md` on violation
 
-**Checkpoint**: Foundation complete — all shared types are importable from `@heimdall/shared`; config parsing enforces structural constraints; snapshot store is ready for use.
+**Checkpoint**: Foundation complete — all shared types are importable from `@heimdall/shared`; config parsing enforces `postalCode`/`retailers[]` constraints; snapshot store is ready for use.
 
 ---
 
@@ -47,37 +48,36 @@
 
 **Goal**: A user opens the dashboard and the supermarket offers view renders current daily offers for configured products, without any user input.
 
-**Independent Test**: Configure one market (`market-a`), one region (`DE / 44135 / Dortmund`), and three products in `config.json`; start the dashboard (`pnpm dev`) and verify the `supermarket-offers` view renders matching daily offers automatically, with source attribution visible for each offer and no interactive controls present.
+**Independent Test**: Set `postalCode` to `"44135"`, `retailers` to `["rewe"]`, and three products in `config.json`; run `pnpm dev` and verify the `supermarket-offers` view renders matching daily offers automatically, with `retailer` attribution visible per offer card (`priceText`, `imageUrl` where available) and no interactive controls present.
 
 ### Implementation for User Story 1
 
-- [ ] T006 [P] [US1] Implement `marketA.ts` live source adapter exporting `fetchOffers(region: RegionContext): Promise<SourceOfferRecord[]>` with per-record error isolation (failed individual records do not abort the entire fetch) in `packages/server/src/services/supermarket/adapters/marketA.ts`
-- [ ] T007 [P] [US1] Implement `marketB.ts` live source adapter exporting `fetchOffers(region: RegionContext): Promise<SourceOfferRecord[]>` with per-record error isolation in `packages/server/src/services/supermarket/adapters/marketB.ts`
-- [ ] T008 [US1] Implement `matchOffers(sources: SourceOfferRecord[], products: TrackedProduct[]): OfferRecord[]` with exact normalized canonical-name + explicit-alias matching only (no fuzzy/substring), plus duplicate suppression by `trackedProductName + market + priceText + validFrom + validTo` key (FR-011) in `packages/server/src/services/supermarket/matchOffers.ts`
-- [ ] T009 [US1] Implement `refreshDailySnapshot(config: SupermarketProviderConfig): Promise<void>` orchestrating multi-source fan-out, per-source `SourceRefreshStatus` population, stale-snapshot fallback on failure (FR-012), and 24 h scheduler with immediate startup attempt (R2) in `packages/server/src/services/supermarket/refreshDailySnapshot.ts`
-- [ ] T010 [US1] Implement Fastify route handlers for `GET /api/supermarket-offers/snapshot` (200 with `DailyOfferSnapshot` / 404 when no snapshot exists / 422 for invalid config) and `GET /api/supermarket-offers/health` (200 with next-refresh metadata) in `packages/server/src/routes/supermarketOffers.ts`
-- [ ] T011 [US1] Register the supermarket Fastify plugin and invoke the daily refresh scheduler bootstrap on server startup in `packages/server/src/index.ts`
-- [ ] T012 [P] [US1] Implement `useSupermarketOffers.ts` React hook that fetches `/api/supermarket-offers/snapshot` on mount and re-fetches while the view is active, returning typed `DailyOfferSnapshot | null` plus loading/error state in `packages/dashboard/src/components/views/supermarket/useSupermarketOffers.ts`
-- [ ] T013 [P] [US1] Create `SupermarketOffers.module.css` with styles for: offer-list container, offer-card (product name, price, validity, source attribution), stale-banner, partial-error-banner, empty-state, and error-state in `packages/dashboard/src/components/views/supermarket/SupermarketOffers.module.css`
-- [ ] T014 [US1] Implement `SupermarketOffersView.tsx` view-only React component rendering exactly four states — `OFFERS_STATE` (list with source attribution per FR-010), `NO_MATCH_STATE` (no offers found), `ERROR_STATE` (snapshot unavailable), `STALE_STATE` (stale banner + last-success timestamp per FR-012) — with zero interactive controls (no search, filter, or text input per FR-002) in `packages/dashboard/src/components/views/supermarket/SupermarketOffersView.tsx`
+- [ ] T007 [P] [US1] Implement `marktguru.ts` adapter in `packages/server/src/services/supermarket/adapters/marktguru.ts` exporting `fetchOffers(config: SupermarketProviderConfig): Promise<SourceOfferRecord[]>`; use the `marktguru` npm library to query the marktguru API with `zipCode` set to `config.postalCode` and `allowedRetailers` set to `config.retailers`; map each raw offer to `SourceOfferRecord` by extracting: `sourceId: 'marktguru'`, `sourceOfferId: String(offer.id)`, `productTitle: offer.description`, `retailer: offer.advertisers[0].name`, `retailerSlug` resolved from `config.retailers` by matching advertiser name, `price: offer.price`, `oldPrice: offer.oldPrice ?? null`, `imageUrl: offer.id ? \`https://mg2de.b-cdn.net/api/v1/offers/${offer.id}/images/default/0/small.jpg\` : null`, `validFrom: offer.validityDates?.[0]?.from ?? null`, `validTo: offer.validityDates?.[0]?.to ?? null`; isolate per-record mapping errors so a single malformed record does not abort the full fetch
+- [ ] T008 [US1] Implement `matchOffers(sources: SourceOfferRecord[], products: TrackedProduct[]): OfferRecord[]` in `packages/server/src/services/supermarket/matchOffers.ts`; build a lookup map of `normalize(product.name)` and each `normalize(alias)` → `{trackedProductName, matchedBy}`; for each `SourceOfferRecord` check if `normalizeProductName(source.productTitle)` hits the lookup map (exact match only — no fuzzy, substring, or token similarity); on match, construct an `OfferRecord` including `priceText` formatted as German locale currency (e.g. `"1,29 €"` using `price.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })`); suppress duplicates by collapsing records with the same `retailer + trackedProductName + price + validTo` composite key (FR-011)
+- [ ] T009 [US1] Implement `refreshDailySnapshot(config: SupermarketProviderConfig): Promise<void>` in `packages/server/src/services/supermarket/refreshDailySnapshot.ts`; call the `marktguru` adapter, capture a `SourceRefreshStatus` entry (single entry with `sourceId: 'marktguru'`), run `matchOffers` on success, build a `DailyOfferSnapshot` with `postalCode: config.postalCode`, `configuredProductCount: config.products.length`, and `stale: false`; on adapter failure retain the previous snapshot from `snapshotStore`, update `stale: true`, and append a user-safe message to `errors[]`; export a `scheduleDailyRefresh(config)` function that performs an immediate startup attempt then schedules a 24 h recurring refresh (R2/FR-005)
+- [ ] T010 [US1] Implement Fastify route handlers in `packages/server/src/routes/supermarketOffers.ts`: `GET /api/supermarket-offers/snapshot` returns `200 DailyOfferSnapshot` when a snapshot exists, `404 { error: 'snapshot_unavailable', message: '...' }` when no snapshot exists, or `422 { error: 'supermarket_config_invalid', message: '...' }` when config is invalid (FR-008); `GET /api/supermarket-offers/health` returns `200 { hasSnapshot, stale, lastSuccessfulAt, nextRefreshDueAt, configuredRetailers, configuredProductCount }` (matching `contracts/api.md` health shape)
+- [ ] T011 [US1] Register the supermarket Fastify plugin (importing `supermarketOffers.ts` route) and call `scheduleDailyRefresh(config.providers.supermarket)` on server startup in `packages/server/src/index.ts`
+- [ ] T012 [P] [US1] Implement `useSupermarketOffers.ts` React hook in `packages/dashboard/src/components/views/supermarket/useSupermarketOffers.ts` that fetches `GET /api/supermarket-offers/snapshot` on mount and re-fetches on a polling interval while the view is active, returning `{ snapshot: DailyOfferSnapshot | null; loading: boolean; error: string | null }`; import `DailyOfferSnapshot` from `@heimdall/shared`
+- [ ] T013 [P] [US1] Create `SupermarketOffers.module.css` in `packages/dashboard/src/components/views/supermarket/SupermarketOffers.module.css` with CSS modules for: `offerList` container, `offerCard` (displays `retailer` name badge, `trackedProductName`, `priceText` prominently, `oldPrice` struck-through when present, `imageUrl` thumbnail when non-null, `validFrom`/`validTo` range), `staleBanner`, `partialErrorBanner`, `emptyState`, and `errorState`
+- [ ] T014 [US1] Implement `SupermarketOffersView.tsx` in `packages/dashboard/src/components/views/supermarket/SupermarketOffersView.tsx` as a view-only React component using `useSupermarketOffers`; render exactly five mutually-exclusive states driven by the snapshot: `LOADING` (spinner), `ERROR_STATE` (snapshot unavailable — 404 or fetch error), `EMPTY_CONFIG_STATE` (`snapshot.configuredProductCount === 0` — "No products configured"), `NO_MATCH_STATE` (`snapshot.offers.length === 0` but products exist — "No matching offers found"), `OFFERS_STATE` (offer card list with `retailer` attribution per FR-010, `priceText`, optional `oldPrice`, optional `imageUrl`, optional validity range); inside `OFFERS_STATE` also render `STALE_BANNER` when `snapshot.stale === true` and `PARTIAL_ERROR_BANNER` when any `sourceStatuses[].ok === false`; zero interactive controls (no search, filter, or text input per FR-002)
 - [ ] T015 [US1] Import `SupermarketOffersView` and call `registerComponent('supermarket-offers', SupermarketOffersView)` in `packages/dashboard/src/components/registry.ts`
 
-**Checkpoint**: User Story 1 is independently functional — the `supermarket-offers` view renders live matched offers, source attribution, stale indicator, and error state with no user input required.
+**Checkpoint**: User Story 1 is independently functional — the `supermarket-offers` view renders live matched offers (with `priceText`, `imageUrl`, `retailer` attribution), stale indicator, and all error/empty states with no user input required.
 
 ---
 
-## Phase 4: User Story 2 — Configure Region and Markets (Priority: P1)
+## Phase 4: User Story 2 — Configure Postal Code and Retailers (Priority: P1)
 
-**Goal**: A user configures `providers.supermarket.region` and up to two enabled market sources in `config.json`, and the daily refresh delivers offers scoped to that region from all enabled sources.
+**Goal**: A user configures `providers.supermarket.postalCode` and up to two marktguru retailer slugs in `config.json`, and the daily refresh delivers offers scoped to that postal code from all configured retailers.
 
-**Independent Test**: Set `region.postalCode` to two different values in separate runs and confirm displayed offers differ according to region; enable both `market-a` and `market-b` and confirm the consolidated view includes results from both sources; set an empty `region` object and confirm a clear error state is surfaced.
+**Independent Test**: Set `postalCode` to two different German PLZ values in separate runs and confirm displayed offers differ; set `retailers` to `["rewe", "lidl"]` and confirm the consolidated view includes results from both retailers; set `retailers` to `[]` or `["unknown-slug"]` and confirm a clear `422` error state is surfaced rather than a runtime crash.
 
 ### Implementation for User Story 2
 
-- [ ] T016 [P] [US2] Extend config validation in `packages/server/src/config.ts` to enforce `RegionContext` constraints: non-empty `countryCode` required, and at least one of `postalCode` or `city` present; return a structured `supermarket_config_invalid` error payload on violation (matching the `422` API contract in `contracts/api.md`)
-- [ ] T017 [US2] Confirm no hardcoded locality constants exist in `packages/server/src/services/supermarket/adapters/marketA.ts` or `marketB.ts` — each adapter must derive all region parameters exclusively from the `RegionContext` argument passed by `refreshDailySnapshot.ts`; add a JSDoc `@throws` annotation documenting the unsupported-region error path in both adapter files
+- [ ] T016 [P] [US2] Extend config validation in `packages/server/src/config.ts` to enforce the full `postalCode` constraint (non-empty string, matches `/^\d{5}$/` German PLZ format) and confirm the existing `retailers` slug allowlist check returns the structured `supermarket_config_invalid` 422 payload (matching `contracts/api.md`) — no hardcoded locality values anywhere in the validation path
+- [ ] T017 [US2] Audit `packages/server/src/services/supermarket/adapters/marktguru.ts` to confirm all locality parameters (`zipCode`, `allowedRetailers`) are derived exclusively from the `SupermarketProviderConfig` argument with no hardcoded PLZ or retailer constants; add a JSDoc `@throws` annotation documenting the error path when the marktguru API rejects an unrecognised postal code or retailer slug
 
-**Checkpoint**: Region configuration is fully data-driven; changing `providers.supermarket.region` in `config.json` and triggering a refresh delivers offers for the new region with no code change required.
+**Checkpoint**: Locality is fully data-driven — changing `postalCode` or `retailers` in `config.json` and triggering a refresh delivers offers for the new context with no code change required.
 
 ---
 
@@ -85,15 +85,15 @@
 
 **Goal**: A user edits `config.json` to define the monitored product list, and the view exclusively shows offers for those products; empty list and duplicate entries are handled gracefully.
 
-**Independent Test**: Start with product set A configured; verify only set A products appear; update to product set B and trigger a refresh; verify only set B products appear; configure an empty `products: []` list and verify an explicit "no products configured" message is displayed instead of a blank layout.
+**Independent Test**: Start with product set A configured; verify only set A products appear; update to product set B and trigger a refresh; verify only set B products appear; configure `products: []` and verify the explicit "No products configured" message appears instead of a blank layout; add duplicate product names and verify only one entry per canonical name is matched.
 
 ### Implementation for User Story 3
 
-- [ ] T018 [P] [US3] Implement tracked-product de-duplication by normalized canonical name during config parsing in `packages/server/src/config.ts` (collapse duplicate entries, keeping first occurrence) and add `configuredProductCount: number` field to `DailyOfferSnapshot` in `packages/shared/src/types.ts`, populated from `config.products.length` after de-duplication in `packages/server/src/services/supermarket/refreshDailySnapshot.ts`
-- [ ] T019 [US3] Add `EMPTY_CONFIG_STATE` branch to `SupermarketOffersView.tsx` that renders an explicit "No products configured — add products to `config.json`" message when `snapshot.configuredProductCount === 0`, distinct from `NO_MATCH_STATE` ("No matching offers found for your products"), in `packages/dashboard/src/components/views/supermarket/SupermarketOffersView.tsx`
-- [ ] T020 [US3] Add `PARTIAL_ERROR_BANNER` rendering to `SupermarketOffersView.tsx` inside `OFFERS_STATE` that displays per-source failure attribution (source ID + error message from `snapshot.sourceStatuses`) when any `SourceRefreshStatus.ok === false` while other sources still returned data in `packages/dashboard/src/components/views/supermarket/SupermarketOffersView.tsx`
+- [ ] T018 [P] [US3] Verify that the product de-duplication added in T006 (`packages/server/src/config.ts`) collapses duplicate normalized canonical names to the first occurrence and that `configuredProductCount` in `packages/server/src/services/supermarket/refreshDailySnapshot.ts` is populated from the post-deduplication `config.products.length` — add an explicit comment in `refreshDailySnapshot.ts` at the snapshot construction site documenting that `configuredProductCount` uses the deduplicated count
+- [ ] T019 [US3] Confirm `EMPTY_CONFIG_STATE` in `packages/dashboard/src/components/views/supermarket/SupermarketOffersView.tsx` renders the message "No products configured — add products to `config.json`" exclusively when `snapshot.configuredProductCount === 0`, and that it is visually distinct from `NO_MATCH_STATE` ("No matching offers found for your products") — both must never render simultaneously
+- [ ] T020 [US3] Confirm `PARTIAL_ERROR_BANNER` in `packages/dashboard/src/components/views/supermarket/SupermarketOffersView.tsx` renders inside `OFFERS_STATE` when `snapshot.sourceStatuses` contains any entry with `ok === false`; display the affected `sourceId` and `error` string from that entry; confirm offers from successful sources remain visible (non-blocking per FR-008/SC-006)
 
-**Checkpoint**: User Story 3 is independently functional — the product watchlist is the sole driver of displayed offers; empty list, deduplication, and partial-source errors all surface clear, non-breaking UI states.
+**Checkpoint**: User Story 3 is independently functional — the product watchlist is the sole driver of displayed offers; empty config, deduplication, and source error states all surface clear, non-breaking UI messages.
 
 ---
 
@@ -101,8 +101,8 @@
 
 **Purpose**: Edge-case hardening and correctness improvements identified across the spec edge cases.
 
-- [ ] T021 [P] Add null/missing validity-date guard in the offer-card template in `packages/dashboard/src/components/views/supermarket/SupermarketOffersView.tsx`: render "—" when `validFrom` or `validTo` is `null`, and omit the validity row entirely when both are null (spec edge case: "Offer data is stale or missing validity dates in a source response")
-- [ ] T022 Invalidate and clear the persisted snapshot in `packages/server/src/services/supermarket/snapshotStore.ts` when `providers.supermarket.region` changes between server restarts (detected by comparing stored `snapshot.region` to current config at boot) to prevent cross-region stale data being served (spec edge case: "Region is changed while previously cached daily data exists")
+- [ ] T021 [P] Add null validity-date guards in the offer-card template in `packages/dashboard/src/components/views/supermarket/SupermarketOffersView.tsx`: render "—" for an individual `validFrom` or `validTo` that is `null`; omit the validity row entirely when both are `null` (spec edge case: "Offer data is stale or missing validity dates in a source response"); confirm `imageUrl: null` renders no `<img>` element rather than a broken image
+- [ ] T022 Invalidate the persisted snapshot in `packages/server/src/services/supermarket/snapshotStore.ts` when `postalCode` changes between server restarts: on boot, if a persisted snapshot exists and `snapshot.postalCode !== config.postalCode`, discard the persisted file and start with no snapshot so stale cross-PLZ data is never served (spec edge case: "Region is changed while previously cached daily data exists")
 
 **Checkpoint**: All spec edge cases addressed; the feature is production-ready for daily kiosk operation.
 
@@ -111,11 +111,11 @@
 ## Dependencies (Story Completion Order)
 
 ```text
-Phase 1 (T001)
-  └──▶ Phase 2 (T002–T005)          [Foundation: types, normalize, store, config]
-         └──▶ Phase 3 US1 (T006–T015)  [MVP: adapters, matching, refresh, route, view]
-               ├──▶ Phase 4 US2 (T016–T017)  [Region hardening — builds on US1 adapters]
-               └──▶ Phase 5 US3 (T018–T020)  [Product management — builds on US1 matching + view]
+Phase 1 (T001–T002)
+  └──▶ Phase 2 (T003–T006)           [Foundation: types, normalize, store, config]
+         └──▶ Phase 3 US1 (T007–T015)   [MVP: marktguru adapter, matching, refresh, route, view]
+               ├──▶ Phase 4 US2 (T016–T017)   [Locality hardening — builds on US1 adapter + config]
+               └──▶ Phase 5 US3 (T018–T020)   [Product management — builds on US1 matching + view]
                      └──▶ Final Phase (T021–T022)  [Polish — builds on all prior phases]
 ```
 
@@ -125,21 +125,22 @@ Phase 1 (T001)
 
 ## Parallel Execution Examples
 
+### Phase 1 Sequential (T001 before T002 — package.json must be updated before config referencing the adapter is testable)
+
 ### Phase 2 Parallel Opportunities
 
 ```text
-T003 normalize.ts  ──┐
-                     ├──▶ T005 config.ts (depends on T002)
-T004 snapshotStore ──┘
-T002 types.ts (start first — all others import from it)
+T004 normalize.ts  ──┐
+                     ├──▶ T006 config.ts (depends on T003 types)
+T005 snapshotStore ──┘
+T003 types.ts (start first — all others import from it)
 ```
 
 ### Phase 3 US1 Parallel Opportunities
 
 ```text
-T006 marketA adapter  ──┐
-T007 marketB adapter  ──┤
-                        ├──▶ T008 matchOffers ──▶ T009 refreshDailySnapshot ──▶ T010 route ──▶ T011 index.ts
+T007 marktguru adapter   ──┐
+                           ├──▶ T008 matchOffers ──▶ T009 refreshDailySnapshot ──▶ T010 route ──▶ T011 index.ts
 T012 useSupermarketOffers hook  ──┐
 T013 CSS module                  ├──▶ T014 SupermarketOffersView.tsx ──▶ T015 registry.ts
 ```
@@ -147,26 +148,27 @@ T013 CSS module                  ├──▶ T014 SupermarketOffersView.tsx ─
 ### Phase 4 + 5 Parallel Opportunities (after Phase 3)
 
 ```text
-T016 [US2] config region validation  ──┐
-T017 [US2] adapter region wiring     ──┘  (US2 in parallel with US3)
+T016 [US2] PLZ format validation  ──┐
+T017 [US2] adapter locality audit ──┘  (US2 in parallel with US3)
 
-T018 [US3] product dedup + count field  ──┐
-T019 [US3] EMPTY_CONFIG_STATE view      ──┤
-T020 [US3] PARTIAL_ERROR_BANNER view    ──┘
+T018 [US3] dedup count verification  ──┐
+T019 [US3] EMPTY_CONFIG_STATE view   ──┤
+T020 [US3] PARTIAL_ERROR_BANNER view ──┘
 ```
 
 ---
 
 ## Implementation Strategy
 
-**MVP Scope (Phase 3 only)**: Delivering Phase 1 + Phase 2 + Phase 3 gives a fully working `supermarket-offers` view for the primary use case — glanceable daily offers, source attribution, stale fallback, and error states. US2 (region hardening) and US3 (product management polish + empty states) are additive and do not break US1 delivery.
+**MVP Scope**: Delivering Phase 1 + Phase 2 + Phase 3 gives a fully working `supermarket-offers` view — glanceable daily marktguru offers filtered by `postalCode` + `retailers[]`, offer cards with `priceText`/`imageUrl`/`retailer` attribution, stale fallback, and all empty/error states. US2 (locality hardening) and US3 (product management polish) are additive and do not break US1 delivery.
 
 **Incremental Delivery Order**:
-1. **T001–T005** (Setup + Foundation) — non-functional but unblocks all story work
-2. **T006–T011** (US1 server side) — snapshot API is functional and testable with `curl`
-3. **T012–T015** (US1 dashboard side) — view renders in the dashboard rotation ✅ MVP
-4. **T016–T017** (US2) + **T018–T020** (US3) in parallel — configuration hardening
-5. **T021–T022** (Polish) — edge-case correctness
+1. **T001–T002** (Setup) — installs the `marktguru` library and establishes correct config shape
+2. **T003–T006** (Foundation) — non-functional but unblocks all story work
+3. **T007–T011** (US1 server side) — snapshot API functional and testable with `curl /api/supermarket-offers/snapshot`
+4. **T012–T015** (US1 dashboard side) — view renders in the dashboard rotation ✅ MVP
+5. **T016–T017** (US2) + **T018–T020** (US3) in parallel — configuration hardening
+6. **T021–T022** (Polish) — edge-case correctness
 
 ---
 
@@ -174,13 +176,13 @@ T020 [US3] PARTIAL_ERROR_BANNER view    ──┘
 
 | Phase | Story | Tasks | Count |
 |---|---|---|---|
-| Phase 1: Setup | — | T001 | 1 |
-| Phase 2: Foundational | — | T002–T005 | 4 |
-| Phase 3: MVP | US1 (P1) | T006–T015 | 10 |
-| Phase 4: Region | US2 (P1) | T016–T017 | 2 |
+| Phase 1: Setup | — | T001–T002 | 2 |
+| Phase 2: Foundational | — | T003–T006 | 4 |
+| Phase 3: MVP | US1 (P1) | T007–T015 | 9 |
+| Phase 4: Locality | US2 (P1) | T016–T017 | 2 |
 | Phase 5: Products | US3 (P2) | T018–T020 | 3 |
 | Final: Polish | — | T021–T022 | 2 |
 | **Total** | | **T001–T022** | **22** |
 
-**Parallelizable tasks**: T003, T004, T006, T007, T012, T013, T016, T018, T019, T020, T021 (11 of 22)  
+**Parallelizable tasks**: T004, T005, T007, T012, T013, T016, T018, T019, T020, T021 (10 of 22)  
 **MVP boundary**: Complete T001–T015 for a fully operational US1 delivery.
