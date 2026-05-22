@@ -59,14 +59,13 @@ async function start(): Promise<void> {
   const configResult = loadConfig(path.resolve(PROJECT_ROOT, 'config.json'));
   const eventsConfig = configResult.config?.providers?.events;
   if (eventsConfig) {
-    const activeViewTypes = (configResult.config?.views ?? [])
-      .map(v => v.type)
-      .filter(t => ['events-today', 'events-weekend', 'events-upcoming'].includes(t));
+    // Always bootstrap all three view types so snapshots are ready regardless of which views are configured
+    const allViewTypes = ['events-today', 'events-weekend', 'events-upcoming'];
     const upcomingSettings = configResult.config?.views?.find(
       v => v.type === 'events-upcoming'
     )?.settings;
     const days = typeof upcomingSettings?.days === 'number' ? upcomingSettings.days : 7;
-    bootstrapRefreshScheduler(eventsConfig, activeViewTypes, days);
+    bootstrapRefreshScheduler(eventsConfig, allViewTypes, days);
   }
   await server.register(eventsRoute);
 

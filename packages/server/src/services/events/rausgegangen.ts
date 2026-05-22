@@ -181,6 +181,16 @@ export function parseEventTiles(html: string): RawEventRecord[] {
     const catMatch = tile.match(/event-text-pill-outline[^>]*>([^<]+)</);
     const categoryLabel = decodeHtml(catMatch?.[1]?.trim() ?? '');
 
+    // image: background-image in tile style, or <img src/data-src>
+    let imageUrl: string | undefined;
+    const bgMatch = tile.match(/background-image:\s*url\(['"]?([^'")\s]+)['"]?\)/);
+    if (bgMatch) {
+      imageUrl = decodeHtml(bgMatch[1]).replace(/[?&]width=\d+/, '?width=1920').replace(/[?&]height=\d+/, '&height=1080');
+    } else {
+      const imgMatch = tile.match(/<img[^>]+(?:src|data-src)="([^"]+)"/);
+      if (imgMatch) imageUrl = decodeHtml(imgMatch[1]).replace(/[?&]width=\d+/, '?width=1920').replace(/[?&]height=\d+/, '&height=1080');
+    }
+
     if (!title || !date) continue;
 
     // Build description in the same "Venue | DD.MM.YYYY HH:MM" format
@@ -192,10 +202,12 @@ export function parseEventTiles(html: string): RawEventRecord[] {
       id: slug,
       title,
       categorySlug: categoryToSlug(categoryLabel),
+      categoryLabelRaw: categoryLabel,
       date,
       description,
       additionalInfos: null,
       slug,
+      imageUrl,
     });
   }
 

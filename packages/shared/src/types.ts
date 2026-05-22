@@ -187,10 +187,12 @@ export interface RawEventRecord {
   id: string;
   title: string;
   categorySlug: string;
+  categoryLabelRaw: string;
   date: string;
   description: string;
   additionalInfos: string | null;
   slug: string;
+  imageUrl?: string;
 }
 
 /** Processed event record for display */
@@ -201,10 +203,13 @@ export interface EventRecord {
   categoryLabel: string;
   date: string;
   dateDisplay: string;
+  venue: string | null;
+  startTime: string | null;
   venueAndTime: string | null;
   rawDescription: string;
   recurrenceNote: string | null;
   detailUrl: string;
+  imageUrl?: string;
 }
 
 /** Events provider configuration */

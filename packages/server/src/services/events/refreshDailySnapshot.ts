@@ -18,7 +18,7 @@ function titleCase(slug: string): string {
 function formatDateDisplay(dateStr: string): string {
   const [year, month, day] = dateStr.split('-').map(Number);
   const d = new Date(Date.UTC(year, month - 1, day));
-  return new Intl.DateTimeFormat('en-GB', {
+  return new Intl.DateTimeFormat('de-DE', {
     timeZone: 'UTC',
     weekday: 'short',
     day: 'numeric',
@@ -50,18 +50,24 @@ export async function refreshSnapshot(
 
     const events: EventRecord[] = filtered.map(r => {
       const parts = r.description.split(' | ');
-      const venueAndTime = parts.length > 1 ? parts[1] : null;
+      const venue = parts[0]?.trim() || null;
+      const timeStr = parts[1]?.trim() || null;
+      // Extract HH:MM from "DD.MM.YYYY HH:MM"
+      const startTime = timeStr?.match(/(\d{1,2}:\d{2})$/)?.[1] ?? null;
       return {
         id: r.id,
         title: r.title,
         categorySlug: r.categorySlug,
-        categoryLabel: titleCase(r.categorySlug),
+        categoryLabel: r.categoryLabelRaw || titleCase(r.categorySlug),
         date: r.date,
         dateDisplay: formatDateDisplay(r.date),
-        venueAndTime,
+        venue,
+        startTime,
+        venueAndTime: venue && startTime ? `${venue} · ${startTime} Uhr` : (venue ?? startTime),
         rawDescription: r.description,
         recurrenceNote: r.additionalInfos,
-        detailUrl: `https://rausgegangen.de/en/events/${r.slug}/`,
+        detailUrl: `https://rausgegangen.de/events/${r.slug}/`,
+        imageUrl: r.imageUrl,
       };
     });
 
