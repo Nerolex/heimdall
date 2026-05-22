@@ -1,9 +1,15 @@
 import type { EventsProviderConfig, EventRecord, EventsViewSnapshot } from '@heimdall/shared';
 import { getTodayWindow, getWeekendWindow, getUpcomingWindow } from './dateWindows.js';
-import { fetchCsrfCookie } from './rausgegangen.js';
-import { paginateFetch } from './paginateFetch.js';
+import { fetchCsrfCookie, scrapeTimePage } from './rausgegangen.js';
 import { filterByWindow, filterByCategory } from './filterEvents.js';
 import { getSnapshot, setSnapshot } from './snapshotStore.js';
+
+// Page slugs for each view type
+const PAGE_SLUG: Record<string, string> = {
+  'events-today': 'tipps-fuer-heute',
+  'events-weekend': 'tips-for-the-weekend',
+  'events-upcoming': 'tips-for-the-weekend',
+};
 
 function titleCase(slug: string): string {
   return slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -36,16 +42,9 @@ export async function refreshSnapshot(
   }
 
   try {
-    const { cookie, csrfToken } = await fetchCsrfCookie(config.city);
-    const raw = await paginateFetch(
-      config.city,
-      config.lat,
-      config.lng,
-      windowStart,
-      windowEnd,
-      cookie,
-      csrfToken
-    );
+    const { cookie } = await fetchCsrfCookie(config.city);
+    const pageSlug = PAGE_SLUG[viewType] ?? 'tipps-fuer-heute';
+    const raw = await scrapeTimePage(config.city, cookie, pageSlug);
     const windowed = filterByWindow(raw, windowStart, windowEnd);
     const filtered = filterByCategory(windowed, config.categories ?? []);
 
@@ -62,7 +61,7 @@ export async function refreshSnapshot(
         venueAndTime,
         rawDescription: r.description,
         recurrenceNote: r.additionalInfos,
-        detailUrl: `https://rausgegangen.de/en/${config.city}/${r.slug}`,
+        detailUrl: `https://rausgegangen.de/en/events/${r.slug}/`,
       };
     });
 
