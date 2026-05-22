@@ -23,6 +23,10 @@ export function Overlay({ clockVisible, weatherVisible, weatherConfig, showFulls
   const showWeatherComponent = weatherConfig != null;
   const [isFullscreen, setIsFullscreen] = useState(!!document.fullscreenElement);
 
+  const [isHovered, setIsHovered] = useState(false);
+
+  const buttonOpacity = isFullscreen ? (isHovered ? 0.75 : 0) : 0.75;
+
   const handleFullscreen = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     toggleFullscreen();
@@ -67,20 +71,28 @@ export function Overlay({ clockVisible, weatherVisible, weatherConfig, showFulls
           style={{
             marginLeft: 'auto',
             pointerEvents: 'auto',
-            background: 'transparent',
-            border: 'none',
-            borderRadius: '0.5vw',
-            padding: '0.6vw',
+            background: isHovered ? 'rgba(0, 0, 0, 0.55)' : 'rgba(0, 0, 0, 0.35)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            borderRadius: '50%',
+            width: 'clamp(36px, 3.5vw, 52px)',
+            height: 'clamp(36px, 3.5vw, 52px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0,
             cursor: 'pointer',
-            opacity: 0.35,
-            transition: 'opacity 0.3s',
+            opacity: buttonOpacity,
+            transition: 'opacity 0.4s, background 0.25s',
             lineHeight: 0,
+            flexShrink: 0,
           }}
-          onMouseEnter={e => { e.currentTarget.style.opacity = '0.7'; }}
-          onMouseLeave={e => { e.currentTarget.style.opacity = '0.35'; }}
+          onMouseEnter={e => { e.stopPropagation(); setIsHovered(true); }}
+          onMouseLeave={e => { e.stopPropagation(); setIsHovered(false); }}
           title={isFullscreen ? 'Vollbild beenden' : 'Vollbild'}
         >
-          <svg width="1.6vw" height="1.6vw" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="45%" height="45%" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
             {isFullscreen ? (
               <>
                 <polyline points="4 14 10 14 10 20" />
