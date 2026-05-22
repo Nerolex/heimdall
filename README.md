@@ -14,6 +14,7 @@ Heimdall cycles through configurable views — weather, calendars, photos, music
 - 🕐 **Clock** — Large clock with photo background, weather, and date
 - ⚡ **Keep Awake** — Silent audio loop to prevent Echo Show (Silk browser) from sleeping
 - 🎲 **Frequency weighting** — Make important views appear more often
+- 🗓️ **City Events** — Local event listings from rausgegangen.de (today, weekend, upcoming)
 
 ## Quick Start
 
@@ -215,6 +216,44 @@ Plays recent game trailers as a background video view.
 ```json
 { "type": "gametrailers", "overlay": "clock", "settings": {} }
 ```
+
+### City Events (`events-today`, `events-weekend`, `events-upcoming`)
+
+Shows events from [rausgegangen.de](https://rausgegangen.de) for a configured city.
+
+- Requires `providers.events` config section with `city`, `lat`, `lng`, and optionally `categories`
+- Three view types: today's events, this weekend's events, or upcoming events (configurable window)
+- Snapshots are refreshed automatically every 24 hours on server startup
+
+**Configuration:**
+
+```json
+{
+  "providers": {
+    "events": {
+      "city": "dortmund",
+      "lat": 51.5136,
+      "lng": 7.4653,
+      "categories": ["party", "concerts-and-music", "theater"]
+    }
+  }
+}
+```
+
+**View examples:**
+
+```json
+{ "type": "events-today", "settings": { "skipIfEmpty": true } }
+{ "type": "events-weekend", "settings": { "skipIfEmpty": true } }
+{ "type": "events-upcoming", "settings": { "days": 7 } }
+```
+
+The `categories` filter uses slugs from rausgegangen.de (e.g. `party`, `concerts-and-music`, `theater`, `art-and-exhibitions`). Events in the `available-anytime` category are always excluded. Leave `categories` empty to show all event types.
+
+**API endpoints:**
+
+- `GET /api/events/snapshot?type=events-today` — current snapshot for a view type
+- `GET /api/events/health` — refresh status for all configured view types
 
 ## View Options
 

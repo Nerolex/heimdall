@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import {
   type DashboardConfig,
+  type EventsProviderConfig,
   isValidDashboardConfig,
   normalizeCycleInterval,
   normalizeViewOrder,
@@ -22,6 +23,22 @@ function getObject(value: unknown): JsonObject | undefined {
   return isObject(value) ? value : undefined;
 }
 
+function normalizeEventsProvider(raw: unknown): EventsProviderConfig | null {
+  if (!isObject(raw)) return null;
+  const city = raw.city;
+  if (typeof city !== 'string' || city.trim() === '') return null;
+  const lat = raw.lat;
+  const lng = raw.lng;
+  if (typeof lat !== 'number' || lat < -90 || lat > 90) return null;
+  if (typeof lng !== 'number' || lng < -180 || lng > 180) return null;
+  const rawCategories = Array.isArray(raw.categories) ? raw.categories : [];
+  const categories = rawCategories
+    .filter((c): c is string => typeof c === 'string')
+    .map(c => c.toLowerCase().trim())
+    .filter(c => c !== 'available-anytime');
+  return { city: city.trim(), lat, lng, categories };
+}
+
 function normalizeGroupedShape(parsed: JsonObject): JsonObject {
   const app = getObject(parsed.app);
   const providers = getObject(parsed.providers);
@@ -32,6 +49,7 @@ function normalizeGroupedShape(parsed: JsonObject): JsonObject {
   const lastfm = getObject(music?.lastfm) ?? getObject(parsed.lastfm);
   const steam = getObject(gaming?.steam) ?? getObject(parsed.steam);
   const plex = getObject(providers?.plex) ?? getObject(parsed.plex);
+  const eventsProvider = getObject(providers?.events);
   const legacyRetro = getObject(parsed.retro);
   const groupedRetro = getObject(gaming?.retro);
   const igdb = getObject(gaming?.igdb);
@@ -57,6 +75,7 @@ function normalizeGroupedShape(parsed: JsonObject): JsonObject {
     ...(Object.keys(retro).length > 0 ? { retro } : {}),
     ...(steam ? { steam } : {}),
     ...(plex ? { plex } : {}),
+    ...(eventsProvider ? { providers: { events: eventsProvider } } : {}),
   };
 }
 
@@ -122,6 +141,15 @@ export function loadConfig(configPath: string): ConfigResult {
     ...(normalizedParsed.lastfm ? { lastfm: normalizedParsed.lastfm } : {}),
     ...(normalizedParsed.plex ? { plex: normalizedParsed.plex } : {}),
   } as DashboardConfig;
+
+  // Validate and normalize events provider if present
+  if (normalizedParsed.providers) {
+    const rawProviders = normalizedParsed.providers as Record<string, unknown>;
+    const normalizedEvents = normalizeEventsProvider(rawProviders.events);
+    if (normalizedEvents) {
+      config.providers = { events: normalizedEvents };
+    }
+  }
 
   return { config };
 }

@@ -115,6 +115,8 @@ export interface DashboardConfig {
   steam?: SteamConfig;
   /** Plex server configuration */
   plex?: PlexConfig;
+  /** Provider configurations (events, etc.) */
+  providers?: { events?: EventsProviderConfig };
 }
 
 /** A calendar source (iCal URL) */
@@ -178,6 +180,66 @@ export interface RandomPhotoResponse {
 export interface ComponentProps {
   /** Component-specific settings from config */
   settings: Record<string, unknown>;
+}
+
+/** Raw event record from rausgegangen.de API */
+export interface RawEventRecord {
+  id: string;
+  title: string;
+  categorySlug: string;
+  date: string;
+  description: string;
+  additionalInfos: string | null;
+  slug: string;
+}
+
+/** Processed event record for display */
+export interface EventRecord {
+  id: string;
+  title: string;
+  categorySlug: string;
+  categoryLabel: string;
+  date: string;
+  dateDisplay: string;
+  venueAndTime: string | null;
+  rawDescription: string;
+  recurrenceNote: string | null;
+  detailUrl: string;
+}
+
+/** Events provider configuration */
+export interface EventsProviderConfig {
+  city: string;
+  lat: number;
+  lng: number;
+  categories?: string[];
+}
+
+/** Events view settings */
+export interface EventsViewSettings {
+  skipIfEmpty?: boolean;
+  days?: number;
+}
+
+/** Refresh status for a view type */
+export interface RefreshStatus {
+  viewType: string;
+  lastRefreshed: string | null;
+  stale: boolean;
+  eventCount: number;
+}
+
+/** Snapshot of events for a view */
+export interface EventsViewSnapshot {
+  viewType: string;
+  city: string;
+  events: EventRecord[];
+  totalFetched: number;
+  windowStart: string;
+  windowEnd: string;
+  refreshedAt: string;
+  stale: boolean;
+  error?: string;
 }
 
 // --- Type guards and defaults ---

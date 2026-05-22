@@ -14,6 +14,10 @@ import { steamRoute } from './routes/steam.js';
 import { gamingRoute } from './routes/gaming.js';
 import { plexRoute } from './routes/plex.js';
 import { youtubeRoute } from './routes/youtube.js';
+import { eventsRoute } from './routes/events.js';
+import { bootstrapRefreshScheduler } from './services/events/refreshDailySnapshot.js';
+import { loadFromDisk } from './services/events/snapshotStore.js';
+import { loadConfig } from './config.js';
 
 const server = Fastify({ logger: true });
 
@@ -47,6 +51,24 @@ async function start(): Promise<void> {
   await server.register(gamingRoute);
   await server.register(plexRoute);
   await server.register(youtubeRoute);
+
+  // Load snapshot store from disk
+  await loadFromDisk(path.resolve(PROJECT_ROOT, 'data/events-snapshots.json'));
+
+  // Bootstrap events provider if configured
+  const configResult = loadConfig(path.resolve(PROJECT_ROOT, 'config.json'));
+  const eventsConfig = configResult.config?.providers?.events;
+  if (eventsConfig) {
+    const activeViewTypes = (configResult.config?.views ?? [])
+      .map(v => v.type)
+      .filter(t => ['events-today', 'events-weekend', 'events-upcoming'].includes(t));
+    const upcomingSettings = configResult.config?.views?.find(
+      v => v.type === 'events-upcoming'
+    )?.settings;
+    const days = typeof upcomingSettings?.days === 'number' ? upcomingSettings.days : 7;
+    bootstrapRefreshScheduler(eventsConfig, activeViewTypes, days);
+  }
+  await server.register(eventsRoute);
 
   // Serve static assets from assets/ directory
   const assetsDir = path.resolve(PROJECT_ROOT, 'assets');
