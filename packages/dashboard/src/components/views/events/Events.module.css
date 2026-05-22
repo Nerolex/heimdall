@@ -1,3 +1,102 @@
+/* ── Showcase (events-today) ── */
+
+.showcaseContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.showcaseImage {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.showcaseFallback {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+}
+
+.showcaseOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.35) 40%, transparent 70%);
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: clamp(16px, 3vw, 40px);
+}
+
+.showcaseInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: clamp(4px, 0.6vw, 10px);
+  max-width: 65%;
+  text-align: right;
+}
+
+.showcaseQr {
+  flex-shrink: 0;
+  width: clamp(80px, 9vw, 130px);
+  height: clamp(80px, 9vw, 130px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: clamp(8px, 1vw, 14px);
+  padding: clamp(6px, 0.8vw, 12px);
+  align-self: flex-end;
+}
+
+.showcaseCategoryBadge {
+  font-size: clamp(10px, 1.5vw, 16px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(100, 200, 255, 0.25);
+  color: rgba(180, 230, 255, 0.95);
+  border-radius: 4px;
+  padding: clamp(2px, 0.3vw, 5px) clamp(6px, 1vw, 14px);
+  border: 1px solid rgba(100, 200, 255, 0.3);
+}
+
+.showcaseTitle {
+  font-size: clamp(22px, 4.5vw, 52px);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  line-height: 1.15;
+}
+
+.showcaseVenue {
+  font-size: clamp(13px, 2.2vw, 26px);
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.showcaseVenueIcon {
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+
+.showcaseDateTime {
+  font-size: clamp(12px, 1.8vw, 20px);
+  color: rgba(255, 220, 120, 0.9);
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* ── Card list (events-weekend / events-upcoming) ── */
+
 .eventCard {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 12px;
@@ -5,6 +104,189 @@
   margin-bottom: 0.75rem;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.categoryBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(100, 200, 255, 0.2);
+  color: rgba(180, 230, 255, 0.9);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+.dateDisplay {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.eventTitle {
+  margin: 0 0 0.3rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.venueAndTime {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.recurrenceNote {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  color: rgba(255, 200, 100, 0.8);
+  font-style: italic;
+}
+
+/* ── Grouped container with background image (weekend / upcoming) ── */
+
+.groupedContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.groupedBg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(18px) brightness(0.4);
+  transform: scale(1.08); /* hide blur edges */
+}
+
+.groupedBgOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 100%);
+}
+
+.cardList {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding-top: calc(var(--overlay-height, 0px) + 2vw);
+  padding-left: 3vw;
+  padding-right: 3vw;
+  padding-bottom: 2vw;
+  box-sizing: border-box;
+}
+
+/* ── Day-grouped list (events-weekend / events-upcoming) ── */
+
+.dayGroup {
+  margin-bottom: clamp(16px, 2.5vw, 32px);
+}
+
+.dayHeader {
+  font-size: clamp(16px, 2.8vw, 30px);
+  font-weight: 700;
+  color: rgba(255, 220, 120, 0.95);
+  letter-spacing: 0.03em;
+  margin-bottom: clamp(6px, 0.8vw, 12px);
+  padding-bottom: clamp(4px, 0.5vw, 8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.eventRow {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(8px, 1.5vw, 20px);
+  padding: clamp(6px, 0.8vw, 12px) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.eventRow:last-child {
+  border-bottom: none;
+}
+
+.eventRowTime {
+  flex-shrink: 0;
+  width: clamp(52px, 6vw, 80px);
+  font-size: clamp(12px, 1.8vw, 20px);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  padding-top: 0.15em;
+}
+
+.eventRowBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+
+.eventRowTitle {
+  font-size: clamp(13px, 2vw, 22px);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventRowVenue {
+  font-size: clamp(11px, 1.5vw, 16px);
+  color: rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eventRowCat {
+  flex-shrink: 0;
+  font-size: clamp(9px, 1.2vw, 13px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(180, 230, 255, 0.8);
+  background: rgba(100, 200, 255, 0.12);
+  border: 1px solid rgba(100, 200, 255, 0.2);
+  border-radius: 4px;
+  padding: 0.2em 0.6em;
+  white-space: nowrap;
+  align-self: center;
+}
+
+.emptyState {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1rem;
+  margin: 2rem 0;
+}
+
+.errorState {
+  text-align: center;
+  color: rgba(255, 100, 100, 0.8);
+  font-size: 1rem;
+  margin: 2rem 0;
+}
+
+.staleBanner {
+  background: rgba(255, 180, 0, 0.15);
+  border: 1px solid rgba(255, 180, 0, 0.3);
+  border-radius: 6px;
+  color: rgba(255, 200, 100, 0.9);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+  margin-bottom: 0.75rem;
+  text-align: center;
 }
 
 .cardHeader {
