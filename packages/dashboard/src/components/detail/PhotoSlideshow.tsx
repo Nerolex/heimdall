@@ -83,9 +83,18 @@ export function PhotoSlideshow({ settings, onClose }: Props): React.ReactElement
     isTransitioning.current = true;
     setVisible(false);
     setTimeout(() => {
+      // Update the photo source while opacity is 0.
       setActiveIndex(nextIdx);
-      setVisible(true);
-      isTransitioning.current = false;
+      // Double rAF: wait until the browser has committed the new img.src at
+      // opacity=0 before triggering the fade-in. Without this, the old cached
+      // image flashes visible at the start of the fade-in because React batches
+      // the src change and the opacity change into the same paint.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setVisible(true);
+          isTransitioning.current = false;
+        });
+      });
     }, FADE_DURATION);
   }
 
