@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import type { PhotoEntry } from '@heimdall/shared';
+import { setCurrentPhotoId } from './currentPhotoId';
 import styles from './Photos.module.css';
 
 interface Props {
@@ -25,6 +26,7 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
       const data = await res.json();
       if (data.photo) {
         setPhoto(data.photo);
+        setCurrentPhotoId(data.photo.id);
         onStateChangeRef.current?.({ photo: data.photo });
       }
       setLoading(false);
@@ -38,6 +40,7 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
     // Restore previously shown photo when navigating back
     if (savedStateRef.current?.photo) {
       setPhoto(savedStateRef.current.photo);
+      setCurrentPhotoId(savedStateRef.current.photo.id);
       onStateChangeRef.current?.({ photo: savedStateRef.current.photo });
       setLoading(false);
       return;

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import type { PhotoEntry, MemoriesResponse } from '@heimdall/shared';
+import { setCurrentPhotoId } from './currentPhotoId';
 import styles from './Photos.module.css';
 
 interface Props {
@@ -53,9 +54,12 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
     return slides[Math.floor(Math.random() * slides.length)];
   }, [memories]);
 
-  // Save state whenever current is determined
+  // Save state and update current photo ID whenever current is determined
   useEffect(() => {
-    if (current) onStateChangeRef.current?.(current);
+    if (current) {
+      setCurrentPhotoId(current.photo.id);
+      onStateChangeRef.current?.(current);
+    }
   }, [current]);
 
   if (loading) return <div className={styles.loading}>Loading memories…</div>;

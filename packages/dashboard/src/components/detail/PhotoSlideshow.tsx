@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { clockCurrentPhotoId } from '../views/clock';
+import { currentPhotoId } from '../views/photos/currentPhotoId';
 import styles from './Detail.module.css';
 
 interface Props {
@@ -40,7 +40,10 @@ export function PhotoSlideshow({ settings, onClose }: Props): React.ReactElement
     let cancelled = false;
     async function fetchTimeline(): Promise<void> {
       try {
-        const photoId = clockCurrentPhotoId;
+        // Use currentPhotoId (set by whichever photo view is active) rather than
+        // clockCurrentPhotoId so that opening the slideshow from PhotosRandomView
+        // or PhotosMemoriesView centres on the photo the user was actually viewing.
+        const photoId = currentPhotoId;
         let url: string;
 
         if (photoId) {

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { ComponentProps, WeatherConfig } from '@heimdall/shared';
+import { setCurrentPhotoId } from '../photos/currentPhotoId';
 import styles from './Clock.module.css';
 
 interface WeatherData {
@@ -113,6 +114,7 @@ export function ClockView({ settings }: ComponentProps): React.ReactElement {
         if (photo) {
           setPhotoUrl(`/api/photos/file/${photo.id}`);
           clockCurrentPhotoId = photo.id;
+          setCurrentPhotoId(photo.id);
         }
       })
       .catch(() => {});
