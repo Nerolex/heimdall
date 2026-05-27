@@ -11,7 +11,7 @@ const SUPPORTED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic',
 // Cache directory for converted HEIC files
 const CACHE_DIR = path.join(process.env.CACHE_DIR || '/tmp', 'heimdall-photo-cache');
 // Bump this version to invalidate stale cached HEIC conversions
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
 
 function cacheKey(filePath: string, suffix: string): string {
@@ -72,7 +72,17 @@ function outputFormatFor(ext: string): OutputFormat {
 
 /**
  * Return an auto-oriented image buffer when orientation normalization is needed.
- * Returns null when raw streaming is safe.
+ * Returns null when raw streaming is safe (no EXIF orientation or already correct).
+ *
+ * For HEIC/HEIF files this always converts to JPEG.
+ * For JPEG/PNG/WEBP files:
+ *   - Reads the EXIF orientation tag via sharp.metadata().
+ *   - If orientation is missing or 1 (upper-left), serves the file as-is so
+ *     the browser can apply its own image-orientation: from-image behaviour.
+ *   - If orientation is 2–8, applies sharp().rotate() to bake the correction into
+ *     the pixels and strips the EXIF orientation tag, then caches the result.
+ *   - If metadata reading fails (e.g. unusual encoding), still attempts a
+ *     best-effort rotate() in case sharp can correct orientation without metadata.
  */
 async function normalizeOrientationIfNeeded(filePath: string, ext: string): Promise<{ buffer: Buffer; contentType: string } | null> {
   if (ext === '.heic' || ext === '.heif') {
@@ -80,34 +90,44 @@ async function normalizeOrientationIfNeeded(filePath: string, ext: string): Prom
   }
 
   let orientation: number | undefined;
+  let metadataFailed = false;
   try {
     orientation = (await sharp(filePath).metadata()).orientation;
   } catch {
+    metadataFailed = true;
+  }
+
+  // Serve raw when no rotation is needed and metadata read succeeded
+  if (!metadataFailed && (!orientation || orientation === 1)) {
     return null;
   }
 
-  if (!orientation || orientation === 1) {
-    return null;
-  }
-
+  // When metadata failed, only try the cached/processed path – if it already exists,
+  // return it; otherwise attempt a best-effort rotate and cache the result.
   const output = outputFormatFor(ext);
-  const hash = cacheKey(filePath, `auto-orient-${output.ext}`);
+  const suffix = metadataFailed ? `force-orient-${output.ext}` : `auto-orient-${output.ext}`;
+  const hash = cacheKey(filePath, suffix);
   const cachedPath = path.join(CACHE_DIR, `${CACHE_VERSION}-${hash}.${output.ext}`);
   if (fs.existsSync(cachedPath)) {
     return { buffer: fs.readFileSync(cachedPath), contentType: output.contentType };
   }
 
-  const pipeline = sharp(filePath).rotate();
-  let buffer: Buffer;
-  if (output.format === 'jpeg') {
-    buffer = await pipeline.jpeg({ quality: 90 }).toBuffer();
-  } else if (output.format === 'png') {
-    buffer = await pipeline.png().toBuffer();
-  } else {
-    buffer = await pipeline.webp({ quality: 90 }).toBuffer();
+  try {
+    const pipeline = sharp(filePath).rotate();
+    let buffer: Buffer;
+    if (output.format === 'jpeg') {
+      buffer = await pipeline.jpeg({ quality: 90 }).toBuffer();
+    } else if (output.format === 'png') {
+      buffer = await pipeline.png().toBuffer();
+    } else {
+      buffer = await pipeline.webp({ quality: 90 }).toBuffer();
+    }
+    fs.writeFileSync(cachedPath, buffer);
+    return { buffer, contentType: output.contentType };
+  } catch {
+    // sharp cannot process this file at all — serve raw and rely on browser CSS
+    return null;
   }
-  fs.writeFileSync(cachedPath, buffer);
-  return { buffer, contentType: output.contentType };
 }
 
 interface PhotoIndex {
@@ -177,6 +197,13 @@ async function getPhotoIndex(photosDir: string): Promise<PhotoIndex> {
       const meta = await sharp(filePath).metadata();
       width = meta.width;
       height = meta.height;
+      // For 90°/270° rotations (orientations 5–8) the stored pixel dimensions are
+      // swapped relative to what the corrected image will look like; fix that here
+      // so callers get the logical display dimensions.
+      const orient = meta.orientation ?? 1;
+      if (orient >= 5 && orient <= 8 && width !== undefined && height !== undefined) {
+        [width, height] = [height, width];
+      }
     } catch {
       // skip dimensions
     }
@@ -203,10 +230,15 @@ async function getPhotoIndex(photosDir: string): Promise<PhotoIndex> {
   const index: PhotoIndex = { photos, byMonthDay, lastScanned: Date.now() };
   photoIndexCache.set(photosDir, index);
 
-  // Also store file path mapping for serving
-  filePathMap.clear();
+  // Update file path mapping without a clear→repopulate gap that would cause 404s.
+  // Add/update entries for all current photos, then prune stale ones.
+  const newIds = new Set<string>();
   for (let i = 0; i < imagePaths.length; i++) {
+    newIds.add(photos[i].id);
     filePathMap.set(photos[i].id, imagePaths[i]);
+  }
+  for (const id of filePathMap.keys()) {
+    if (!newIds.has(id)) filePathMap.delete(id);
   }
 
   return index;
