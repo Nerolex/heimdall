@@ -123,7 +123,7 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
     fetchData();
   }, [steamApiKey, steamId, raApiUser, raApiKey, raUser, sgdbApiKey, igdbClientId, igdbClientSecret]);
 
-  if (loading) return <div className={styles.loading}>Loading…</div>;
+  if (loading) return <div className={styles.showcaseContainer} />;
   if (!achievement) return <div className={styles.loading}>Keine Achievements verfügbar</div>;
 
   const sourceIcon = achievement.source === 'steam' ? '🎮' : '🕹️';

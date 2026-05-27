@@ -21,10 +21,12 @@ afterEach(() => {
 });
 
 describe('PhotosMemoriesView — fresh mount (no savedState)', () => {
-  it('shows loading state before fetch resolves', () => {
+  it('renders an empty container while loading (no visible text flash)', () => {
     global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
     const { container } = render(<PhotosMemoriesView settings={{}} />);
-    expect(container.textContent).toContain('Loading memories');
+    // Loading state renders a blank container — no text — to prevent flash during fade-out
+    expect(container.textContent).toBe('');
+    expect(container.querySelector('div')).not.toBeNull();
   });
 
   it('renders a memory photo after successful fetch', async () => {

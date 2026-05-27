@@ -62,7 +62,7 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
     }
   }, [current]);
 
-  if (loading) return <div className={styles.loading}>Loading memories…</div>;
+  if (loading) return <div className={styles.container} />;
   if (error) return <div className={styles.loading}>Photos unavailable</div>;
 
   if (!current) {

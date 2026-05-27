@@ -21,11 +21,13 @@ afterEach(() => {
 });
 
 describe('PhotosRandomView — fresh mount (no savedState)', () => {
-  it('shows loading state on initial render before fetch resolves', () => {
+  it('renders an empty container while loading (no visible text flash)', () => {
     // fetch that never resolves → component stays in loading state
     global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
     const { container } = render(<PhotosRandomView settings={{}} />);
-    expect(container.textContent).toContain('Loading photo');
+    // Loading state renders a blank container — no text — to prevent flash during fade-out
+    expect(container.textContent).toBe('');
+    expect(container.querySelector('div')).not.toBeNull();
   });
 
   it('fetches a random photo and renders it', async () => {

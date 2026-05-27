@@ -48,7 +48,7 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
     fetchPhoto();
   }, [fetchPhoto]);
 
-  if (loading) return <div className={styles.loading}>Loading photo…</div>;
+  if (loading) return <div className={styles.container} />;
   if (error || !photo) return <div className={styles.loading}>{error ? 'Photos unavailable' : 'No photos found'}</div>;
 
   const dateStr = new Date(photo.dateTaken).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
