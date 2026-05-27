@@ -34,7 +34,7 @@ export function CalendarMonthView({ settings }: Props): React.ReactElement {
           ))}
         </div>
 
-        <div className={styles.monthGrid} style={{ gridTemplateRows: `repeat(${weeks.length}, 1fr)` }}>
+        <div className={styles.monthGrid} style={{ gridTemplateRows: `repeat(${weeks.length}, minmax(0, 1fr))` }}>
           {weeks.map((week, wi) => (
           <div key={wi} className={styles.weekRow}>
             {week.map((date, di) => {

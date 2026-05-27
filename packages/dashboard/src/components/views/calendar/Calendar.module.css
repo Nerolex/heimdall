@@ -108,6 +108,7 @@
   grid-template-columns: repeat(7, 1fr);
   gap: 0.5vw;
   margin-bottom: 0.5vw;
+  flex-shrink: 0;
 }
 
 .weekdayLabel {
@@ -122,12 +123,16 @@
   flex: 1;
   display: grid;
   gap: 0.5vw;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .weekRow {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.5vw;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .dayCell {
@@ -138,6 +143,7 @@
   align-items: flex-start;
   justify-content: flex-start;
   overflow: hidden;
+  min-height: 0;
 }
 
 .dayCellEmpty {
@@ -214,7 +220,20 @@
   padding-left: 6px;
 }
 
-@media (min-height: 600px) and (min-width: 800px) {
+@media (max-height: 620px) {
+  .container {
+    padding-top: calc(var(--overlay-height, 0px) + 1vw);
+    padding-bottom: 1vw;
+  }
+  .monthContent {
+    margin-left: 2.5vw;
+  }
+  .weekdayLabel {
+    padding: 0.1vw 0;
+  }
+}
+
+@media (min-height: 650px) and (min-width: 800px) {
   .eventTitles {
     display: flex;
   }
