@@ -62,7 +62,7 @@ export function useViewCycle(
     return (currentIdx + 1) % config.views.length;
   }
 
-  const transitionTo = useCallback((nextIdx: number): void => {
+  const transitionTo = useCallback((nextIdx: number, deferredHistoryPos?: number): void => {
     if (!config || isTransitioning.current) return;
     isTransitioning.current = true;
 
@@ -75,6 +75,14 @@ export function useViewCycle(
     if (showsWeather(currentMode) && !showsWeather(nextMode)) setWeatherVisible(false);
 
     setTimeout(() => {
+      // If a new history position was provided, apply it here — AFTER the fade-out —
+      // so the currently-visible view is never remounted during the transition.
+      // (User-initiated back/forward navigation sets historyPos before calling
+      //  transitionTo so that savedState is loaded ahead of time; those callers
+      //  do NOT pass deferredHistoryPos.)
+      if (deferredHistoryPos !== undefined) {
+        setHistoryPos(deferredHistoryPos);
+      }
       activeViewIndexRef.current = nextIdx;
       setActiveViewIndex(nextIdx);
       setVisible(true);
@@ -100,8 +108,9 @@ export function useViewCycle(
     const newPos = historyPosRef.current + 1;
     viewSnapshots.current.delete(newPos);
     historyPosRef.current = newPos;
-    setHistoryPos(newPos);
-    transitionTo(nextIdx);
+    // Defer the React key change until the fade-out completes so the
+    // currently-visible view is never re-mounted during its own exit transition.
+    transitionTo(nextIdx, newPos);
   }, [config, transitionTo]);
 
   // Reset overlay state when config first becomes available.
@@ -155,8 +164,7 @@ export function useViewCycle(
         const newPos = historyPosRef.current + 1;
         viewSnapshots.current.delete(newPos);
         historyPosRef.current = newPos;
-        setHistoryPos(newPos);
-        transitionTo(nextIdx);
+        transitionTo(nextIdx, newPos);
       }
       return;
     }
@@ -185,8 +193,9 @@ export function useViewCycle(
       const newPos = historyPosRef.current + 1;
       viewSnapshots.current.delete(newPos);
       historyPosRef.current = newPos;
-      setHistoryPos(newPos);
-      transitionTo(nextIdx);
+      // Defer the React key change until after the fade-out so the currently-visible
+      // view is not re-mounted (and does not flash "Loading…") during its exit.
+      transitionTo(nextIdx, newPos);
     }, interval - FADE_DURATION);
 
     return () => {
