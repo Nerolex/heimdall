@@ -63,7 +63,9 @@ export function useViewCycle(
   }
 
   const transitionTo = useCallback((nextIdx: number): void => {
-    if (!config || isTransitioning.current) return;
+    if (!config || isTransitioning.current) {
+      return;
+    }
     isTransitioning.current = true;
 
     const currentIdx = activeViewIndexRef.current;

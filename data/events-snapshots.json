@@ -1,0 +1,155 @@
+{
+  "dortmund:events-today": {
+    "viewType": "events-today",
+    "city": "dortmund",
+    "events": [
+      {
+        "id": "dev-today-1",
+        "title": "Jazz im Konzerthaus",
+        "categorySlug": "konzerte-musik",
+        "categoryLabel": "Konzerte & Musik",
+        "date": "2026-05-27",
+        "dateDisplay": "Mi., 27. Mai",
+        "venue": "Konzerthaus Dortmund",
+        "startTime": "20:00",
+        "venueAndTime": "Konzerthaus Dortmund · 20:00 Uhr",
+        "rawDescription": "Ein unvergesslicher Jazzabend mit internationalen Künstlern.",
+        "recurrenceNote": null,
+        "detailUrl": "https://example.com/jazz-im-konzerthaus",
+        "imageUrl": "https://picsum.photos/seed/today1/1024/600"
+      },
+      {
+        "id": "dev-today-2",
+        "title": "Sommerfest am Phoenixsee",
+        "categorySlug": "stadtfest-märkte",
+        "categoryLabel": "Stadtfeste & Märkte",
+        "date": "2026-05-27",
+        "dateDisplay": "Mi., 27. Mai",
+        "venue": "Phoenixsee",
+        "startTime": "14:00",
+        "venueAndTime": "Phoenixsee · 14:00 Uhr",
+        "rawDescription": "Großes Sommerfest mit Musik, Essen und Unterhaltung für die ganze Familie.",
+        "recurrenceNote": null,
+        "detailUrl": "https://example.com/sommerfest-phoenixsee",
+        "imageUrl": "https://picsum.photos/seed/today2/1024/600"
+      }
+    ],
+    "totalFetched": 2,
+    "windowStart": "2026-05-27T00:00:00.000Z",
+    "windowEnd": "2026-05-27T23:59:59.000Z",
+    "refreshedAt": "2026-05-27T08:00:00.000Z",
+    "stale": false
+  },
+  "dortmund:events-weekend": {
+    "viewType": "events-weekend",
+    "city": "dortmund",
+    "events": [
+      {
+        "id": "dev-weekend-1",
+        "title": "Rock am Revierpark",
+        "categorySlug": "konzerte-musik",
+        "categoryLabel": "Konzerte & Musik",
+        "date": "2026-05-30",
+        "dateDisplay": "Sa., 30. Mai",
+        "venue": "Revierpark Wischlingen",
+        "startTime": "18:00",
+        "venueAndTime": "Revierpark Wischlingen · 18:00 Uhr",
+        "rawDescription": "Open-Air Konzert mit lokalen und überregionalen Bands.",
+        "recurrenceNote": null,
+        "detailUrl": "https://example.com/rock-am-revierpark",
+        "imageUrl": "https://picsum.photos/seed/weekend1/1024/600"
+      },
+      {
+        "id": "dev-weekend-2",
+        "title": "Flohmarkt Westfalenpark",
+        "categorySlug": "stadtfest-märkte",
+        "categoryLabel": "Stadtfeste & Märkte",
+        "date": "2026-05-31",
+        "dateDisplay": "So., 31. Mai",
+        "venue": "Westfalenpark",
+        "startTime": "08:00",
+        "venueAndTime": "Westfalenpark · 08:00 Uhr",
+        "rawDescription": "Großer Trödelmarkt mit hunderten Händlern.",
+        "recurrenceNote": null,
+        "detailUrl": "https://example.com/flohmarkt-westfalenpark",
+        "imageUrl": "https://picsum.photos/seed/weekend2/1024/600"
+      },
+      {
+        "id": "dev-weekend-3",
+        "title": "Filmvorführung im Freien",
+        "categorySlug": "film-kino",
+        "categoryLabel": "Film & Kino",
+        "date": "2026-05-31",
+        "dateDisplay": "So., 31. Mai",
+        "venue": "Stadtgarten",
+        "startTime": "21:30",
+        "venueAndTime": "Stadtgarten · 21:30 Uhr",
+        "rawDescription": "Open-Air Kino unter dem Sternenhimmel.",
+        "recurrenceNote": null,
+        "detailUrl": "https://example.com/filmvorfuehrung",
+        "imageUrl": "https://picsum.photos/seed/weekend3/1024/600"
+      }
+    ],
+    "totalFetched": 3,
+    "windowStart": "2026-05-30T00:00:00.000Z",
+    "windowEnd": "2026-06-01T23:59:59.000Z",
+    "refreshedAt": "2026-05-27T08:00:00.000Z",
+    "stale": false
+  },
+  "dortmund:events-upcoming": {
+    "viewType": "events-upcoming",
+    "city": "dortmund",
+    "events": [
+      {
+        "id": "dev-upcoming-1",
+        "title": "Ruhrtriennale – Eröffnungskonzert",
+        "categorySlug": "konzerte-musik",
+        "categoryLabel": "Konzerte & Musik",
+        "date": "2026-06-05",
+        "dateDisplay": "Fr., 5. Jun",
+        "venue": "Jahrhunderthalle Bochum",
+        "startTime": "20:00",
+        "venueAndTime": "Jahrhunderthalle Bochum · 20:00 Uhr",
+        "rawDescription": "Das Eröffnungskonzert des internationalen Kunstfestivals Ruhrtriennale.",
+        "recurrenceNote": null,
+        "detailUrl": "https://www.ruhrtriennale.de",
+        "imageUrl": "https://picsum.photos/seed/upcoming1/1024/600"
+      },
+      {
+        "id": "dev-upcoming-2",
+        "title": "Street Food Festival",
+        "categorySlug": "stadtfest-märkte",
+        "categoryLabel": "Stadtfeste & Märkte",
+        "date": "2026-06-12",
+        "dateDisplay": "Fr., 12. Jun",
+        "venue": "Fredenbaumpark",
+        "startTime": "11:00",
+        "venueAndTime": "Fredenbaumpark · 11:00 Uhr",
+        "rawDescription": "Internationales Street Food Festival mit über 50 Foodtrucks.",
+        "recurrenceNote": null,
+        "detailUrl": "https://example.com/street-food",
+        "imageUrl": "https://picsum.photos/seed/upcoming2/1024/600"
+      },
+      {
+        "id": "dev-upcoming-3",
+        "title": "Theater Dortmund: Premiere",
+        "categorySlug": "theater-tanz",
+        "categoryLabel": "Theater & Tanz",
+        "date": "2026-06-20",
+        "dateDisplay": "Sa., 20. Jun",
+        "venue": "Theater Dortmund",
+        "startTime": "19:30",
+        "venueAndTime": "Theater Dortmund · 19:30 Uhr",
+        "rawDescription": "Premiere des neuen Stücks der Spielzeit 2026/27.",
+        "recurrenceNote": null,
+        "detailUrl": "https://www.theaterdo.de",
+        "imageUrl": "https://picsum.photos/seed/upcoming3/1024/600"
+      }
+    ],
+    "totalFetched": 3,
+    "windowStart": "2026-05-27T00:00:00.000Z",
+    "windowEnd": "2026-06-03T23:59:59.000Z",
+    "refreshedAt": "2026-05-27T08:00:00.000Z",
+    "stale": false
+  }
+}

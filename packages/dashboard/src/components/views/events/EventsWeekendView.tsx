@@ -31,7 +31,7 @@ export function EventsWeekendView({ settings }: { settings: Record<string, unkno
     if (status === 'empty' && skipIfEmpty && onEmpty) onEmpty();
   }, [status, skipIfEmpty, onEmpty]);
 
-  if (status === 'loading') return <div className={styles.emptyState}>Lade Events…</div>;
+  if (status === 'loading') return <div className={styles.groupedContainer} />;
   if (status === 'error') return <div className={styles.errorState}>Events konnten nicht geladen werden</div>;
   if (status === 'empty') return <div className={styles.emptyState}>Keine Events am Wochenende</div>;
 
