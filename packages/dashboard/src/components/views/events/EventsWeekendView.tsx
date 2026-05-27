@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useEventsSnapshot } from './useEventsSnapshot';
 import styles from './Events.module.css';
 
@@ -7,13 +7,23 @@ export function EventsWeekendView({ settings }: { settings: Record<string, unkno
   const skipIfEmpty = settings.skipIfEmpty === true;
   const onEmpty = settings.__onEmpty as (() => void) | undefined;
 
+  const savedStateRef = useRef(settings.__savedState as { bgImageUrl: string | undefined } | undefined);
+  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
+
   const events = snapshot?.events ?? [];
 
   // All hooks must be called before any early returns
   const bgImage = useMemo(() => {
+    if (savedStateRef.current != null) return savedStateRef.current.bgImageUrl;
     const withImage = events.filter(e => e.imageUrl);
-    if (!withImage.length) return undefined;
-    return withImage[Math.floor(Math.random() * withImage.length)].imageUrl;
+    const picked = withImage.length
+      ? withImage[Math.floor(Math.random() * withImage.length)].imageUrl
+      : undefined;
+    // Save on first pick so back navigation restores the same image
+    if (picked !== undefined) {
+      onStateChangeRef.current?.({ bgImageUrl: picked });
+    }
+    return picked;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snapshot?.refreshedAt]);
 

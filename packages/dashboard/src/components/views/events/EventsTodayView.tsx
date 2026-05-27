@@ -12,12 +12,21 @@ export function EventsTodayView({ settings }: { settings: Record<string, unknown
   const onEmpty = settings.__onEmpty as (() => void) | undefined;
   const indexRef = useRef<number | null>(null);
 
+  const savedStateRef = useRef(settings.__savedState as { activeIndex: number } | undefined);
+  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
+
   const events = snapshot?.events ?? [];
 
   // Assign index on first render of this mount
   if (indexRef.current === null && events.length > 0) {
-    indexRef.current = lastShownIndex % events.length;
-    lastShownIndex = (lastShownIndex + 1) % events.length;
+    if (savedStateRef.current != null) {
+      // Restore the exact event that was shown before — don't advance the counter
+      indexRef.current = savedStateRef.current.activeIndex % events.length;
+    } else {
+      indexRef.current = lastShownIndex % events.length;
+      lastShownIndex = (lastShownIndex + 1) % events.length;
+      onStateChangeRef.current?.({ activeIndex: indexRef.current });
+    }
   }
 
   useEffect(() => {
