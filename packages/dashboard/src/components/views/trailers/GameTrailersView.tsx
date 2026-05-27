@@ -20,13 +20,16 @@ function randomStartSec(): number {
   return 5 + Math.floor(Math.random() * 40);
 }
 
-export function GameTrailersView(): React.ReactElement {
+export function GameTrailersView({ settings }: { settings: Record<string, unknown> }): React.ReactElement {
   const [videos, setVideos] = useState<VideoEntry[]>([]);
   const [current, setCurrent] = useState<VideoEntry | null>(null);
   const [startSec, setStartSec] = useState(0);
   const [error, setError] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const videosRef = useRef<VideoEntry[]>([]);
+
+  const savedStateRef = useRef(settings.__savedState as { current: VideoEntry; startSec: number } | undefined);
+  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
 
   const pickNext = useCallback((pool: VideoEntry[]) => {
     const vid = pickRandom(pool);
@@ -41,9 +44,20 @@ export function GameTrailersView(): React.ReactElement {
         if (!data.videos?.length) throw new Error();
         videosRef.current = data.videos;
         setVideos(data.videos);
-        pickNext(data.videos);
+        // Only pick a new video if we're not restoring from saved state
+        if (!savedStateRef.current?.current) {
+          pickNext(data.videos);
+        }
       })
-      .catch(() => setError(true));
+      .catch(() => {
+        if (!savedStateRef.current?.current) setError(true);
+      });
+
+    // Restore saved video immediately while the pool loads in background
+    if (savedStateRef.current?.current) {
+      setCurrent(savedStateRef.current.current);
+      setStartSec(savedStateRef.current.startSec);
+    }
   }, [pickNext]);
 
   // Auto-advance to next random video after SEGMENT_DURATION
@@ -57,6 +71,13 @@ export function GameTrailersView(): React.ReactElement {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [current, videos.length, pickNext]);
+
+  // Save state whenever the displayed video changes
+  useEffect(() => {
+    if (current) {
+      onStateChangeRef.current?.({ current, startSec });
+    }
+  }, [current, startSec]);
 
   if (error) {
     return <div className={styles.error}>GameTrailers unavailable</div>;

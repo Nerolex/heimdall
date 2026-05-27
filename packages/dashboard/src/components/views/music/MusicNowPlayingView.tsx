@@ -16,10 +16,13 @@ interface Props {
 }
 
 export function MusicNowPlayingView({ settings }: Props): React.ReactElement {
-  const [nowPlaying, setNowPlaying] = useState<Track | null>(null);
-  const [recent, setRecent] = useState<Track[]>([]);
+  const [featured, setFeatured] = useState<Track | null>(null);
+  const [isNowPlaying, setIsNowPlaying] = useState(false);
   const [loading, setLoading] = useState(true);
   const fetchedRef = useRef(false);
+
+  const savedStateRef = useRef(settings.__savedState as { featured: Track; isNowPlaying: boolean } | undefined);
+  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
 
   const apiKey = settings.lastfmApiKey as string | undefined;
   const user = settings.lastfmUser as string | undefined;
@@ -27,6 +30,13 @@ export function MusicNowPlayingView({ settings }: Props): React.ReactElement {
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
+
+    if (savedStateRef.current?.featured) {
+      setFeatured(savedStateRef.current.featured);
+      setIsNowPlaying(savedStateRef.current.isNowPlaying);
+      setLoading(false);
+      return;
+    }
 
     async function fetchData(): Promise<void> {
       if (!apiKey || !user) {
@@ -36,8 +46,14 @@ export function MusicNowPlayingView({ settings }: Props): React.ReactElement {
       try {
         const res = await fetch(`/api/lastfm/recent?apiKey=${apiKey}&user=${encodeURIComponent(user)}&limit=8`);
         const data = await res.json();
-        setNowPlaying(data.nowPlaying || null);
-        setRecent(data.recent || []);
+        const nowPlaying: Track | null = data.nowPlaying || null;
+        const recent: Track[] = data.recent || [];
+        const track = nowPlaying || (recent.length > 0 ? recent[Math.floor(Math.random() * recent.length)] : null);
+        if (track) {
+          setFeatured(track);
+          setIsNowPlaying(!!nowPlaying);
+          onStateChangeRef.current?.({ featured: track, isNowPlaying: !!nowPlaying });
+        }
       } catch { /* ignore */ }
       setLoading(false);
     }
@@ -52,7 +68,6 @@ export function MusicNowPlayingView({ settings }: Props): React.ReactElement {
     return <div className={styles.loading}>Last.fm nicht konfiguriert</div>;
   }
 
-  const featured = nowPlaying || recent[Math.floor(Math.random() * recent.length)];
   if (!featured) {
     return <div className={styles.loading}>Keine Musik-Daten verfügbar</div>;
   }
@@ -72,7 +87,7 @@ export function MusicNowPlayingView({ settings }: Props): React.ReactElement {
             <img src={featured.image} alt="" className={styles.albumArt} />
           )}
           <div className={styles.trackInfo}>
-            {nowPlaying && <div className={styles.nowPlayingBadge}>▶ Now Playing</div>}
+            {isNowPlaying && <div className={styles.nowPlayingBadge}>▶ Now Playing</div>}
             <div className={styles.trackName}>{featured.name}</div>
             <div className={styles.artistName}>{featured.artist}</div>
             <div className={styles.albumName}>{featured.album}</div>

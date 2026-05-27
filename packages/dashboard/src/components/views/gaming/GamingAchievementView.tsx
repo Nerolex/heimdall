@@ -33,6 +33,9 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const fetchedRef = useRef(false);
 
+  const savedStateRef = useRef(settings.__savedState as { achievement: UnifiedAchievement; bgUrl: string | null } | undefined);
+  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
+
   const steamApiKey = settings.steamApiKey as string | undefined;
   const steamId = settings.steamId as string | undefined;
   const raApiUser = settings.raApiUser as string | undefined;
@@ -45,6 +48,14 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
+
+    // Restore from navigation history without re-fetching
+    if (savedStateRef.current?.achievement) {
+      setAchievement(savedStateRef.current.achievement);
+      setBgUrl(savedStateRef.current.bgUrl);
+      setLoading(false);
+      return;
+    }
 
     async function fetchData(): Promise<void> {
       try {
@@ -67,11 +78,10 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
           return;
         }
 
-        // Pick random achievement
         const picked = data[Math.floor(Math.random() * data.length)];
         setAchievement(picked);
 
-        // Fetch background: prefer SGDB hero (always high-res), fallback to IGDB screenshot for modern games
+        let finalBgUrl: string | null = null;
         let foundBg = false;
 
         if (sgdbApiKey && picked.gameName) {
@@ -85,14 +95,13 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
               if (heroData.success && heroData.data?.length > 0) {
                 const originalUrl = heroData.data[0].url as string;
                 const path = originalUrl.replace('https://cdn2.steamgriddb.com/', '');
-                setBgUrl(`/api/sgdb/media/${path}`);
+                finalBgUrl = `/api/sgdb/media/${path}`;
                 foundBg = true;
               }
             }
           } catch { /* ignore */ }
         }
 
-        // Only use IGDB screenshot if no hero and it's a modern platform
         if (!foundBg && igdbClientId && igdbClientSecret && picked.gameName && picked.consoleName === 'Steam') {
           try {
             const igdbRes = await fetch(
@@ -101,15 +110,18 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
             const igdbData = await igdbRes.json();
             if (igdbData.success && igdbData.screenshots?.length > 0) {
               const shots = igdbData.screenshots;
-              setBgUrl(shots[Math.floor(Math.random() * shots.length)].url);
+              finalBgUrl = shots[Math.floor(Math.random() * shots.length)].url;
             }
           } catch { /* ignore */ }
         }
+
+        if (finalBgUrl) setBgUrl(finalBgUrl);
+        onStateChangeRef.current?.({ achievement: picked, bgUrl: finalBgUrl });
       } catch { /* ignore */ }
       setLoading(false);
     }
     fetchData();
-  }, [steamApiKey, steamId, raApiUser, raApiKey, raUser, sgdbApiKey]);
+  }, [steamApiKey, steamId, raApiUser, raApiKey, raUser, sgdbApiKey, igdbClientId, igdbClientSecret]);
 
   if (loading) return <div className={styles.loading}>Loading…</div>;
   if (!achievement) return <div className={styles.loading}>Keine Achievements verfügbar</div>;

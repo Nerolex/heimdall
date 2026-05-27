@@ -5,6 +5,8 @@ import { getOverlayMode, showsClock, showsWeather } from './viewSettings';
 
 interface UseViewCycleResult {
   activeViewIndex: number;
+  /** Current position in the navigation history stack — use as React key for ViewRenderer */
+  historyPos: number;
   nextViewIndex: number | null;
   detailMode: boolean;
   visible: boolean;
@@ -32,9 +34,13 @@ export function useViewCycle(
   const [weatherVisible, setWeatherVisible] = useState(true);
   const cycleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTransitioning = useRef(false);
+
+  // Pointer-based navigation history.
+  // viewHistory holds the view index at each position; historyPosRef is the cursor.
   const viewHistory = useRef<number[]>([0]);
   const viewSnapshots = useRef<Map<number, unknown>>(new Map());
-  const currentHistoryPos = useRef(0);
+  const historyPosRef = useRef(0);
+  const [historyPos, setHistoryPos] = useState(0);
 
   function getNextIndex(currentIdx: number): number {
     if (!config) return 0;
@@ -79,7 +85,7 @@ export function useViewCycle(
   }, [config]);
 
   const onActiveViewStateChange = useCallback((state: unknown) => {
-    viewSnapshots.current.set(currentHistoryPos.current, state);
+    viewSnapshots.current.set(historyPosRef.current, state);
   }, []);
 
   const onActiveViewEmpty = useCallback(() => {
@@ -88,8 +94,13 @@ export function useViewCycle(
     if (!view?.skipIfEmpty) return;
     if (cycleTimer.current) clearTimeout(cycleTimer.current);
     const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
-    viewSnapshots.current.delete(viewHistory.current.length);
+    // Truncate any "forward" history past the current position, then push new entry.
+    viewHistory.current = viewHistory.current.slice(0, historyPosRef.current + 1);
     viewHistory.current.push(nextIdx);
+    const newPos = historyPosRef.current + 1;
+    viewSnapshots.current.delete(newPos);
+    historyPosRef.current = newPos;
+    setHistoryPos(newPos);
     transitionTo(nextIdx);
   }, [config, transitionTo]);
 
@@ -119,19 +130,34 @@ export function useViewCycle(
     if (cycleTimer.current) clearTimeout(cycleTimer.current);
 
     if (zone < 0.25) {
-      if (viewHistory.current.length > 1) {
-        viewHistory.current.pop();
-        const prevIdx = viewHistory.current[viewHistory.current.length - 1];
-        transitionTo(prevIdx);
+      // Go back in history (if not at the beginning)
+      if (historyPosRef.current > 0) {
+        const newPos = historyPosRef.current - 1;
+        historyPosRef.current = newPos;
+        setHistoryPos(newPos);
+        transitionTo(viewHistory.current[newPos]);
       }
       return;
     }
 
     if (zone > 0.75) {
-      const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
-      viewSnapshots.current.delete(viewHistory.current.length);
-      viewHistory.current.push(nextIdx);
-      transitionTo(nextIdx);
+      if (historyPosRef.current < viewHistory.current.length - 1) {
+        // Go forward in existing history (restores saved state for that position)
+        const newPos = historyPosRef.current + 1;
+        historyPosRef.current = newPos;
+        setHistoryPos(newPos);
+        transitionTo(viewHistory.current[newPos]);
+      } else {
+        // At the end of history — push a brand-new forward entry
+        const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
+        viewHistory.current = viewHistory.current.slice(0, historyPosRef.current + 1);
+        viewHistory.current.push(nextIdx);
+        const newPos = historyPosRef.current + 1;
+        viewSnapshots.current.delete(newPos);
+        historyPosRef.current = newPos;
+        setHistoryPos(newPos);
+        transitionTo(nextIdx);
+      }
       return;
     }
 
@@ -153,8 +179,13 @@ export function useViewCycle(
     const interval = normalizeCycleInterval(config.cycleInterval) * 1000;
     cycleTimer.current = setTimeout(() => {
       const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
-      viewSnapshots.current.delete(viewHistory.current.length);
+      // Truncate any forward history past current position, then push a fresh entry.
+      viewHistory.current = viewHistory.current.slice(0, historyPosRef.current + 1);
       viewHistory.current.push(nextIdx);
+      const newPos = historyPosRef.current + 1;
+      viewSnapshots.current.delete(newPos);
+      historyPosRef.current = newPos;
+      setHistoryPos(newPos);
       transitionTo(nextIdx);
     }, interval - FADE_DURATION);
 
@@ -164,10 +195,9 @@ export function useViewCycle(
   }, [config, detailMode, activeViewIndex, transitionTo]);
 
   const withInternalSettings = useCallback((settings: Record<string, unknown>) => {
-    currentHistoryPos.current = viewHistory.current.length - 1;
     return {
       ...settings,
-      __savedState: viewSnapshots.current.get(currentHistoryPos.current),
+      __savedState: viewSnapshots.current.get(historyPosRef.current),
       __onStateChange: onActiveViewStateChange,
       __onEmpty: onActiveViewEmpty,
     };
@@ -175,6 +205,7 @@ export function useViewCycle(
 
   return {
     activeViewIndex,
+    historyPos,
     nextViewIndex,
     detailMode,
     visible,

@@ -13,6 +13,7 @@ export function App(): React.ReactElement {
   const { state, config, errorMessage } = useDashboardConfig();
   const {
     activeViewIndex,
+    historyPos,
     nextViewIndex,
     detailMode,
     visible,
@@ -77,7 +78,7 @@ export function App(): React.ReactElement {
           transition: 'opacity 1000ms ease-in-out',
         }}
       >
-        <ViewRenderer key={activeViewIndex} type={view.type} settings={activeSettings} />
+        <ViewRenderer key={historyPos} type={view.type} settings={activeSettings} />
       </div>
       {shouldPreloadNext && (
         <div

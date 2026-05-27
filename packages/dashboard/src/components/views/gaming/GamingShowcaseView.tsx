@@ -21,6 +21,9 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const fetchedRef = useRef(false);
 
+  const savedStateRef = useRef(settings.__savedState as { game: GameCandidate; heroUrl: string | null; screenshotUrl: string | null } | undefined);
+  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
+
   const steamApiKey = settings.steamApiKey as string | undefined;
   const steamId = settings.steamId as string | undefined;
   const raApiUser = settings.raApiUser as string | undefined;
@@ -33,6 +36,14 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
+
+    if (savedStateRef.current?.game) {
+      setGame(savedStateRef.current.game);
+      setHeroUrl(savedStateRef.current.heroUrl);
+      setScreenshotUrl(savedStateRef.current.screenshotUrl);
+      setLoading(false);
+      return;
+    }
 
     async function fetchData(): Promise<void> {
       try {
@@ -54,7 +65,9 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
         const picked = data.game as GameCandidate;
         setGame(picked);
 
-        // Fetch art in parallel
+        let finalHeroUrl: string | null = null;
+        let finalScreenshotUrl: string | null = null;
+
         const heroPromise = sgdbApiKey ? (async () => {
           try {
             const searchRes = await fetch(`/api/sgdb/search?apiKey=${sgdbApiKey}&term=${encodeURIComponent(picked.name)}`);
@@ -66,7 +79,7 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
               if (heroData.success && heroData.data?.length > 0) {
                 const originalUrl = heroData.data[0].url as string;
                 const path = originalUrl.replace('https://cdn2.steamgriddb.com/', '');
-                setHeroUrl(`/api/sgdb/media/${path}`);
+                finalHeroUrl = `/api/sgdb/media/${path}`;
               }
             }
           } catch { /* ignore */ }
@@ -80,17 +93,21 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
             const igdbData = await igdbRes.json();
             if (igdbData.success && igdbData.screenshots?.length > 0) {
               const shots = igdbData.screenshots;
-              setScreenshotUrl(shots[Math.floor(Math.random() * shots.length)].url);
+              finalScreenshotUrl = shots[Math.floor(Math.random() * shots.length)].url;
             }
           } catch { /* ignore */ }
         })() : Promise.resolve();
 
         await Promise.all([heroPromise, screenshotPromise]);
 
-        // For Steam games without SGDB hero, use Steam library hero (high-res)
-        if (!heroUrl && picked.source === 'steam' && picked.appId) {
-          setHeroUrl(`https://steamcdn-a.akamaihd.net/steam/apps/${picked.appId}/library_hero.jpg`);
+        // For Steam games without SGDB hero, fall back to Steam library hero
+        if (!finalHeroUrl && picked.source === 'steam' && picked.appId) {
+          finalHeroUrl = `https://steamcdn-a.akamaihd.net/steam/apps/${picked.appId}/library_hero.jpg`;
         }
+
+        if (finalHeroUrl) setHeroUrl(finalHeroUrl);
+        if (finalScreenshotUrl) setScreenshotUrl(finalScreenshotUrl);
+        onStateChangeRef.current?.({ game: picked, heroUrl: finalHeroUrl, screenshotUrl: finalScreenshotUrl });
       } catch { /* ignore */ }
       setLoading(false);
     }

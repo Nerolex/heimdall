@@ -37,13 +37,23 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
   const sgdbApiKey = settings.sgdbApiKey as string | undefined;
   const fetchedRef = useRef(false);
 
+  const savedStateRef = useRef(settings.__savedState as { gameInfo: GameInfo; heroUrl: string | null; screenshotUrl: string | null } | undefined);
+  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
+
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
+    if (savedStateRef.current?.gameInfo) {
+      setGameInfo(savedStateRef.current.gameInfo);
+      setHeroUrl(savedStateRef.current.heroUrl);
+      setScreenshotUrl(savedStateRef.current.screenshotUrl);
+      setLoading(false);
+      return;
+    }
+
     async function fetchData(): Promise<void> {
       try {
-        // Get recent games
         const res = await fetch(`/api/retro/recent-games?apiUser=${apiUser}&apiKey=${apiKey}&user=${user}&count=10`);
         const games: RecentGame[] = await res.json();
         if (!Array.isArray(games) || games.length === 0) {
@@ -51,22 +61,20 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
           return;
         }
 
-        // Filter out games with only placeholder images
         const isPlaceholder = (img: string) => !img || /\/Images\/00000[0-9]\.png$/.test(img);
         const validGames = games.filter(g => !isPlaceholder(g.ImageIcon));
         const pool = validGames.length > 0 ? validGames : games;
-
-        // Pick random game
         const game = pool[Math.floor(Math.random() * pool.length)];
 
-        // Fetch RA game info for progress
         const infoRes = await fetch(
           `/api/retro/game-info?apiUser=${apiUser}&apiKey=${apiKey}&user=${user}&gameId=${game.GameID}`
         );
         const info = await infoRes.json();
         if (info.Title) setGameInfo(info);
 
-        // Fetch SGDB hero and IGDB screenshot in parallel
+        let finalHeroUrl: string | null = null;
+        let finalScreenshotUrl: string | null = null;
+
         const heroPromise = (sgdbApiKey && info.Title) ? (async () => {
           try {
             const searchRes = await fetch(`/api/sgdb/search?apiKey=${sgdbApiKey}&term=${encodeURIComponent(info.Title)}`);
@@ -78,7 +86,7 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
               if (heroData.success && heroData.data?.length > 0) {
                 const originalUrl = heroData.data[0].url as string;
                 const path = originalUrl.replace('https://cdn2.steamgriddb.com/', '');
-                setHeroUrl(`/api/sgdb/media/${path}`);
+                finalHeroUrl = `/api/sgdb/media/${path}`;
               }
             }
           } catch { /* ignore */ }
@@ -92,12 +100,18 @@ export function RetroShowcaseView({ settings }: Props): React.ReactElement {
             const igdbData = await igdbRes.json();
             if (igdbData.success && igdbData.screenshots?.length > 0) {
               const screenshots = igdbData.screenshots;
-              setScreenshotUrl(screenshots[Math.floor(Math.random() * screenshots.length)].url);
+              finalScreenshotUrl = screenshots[Math.floor(Math.random() * screenshots.length)].url;
             }
           } catch { /* ignore */ }
         })() : Promise.resolve();
 
         await Promise.all([heroPromise, screenshotPromise]);
+
+        if (finalHeroUrl) setHeroUrl(finalHeroUrl);
+        if (finalScreenshotUrl) setScreenshotUrl(finalScreenshotUrl);
+        if (info.Title) {
+          onStateChangeRef.current?.({ gameInfo: info, heroUrl: finalHeroUrl, screenshotUrl: finalScreenshotUrl });
+        }
       } catch { /* ignore */ }
       setLoading(false);
     }
