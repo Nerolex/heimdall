@@ -3,11 +3,13 @@ import { render, act, cleanup } from '@testing-library/react';
 import React from 'react';
 import { EventCard } from '../../src/components/views/events/EventCard';
 import { EventsTodayView } from '../../src/components/views/events/EventsTodayView';
+import { clearSnapshotCache } from '../../src/components/views/events/useEventsSnapshot';
 import type { EventRecord, EventsViewSnapshot } from '@heimdall/shared';
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  clearSnapshotCache();
 });
 
 function makeEvent(overrides: Partial<EventRecord> = {}): EventRecord {

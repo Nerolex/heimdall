@@ -35,7 +35,7 @@ export function EventsTodayView({ settings }: { settings: Record<string, unknown
     }
   }, [status, skipIfEmpty, onEmpty]);
 
-  if (status === 'loading') return null;
+  if (status === 'loading') return <div className={styles.showcaseContainer} />;
   if (status === 'error' || status === 'empty' || events.length === 0) return null;
 
   const activeIndex = indexRef.current ?? 0;

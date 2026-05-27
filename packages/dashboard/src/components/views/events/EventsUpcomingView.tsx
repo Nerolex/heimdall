@@ -36,7 +36,7 @@ export function EventsUpcomingView({ settings }: { settings: Record<string, unkn
     }
   }, [status, skipIfEmpty, onEmpty]);
 
-  if (status === 'loading') return null;
+  if (status === 'loading') return <div className={styles.showcaseContainer} />;
   if (events.length === 0) return null;
 
   const event = events[indexRef.current ?? 0];
