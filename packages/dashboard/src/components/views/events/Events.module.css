@@ -24,50 +24,51 @@
 .showcaseOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.35) 40%, transparent 70%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.55) 45%, transparent 72%);
   display: flex;
   flex-direction: row;
   align-items: flex-end;
   justify-content: space-between;
-  padding: clamp(16px, 3vw, 40px);
+  padding: clamp(20px, 4vw, 52px);
+  gap: clamp(16px, 2.5vw, 36px);
 }
 
 .showcaseInfo {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: clamp(4px, 0.6vw, 10px);
-  max-width: 65%;
+  gap: clamp(6px, 0.9vw, 14px);
+  max-width: 68%;
   text-align: right;
 }
 
 .showcaseQr {
   flex-shrink: 0;
-  width: clamp(80px, 9vw, 130px);
-  height: clamp(80px, 9vw, 130px);
+  width: clamp(110px, 14vw, 180px);
+  height: clamp(110px, 14vw, 180px);
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: clamp(8px, 1vw, 14px);
-  padding: clamp(6px, 0.8vw, 12px);
+  padding: clamp(8px, 1vw, 14px);
   align-self: flex-end;
 }
 
 .showcaseCategoryBadge {
-  font-size: clamp(10px, 1.5vw, 16px);
+  font-size: clamp(12px, 1.9vw, 20px);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   background: rgba(100, 200, 255, 0.25);
   color: rgba(180, 230, 255, 0.95);
   border-radius: 4px;
-  padding: clamp(2px, 0.3vw, 5px) clamp(6px, 1vw, 14px);
+  padding: clamp(3px, 0.4vw, 6px) clamp(8px, 1.2vw, 16px);
   border: 1px solid rgba(100, 200, 255, 0.3);
 }
 
 .showcaseTitle {
-  font-size: clamp(22px, 4.5vw, 52px);
+  font-size: clamp(28px, 5.5vw, 64px);
   font-weight: 700;
   color: #fff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
@@ -75,7 +76,7 @@
 }
 
 .showcaseVenue {
-  font-size: clamp(13px, 2.2vw, 26px);
+  font-size: clamp(16px, 2.9vw, 34px);
   color: rgba(255, 255, 255, 0.85);
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
   display: flex;
@@ -89,7 +90,7 @@
 }
 
 .showcaseDateTime {
-  font-size: clamp(12px, 1.8vw, 20px);
+  font-size: clamp(14px, 2.5vw, 28px);
   color: rgba(255, 220, 120, 0.9);
   font-weight: 600;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
