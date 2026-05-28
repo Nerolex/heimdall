@@ -62,7 +62,9 @@ export function useViewCycle(
     return (currentIdx + 1) % config.views.length;
   }
 
-  const transitionTo = useCallback((nextIdx: number): void => {
+  // targetHistoryPos is committed inside the setTimeout so the key on ViewRenderer
+  // only changes after the fade-out completes — preventing content flicker.
+  const transitionTo = useCallback((nextIdx: number, targetHistoryPos: number): void => {
     if (!config || isTransitioning.current) {
       return;
     }
@@ -77,6 +79,10 @@ export function useViewCycle(
     if (showsWeather(currentMode) && !showsWeather(nextMode)) setWeatherVisible(false);
 
     setTimeout(() => {
+      // Commit the history position here so the React key on ViewRenderer changes
+      // at the same time as the view type — no remount during the fade-out.
+      historyPosRef.current = targetHistoryPos;
+      setHistoryPos(targetHistoryPos);
       activeViewIndexRef.current = nextIdx;
       setActiveViewIndex(nextIdx);
       setVisible(true);
@@ -101,9 +107,9 @@ export function useViewCycle(
     viewHistory.current.push(nextIdx);
     const newPos = historyPosRef.current + 1;
     viewSnapshots.current.delete(newPos);
-    historyPosRef.current = newPos;
-    setHistoryPos(newPos);
-    transitionTo(nextIdx);
+    // historyPosRef and setHistoryPos are committed inside transitionTo's setTimeout
+    // so the ViewRenderer key only changes when the new view is actually shown.
+    transitionTo(nextIdx, newPos);
   }, [config, transitionTo]);
 
   // Reset overlay state when config first becomes available.
@@ -135,9 +141,7 @@ export function useViewCycle(
       // Go back in history (if not at the beginning)
       if (historyPosRef.current > 0) {
         const newPos = historyPosRef.current - 1;
-        historyPosRef.current = newPos;
-        setHistoryPos(newPos);
-        transitionTo(viewHistory.current[newPos]);
+        transitionTo(viewHistory.current[newPos], newPos);
       }
       return;
     }
@@ -146,9 +150,7 @@ export function useViewCycle(
       if (historyPosRef.current < viewHistory.current.length - 1) {
         // Go forward in existing history (restores saved state for that position)
         const newPos = historyPosRef.current + 1;
-        historyPosRef.current = newPos;
-        setHistoryPos(newPos);
-        transitionTo(viewHistory.current[newPos]);
+        transitionTo(viewHistory.current[newPos], newPos);
       } else {
         // At the end of history — push a brand-new forward entry
         const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
@@ -156,9 +158,7 @@ export function useViewCycle(
         viewHistory.current.push(nextIdx);
         const newPos = historyPosRef.current + 1;
         viewSnapshots.current.delete(newPos);
-        historyPosRef.current = newPos;
-        setHistoryPos(newPos);
-        transitionTo(nextIdx);
+        transitionTo(nextIdx, newPos);
       }
       return;
     }
@@ -186,9 +186,7 @@ export function useViewCycle(
       viewHistory.current.push(nextIdx);
       const newPos = historyPosRef.current + 1;
       viewSnapshots.current.delete(newPos);
-      historyPosRef.current = newPos;
-      setHistoryPos(newPos);
-      transitionTo(nextIdx);
+      transitionTo(nextIdx, newPos);
     }, interval - FADE_DURATION);
 
     return () => {
