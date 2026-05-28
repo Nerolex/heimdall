@@ -126,29 +126,29 @@
 .heroAch {
   display: flex;
   align-items: center;
-  gap: 2vw;
-  padding: 2vw;
+  gap: clamp(12px, 2vw, 28px);
+  padding: clamp(12px, 2.2vw, 32px);
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 1.5vw;
-  margin-bottom: 2vw;
+  border-radius: clamp(8px, 1.5vw, 20px);
+  margin-bottom: clamp(10px, 1.8vw, 24px);
 }
 
 .heroAchIcon {
-  width: 8vw;
-  height: 8vw;
-  border-radius: 1vw;
+  width: clamp(72px, 10vw, 120px);
+  height: clamp(72px, 10vw, 120px);
+  border-radius: clamp(6px, 1vw, 14px);
   object-fit: cover;
 }
 
 .heroAchIconPlaceholder {
-  width: 8vw;
-  height: 8vw;
-  border-radius: 1vw;
+  width: clamp(72px, 10vw, 120px);
+  height: clamp(72px, 10vw, 120px);
+  border-radius: clamp(6px, 1vw, 14px);
   background: rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 4vw;
+  font-size: clamp(32px, 5vw, 60px);
 }
 
 .heroAchInfo {
@@ -157,34 +157,35 @@
 }
 
 .heroAchTitle {
-  font-size: 2.5vw;
+  font-size: clamp(18px, 3.2vw, 38px);
   font-weight: 700;
-  margin-bottom: 0.3vw;
+  margin-bottom: clamp(2px, 0.4vw, 6px);
 }
 
 .heroAchDesc {
-  font-size: 1.6vw;
+  font-size: clamp(14px, 2vw, 24px);
   color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 0.3vw;
+  margin-bottom: clamp(2px, 0.4vw, 6px);
 }
 
 .heroAchGame {
-  font-size: 1.4vw;
+  font-size: clamp(13px, 1.8vw, 22px);
   color: rgba(255, 255, 255, 0.5);
 }
 
 .heroAchMeta {
   text-align: right;
+  flex-shrink: 0;
 }
 
 .heroAchPoints {
-  font-size: 2.5vw;
+  font-size: clamp(20px, 3vw, 36px);
   font-weight: 700;
   color: #fbbf24;
 }
 
 .heroAchTime {
-  font-size: 1.3vw;
+  font-size: clamp(12px, 1.8vw, 20px);
   color: rgba(255, 255, 255, 0.4);
 }
 
@@ -193,34 +194,38 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 0.8vw;
+  gap: clamp(5px, 0.8vw, 12px);
 }
 
 .achRow {
   display: flex;
   align-items: center;
-  gap: 1.5vw;
-  padding: 1vw 1.5vw;
+  gap: clamp(10px, 1.8vw, 24px);
+  padding: clamp(8px, 1.2vw, 16px) clamp(10px, 1.8vw, 24px);
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 1vw;
+  border-radius: clamp(6px, 1vw, 14px);
+}
+
+.achRow:last-child {
+  border-bottom: none;
 }
 
 .achBadge {
-  width: 4.5vw;
-  height: 4.5vw;
-  border-radius: 0.8vw;
+  width: clamp(44px, 5.5vw, 70px);
+  height: clamp(44px, 5.5vw, 70px);
+  border-radius: clamp(4px, 0.8vw, 10px);
   object-fit: cover;
 }
 
 .achBadgePlaceholder {
-  width: 4.5vw;
-  height: 4.5vw;
-  border-radius: 0.8vw;
+  width: clamp(44px, 5.5vw, 70px);
+  height: clamp(44px, 5.5vw, 70px);
+  border-radius: clamp(4px, 0.8vw, 10px);
   background: rgba(255, 255, 255, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5vw;
+  font-size: clamp(20px, 2.8vw, 36px);
 }
 
 .achInfo {
@@ -229,7 +234,7 @@
 }
 
 .achTitle {
-  font-size: 1.8vw;
+  font-size: clamp(15px, 2.3vw, 28px);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -237,22 +242,23 @@
 }
 
 .achGame {
-  font-size: 1.3vw;
+  font-size: clamp(12px, 1.6vw, 20px);
   color: rgba(255, 255, 255, 0.5);
 }
 
 .achMeta {
   text-align: right;
+  flex-shrink: 0;
 }
 
 .achPoints {
-  font-size: 1.8vw;
+  font-size: clamp(15px, 2.2vw, 26px);
   font-weight: 700;
   color: #fbbf24;
 }
 
 .achTime {
-  font-size: 1.2vw;
+  font-size: clamp(11px, 1.5vw, 18px);
   color: rgba(255, 255, 255, 0.4);
 }
 

@@ -50,7 +50,10 @@ export function GamingRecentView({ settings }: Props): React.ReactElement {
           params.set('raApiKey', raApiKey);
           params.set('raUser', raUser);
         }
-        const maxItems = window.innerHeight > 900 ? 10 : 7;
+        let maxItems: number;
+        if (window.innerHeight < 650) maxItems = 4;
+        else if (window.innerHeight < 900) maxItems = 6;
+        else maxItems = 10;
         params.set('limit', String(maxItems));
 
         const res = await fetch(`/api/gaming/recent-achievements?${params}`);
