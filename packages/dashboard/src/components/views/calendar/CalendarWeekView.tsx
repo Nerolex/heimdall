@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { CalendarSource } from '@heimdall/shared';
 import { useCalendarEvents } from '../../../hooks/useCalendarEvents';
-import { getWeekDays, isEventOnDay, clampEventToGrid } from './calendarUtils';
+import { getWeekDays, isEventOnDay, clampEventToGrid, type WeekMode } from './calendarUtils';
 import styles from './Calendar.module.css';
 
 interface Props {
@@ -14,9 +14,10 @@ const TOTAL_HOURS = END_HOUR - START_HOUR;
 
 export function CalendarWeekView({ settings }: Props): React.ReactElement {
   const sources = (settings.sources || []) as CalendarSource[];
+  const mode = (settings.mode === 'rolling' ? 'rolling' : 'week') as WeekMode;
   const { events, loading, error } = useCalendarEvents(sources, 7);
 
-  const weekDays = getWeekDays();
+  const weekDays = getWeekDays(mode);
   const today = new Date().toDateString();
   const [nowPosition, setNowPosition] = useState(() => {
     const n = new Date();

@@ -106,13 +106,30 @@ export function getMonthGrid(year: number, month: number): (Date | null)[][] {
   return weeks;
 }
 
-export function getWeekDays(): Date[] {
+export type WeekMode = 'week' | 'rolling';
+
+/**
+ * Returns 7 days for the week view.
+ * - "week" (default): current calendar week Mon–Sun
+ * - "rolling": next 7 days starting from today
+ */
+export function getWeekDays(mode: WeekMode = 'week'): Date[] {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (mode === 'rolling') {
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      return d;
+    });
+  }
+
+  // mode === 'week': start from Monday of the current week
   const monday = new Date(today);
   const day = today.getDay();
   const diff = day === 0 ? -6 : 1 - day;
   monday.setDate(today.getDate() + diff);
-  monday.setHours(0, 0, 0, 0);
 
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);

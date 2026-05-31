@@ -21,7 +21,7 @@ VIEW_REGISTRY = {
     "weather-forecast":   ("3-day weather forecast (Heute/Morgen/…)",    []),
     "calendar-agenda":    ("Upcoming events list from iCal feeds",       []),
     "calendar-day":       ("Today's schedule in day view",              []),
-    "calendar-week":      ("Week overview grid",                        []),
+    "calendar-week":      ("Week overview grid",                        ["mode"]),
     "calendar-month":     ("Monthly calendar with events",              []),
     "photos-memories":    ("On-this-day photo memories",                 []),
     "photos-random":      ("Random photo from library",                  []),
