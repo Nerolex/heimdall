@@ -45,9 +45,9 @@ describe('EventCard', () => {
   it('renders title, categoryLabel, dateDisplay, venueAndTime', () => {
     const { container } = render(<EventCard event={makeEvent()} />);
     expect(container.textContent).toContain('Test Concert');
-    expect(container.textContent).toContain('Concerts And Music');
-    expect(container.textContent).toContain('Wed, 15 May');
-    expect(container.textContent).toContain('Club Stage | 8:00 PM');
+    expect(container.textContent).toContain('Konzerte & Musik');
+    expect(container.textContent).toContain('Mi., 15. Mai');
+    expect(container.textContent).toContain('Club Stage · 20:00 Uhr');
   });
 
   it('falls back to rawDescription when venueAndTime is null', () => {
@@ -78,24 +78,26 @@ describe('EventsTodayView', () => {
     expect(container.textContent).toContain('Test Concert');
   });
 
-  it('renders stale banner when snapshot is stale', async () => {
+  it('still renders the event when snapshot is stale', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       json: () => Promise.resolve({ ...mockSnapshot, stale: true }),
     });
     const { container } = await act(async () => render(<EventsTodayView settings={{}} />));
-    expect(container.textContent).toContain('Showing cached data');
+    expect(container.textContent).toContain('Test Concert');
+    expect(container.textContent).not.toContain('Showing cached data');
   });
 
-  it('renders empty state on empty status', async () => {
+  it('hides the view on empty status', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       json: () => Promise.resolve({ ...mockSnapshot, events: [] }),
     });
     const { container } = await act(async () => render(<EventsTodayView settings={{}} />));
-    expect(container.textContent).toContain('No events today');
+    expect(container.firstChild).toBeNull();
+    expect(container.textContent).toBe('');
   });
 
   it('calls __onEmpty when empty and skipIfEmpty is true', async () => {
@@ -111,13 +113,14 @@ describe('EventsTodayView', () => {
     expect(onEmpty).toHaveBeenCalledOnce();
   });
 
-  it('renders error state on error', async () => {
+  it('hides the view on error', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 404,
       json: () => Promise.resolve({ error: 'Not found' }),
     });
     const { container } = await act(async () => render(<EventsTodayView settings={{}} />));
-    expect(container.textContent).toContain('Could not load events');
+    expect(container.firstChild).toBeNull();
+    expect(container.textContent).toBe('');
   });
 });

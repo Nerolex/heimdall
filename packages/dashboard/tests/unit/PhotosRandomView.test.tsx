@@ -48,7 +48,7 @@ describe('PhotosRandomView — fresh mount (no savedState)', () => {
     await act(async () => render(<PhotosRandomView settings={{ __onStateChange: onStateChange }} />));
 
     expect(onStateChange).toHaveBeenCalledOnce();
-    expect(onStateChange).toHaveBeenCalledWith({ photo });
+    expect(onStateChange).toHaveBeenCalledWith({ __view: 'photos-random', photo });
   });
 
   it('shows error text when the API fetch fails', async () => {
@@ -97,7 +97,7 @@ describe('PhotosRandomView — back navigation (savedState provided)', () => {
     global.fetch = fetchMock;
 
     await act(async () =>
-      render(<PhotosRandomView settings={{ __savedState: { photo: savedPhoto } }} />)
+      render(<PhotosRandomView settings={{ __savedState: { __view: 'photos-random', photo: savedPhoto } }} />)
     );
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -108,7 +108,7 @@ describe('PhotosRandomView — back navigation (savedState provided)', () => {
     global.fetch = vi.fn();
 
     const { container } = await act(async () =>
-      render(<PhotosRandomView settings={{ __savedState: { photo: savedPhoto } }} />)
+      render(<PhotosRandomView settings={{ __savedState: { __view: 'photos-random', photo: savedPhoto } }} />)
     );
 
     const srcs = Array.from(container.querySelectorAll('img')).map(i => i.getAttribute('src'));
@@ -122,16 +122,16 @@ describe('PhotosRandomView — back navigation (savedState provided)', () => {
 
     await act(async () =>
       render(<PhotosRandomView settings={{
-        __savedState: { photo: savedPhoto },
+        __savedState: { __view: 'photos-random', photo: savedPhoto },
         __onStateChange: onStateChange,
       }} />)
     );
 
     expect(onStateChange).toHaveBeenCalledOnce();
-    expect(onStateChange).toHaveBeenCalledWith({ photo: savedPhoto });
+    expect(onStateChange).toHaveBeenCalledWith({ __view: 'photos-random', photo: savedPhoto });
   });
 
-  it('ignores savedState if it has no photo property', async () => {
+  it('ignores savedState if it has no __view: photos-random tag', async () => {
     const photo = makePhoto('fresh');
     global.fetch = mockFetchPhoto(photo);
     const onStateChange = vi.fn();
@@ -145,6 +145,6 @@ describe('PhotosRandomView — back navigation (savedState provided)', () => {
     );
 
     expect(global.fetch).toHaveBeenCalled();
-    expect(onStateChange).toHaveBeenCalledWith({ photo });
+    expect(onStateChange).toHaveBeenCalledWith({ __view: 'photos-random', photo });
   });
 });

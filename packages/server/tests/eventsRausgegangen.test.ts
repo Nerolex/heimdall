@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { fetchCsrfCookie, searchEvents, EventsScraperError } from '../src/services/events/rausgegangen.js';
+import { fetchCsrfCookie, parseEventTiles, EventsScraperError } from '../src/services/events/rausgegangen.js';
 
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const mockHtml = '<html><head><meta name="csrf-token" content="test-csrf-123"></head></html>';
+// Minimal HTML that matches the hx-headers CSRF token pattern fetchCsrfCookie expects
+const mockHtml = `<body hx-headers='{"X-CSRFToken": "test-csrf-123"}'></body>`;
 
 describe('fetchCsrfCookie', () => {
   it('extracts CSRF token and session cookie', async () => {
@@ -39,46 +40,41 @@ describe('fetchCsrfCookie', () => {
   });
 });
 
-describe('searchEvents', () => {
-  it('sends correct headers and maps response fields', async () => {
-    const mockData = [
-      {
-        id: '1',
-        title: 'Test Concert',
-        category_slug: 'concerts-and-music',
-        date: '2024-05-15',
-        description: 'Venue | 8:00 PM',
-        additional_infos: 'Every Friday',
-        slug: 'test-concert',
-      },
-    ];
-    global.fetch = vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve(mockData),
-    });
+describe('parseEventTiles', () => {
+  it('extracts slug, title, category, and description from tile HTML', () => {
+    // The href must be inside the tile-large div; outer </a></div> closes the wrapper.
+    const html = `
+      <div>
+        <div class="tile-large">
+          <a href="/en/events/test-concert/">
+            <span class="text-sm">Sa, 18. Jan | 20:00</span>
+            <h4 class="font-bold">Test Concert</h4>
+            <span class="text-sm pr-1 opacity-70">Music Venue</span>
+            <span class="event-text-pill-outline">Konzerte &amp; Musik</span>
+          </a>
+        </div>
+        </a>
+      </div>
+    `;
+    const results = parseEventTiles(html);
+    expect(results).toHaveLength(1);
+    expect(results[0].slug).toBe('test-concert');
+    expect(results[0].title).toBe('Test Concert');
+    expect(results[0].categorySlug).toBe('concerts-and-music');
+    expect(results[0].description).toContain('Music Venue');
+  });
 
-    const result = await searchEvents(
-      'session=abc',
-      'csrf-token',
-      'dortmund',
-      51.5,
-      7.4,
-      '2024-05-15',
-      10,
-      0
-    );
-
-    expect(global.fetch).toHaveBeenCalledWith(
-      'https://rausgegangen.de/api/v1/search',
-      expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-          Cookie: 'session=abc',
-          'X-CSRF-Token': 'csrf-token',
-        }),
-      })
-    );
-    expect(result[0].categorySlug).toBe('concerts-and-music');
-    expect(result[0].additionalInfos).toBe('Every Friday');
+  it('skips tiles without a title or date', () => {
+    const html = `
+      <div>
+        <div class="tile-large">
+          <a href="/en/events/no-title/">
+            <span class="text-sm">Sa, 18. Jan | 20:00</span>
+          </a>
+        </div>
+        </a>
+      </div>
+    `;
+    expect(parseEventTiles(html)).toHaveLength(0);
   });
 });

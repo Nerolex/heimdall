@@ -58,7 +58,8 @@ describe('PhotosMemoriesView — fresh mount (no savedState)', () => {
     );
 
     expect(onStateChange).toHaveBeenCalledOnce();
-    const arg = onStateChange.mock.calls[0][0] as { label: string; photo: PhotoEntry };
+    const arg = onStateChange.mock.calls[0][0] as { __view: string; label: string; photo: PhotoEntry };
+    expect(arg.__view).toBe('photos-memories');
     expect(arg.label).toBe('Last year');
     expect(arg.photo).toEqual(photo);
   });
@@ -123,7 +124,7 @@ describe('PhotosMemoriesView — back navigation (savedState provided)', () => {
   it('does NOT call fetch when savedState is provided', async () => {
     const fetchMock = vi.fn();
     global.fetch = fetchMock;
-    const savedState = { label: '5 years ago', photo: makePhoto('wedding') };
+    const savedState = { __view: 'photos-memories' as const, label: '5 years ago', photo: makePhoto('wedding') };
 
     await act(async () =>
       render(<PhotosMemoriesView settings={{ __savedState: savedState }} />)
@@ -133,7 +134,7 @@ describe('PhotosMemoriesView — back navigation (savedState provided)', () => {
   });
 
   it('renders the saved photo immediately without loading flash', async () => {
-    const savedState = { label: 'Long ago', photo: makePhoto('saved-trip') };
+    const savedState = { __view: 'photos-memories' as const, label: 'Long ago', photo: makePhoto('saved-trip') };
     global.fetch = vi.fn();
 
     const { container } = await act(async () =>
@@ -148,7 +149,7 @@ describe('PhotosMemoriesView — back navigation (savedState provided)', () => {
   });
 
   it('renders the saved label', async () => {
-    const savedState = { label: '4 years ago', photo: makePhoto('camp') };
+    const savedState = { __view: 'photos-memories' as const, label: '4 years ago', photo: makePhoto('camp') };
     global.fetch = vi.fn();
 
     const { container } = await act(async () =>
@@ -159,7 +160,7 @@ describe('PhotosMemoriesView — back navigation (savedState provided)', () => {
   });
 
   it('calls __onStateChange with the savedState', async () => {
-    const savedState = { label: 'Yesteryear', photo: makePhoto('cabin') };
+    const savedState = { __view: 'photos-memories' as const, label: 'Yesteryear', photo: makePhoto('cabin') };
     const onStateChange = vi.fn();
     global.fetch = vi.fn();
 
