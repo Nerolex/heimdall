@@ -1,23 +1,10 @@
 import { type FastifyInstance } from 'fastify';
 import { loadConfig } from '../config.js';
 import { getSnapshot } from '../services/events/snapshotStore.js';
-import * as path from 'node:path';
-import * as fs from 'node:fs';
+import { resolveConfigPath } from '../utils/projectRoot.js';
 import type { RefreshStatus } from '@heimdall/shared';
 
 const ALLOWED_TYPES = ['events-today', 'events-weekend', 'events-upcoming'] as const;
-
-function findConfigPath(): string {
-  let dir = process.cwd();
-  while (true) {
-    const candidate = path.join(dir, 'config.json');
-    if (fs.existsSync(candidate)) return candidate;
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return path.resolve(process.cwd(), 'config.json');
-}
 
 export async function eventsRoute(fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Querystring: { type?: string; days?: string } }>(
@@ -32,7 +19,7 @@ export async function eventsRoute(fastify: FastifyInstance): Promise<void> {
         });
       }
 
-      const result = loadConfig(findConfigPath());
+      const result = loadConfig(resolveConfigPath());
       const eventsConfig = result.config?.providers?.events;
       if (!eventsConfig) {
         return reply.status(422).send({ error: 'Events provider not configured' });
@@ -48,7 +35,7 @@ export async function eventsRoute(fastify: FastifyInstance): Promise<void> {
   );
 
   fastify.get('/api/events/health', async (_request, reply) => {
-    const result = loadConfig(findConfigPath());
+    const result = loadConfig(resolveConfigPath());
     const eventsConfig = result.config?.providers?.events;
     if (!eventsConfig) {
       return reply.status(422).send({ error: 'Events provider not configured' });
