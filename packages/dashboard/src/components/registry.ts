@@ -39,7 +39,7 @@ export function getDetailComponent(
 
 // Register built-in components
 import { ImageView } from './shared/ImageView';
-import { WeatherView } from './views/weather';
+import { WeatherView, WeatherForecastView } from './views/weather';
 import { CalendarAgendaView, CalendarDayView, CalendarWeekView, CalendarMonthView } from './views/calendar';
 import { PhotosMemoriesView, PhotosRandomView } from './views/photos';
 import { RetroRecentView, RetroPlayingView, RetroProfileView, RetroShowcaseView } from './views/retro';
@@ -54,6 +54,7 @@ import { EventsWeekendView } from './views/events/EventsWeekendView';
 import { EventsUpcomingView } from './views/events/EventsUpcomingView';
 registerComponent('image', ImageView);
 registerComponent('weather', WeatherView);
+registerComponent('weather-forecast', WeatherForecastView);
 registerComponent('calendar-agenda', CalendarAgendaView);
 registerComponent('calendar-day', CalendarDayView);
 registerComponent('calendar-week', CalendarWeekView);

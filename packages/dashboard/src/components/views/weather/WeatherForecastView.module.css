@@ -1,0 +1,87 @@
+.container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  color: #fff;
+}
+
+/* ── Each day column ───────────────────────────────────── */
+
+.dayCol {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: clamp(14px, 2.5vw, 32px) clamp(12px, 2vw, 28px);
+  box-sizing: border-box;
+}
+
+/* Subtle divider between columns */
+.dayCol + .dayCol {
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Bottom fade so text is always readable over the graphic */
+.dayCol::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 45%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Text content ──────────────────────────────────────── */
+
+.content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3px, 0.6vh, 8px);
+  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+}
+
+.label {
+  font-size: clamp(11px, 1.5vw, 17px);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.tempRange {
+  font-size: clamp(22px, 5vw, 56px);
+  font-weight: 200;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.tempSep {
+  font-size: clamp(14px, 2.5vw, 28px);
+  opacity: 0.5;
+  margin: 0 0.15em;
+}
+
+.condition {
+  font-size: clamp(11px, 1.4vw, 16px);
+  font-weight: 300;
+  text-transform: capitalize;
+  opacity: 0.85;
+  margin-top: clamp(2px, 0.4vh, 6px);
+}
+
+.loading {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #2c3e50 0%, #4a6572 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: clamp(14px, 2vw, 20px);
+}
