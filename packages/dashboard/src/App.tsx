@@ -1,5 +1,7 @@
 import React from 'react';
 import { ViewRenderer } from './components/shared/ViewRenderer';
+import { LoadingScreen } from './components/shared/LoadingScreen';
+import { PreloadView } from './components/shared/PreloadView';
 import { EmptyState } from './components/shared/EmptyState';
 import { ErrorState } from './components/shared/ErrorState';
 import { Overlay } from './components/overlay/Overlay';
@@ -7,7 +9,7 @@ import { KeepAwake } from './components/keepawake';
 import { getDetailComponent } from './components/registry';
 import { useDashboardConfig } from './app/useDashboardConfig';
 import { useViewCycle } from './app/useViewCycle';
-import { mergeViewSettings } from './app/viewSettings';
+import { deriveActiveView } from './app/deriveActiveView';
 
 export function App(): React.ReactElement {
   const { state, config, errorMessage } = useDashboardConfig();
@@ -25,29 +27,12 @@ export function App(): React.ReactElement {
     withInternalSettings,
   } = useViewCycle(config, (type) => !!getDetailComponent(type));
 
-  if (state === 'loading') {
-    return (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
-        Loading...
-      </div>
-    );
-  }
+  if (state === 'loading') return <LoadingScreen />;
+  if (state === 'empty') return <EmptyState />;
+  if (state === 'error' || !config) return <ErrorState message={errorMessage} />;
 
-  if (state === 'empty') {
-    return <EmptyState />;
-  }
-
-  if (state === 'error' || !config) {
-    return <ErrorState message={errorMessage} />;
-  }
-
-  const view = config.views[activeViewIndex];
-  const nextView = nextViewIndex != null ? config.views[nextViewIndex] : null;
-  const shouldPreloadNext = nextView && nextView.type !== view.type;
-  const DetailComponent = detailMode ? getDetailComponent(view.type) : null;
-  const baseSettings = mergeViewSettings(config, view);
-  const activeSettings = withInternalSettings(baseSettings);
-  const keepAwakeMode = (config as unknown as Record<string, unknown>).keepAwake as boolean | 'auto' | undefined;
+  const { view, nextView, shouldPreloadNext, DetailComponent, baseSettings, activeSettings } =
+    deriveActiveView(config, activeViewIndex, nextViewIndex, detailMode, withInternalSettings);
 
   return (
     <div
@@ -60,9 +45,9 @@ export function App(): React.ReactElement {
         '--overlay-height': hasOverlay ? '8vw' : '0px',
       } as React.CSSProperties}
     >
-      <KeepAwake mode={keepAwakeMode} />
+      <KeepAwake mode={config.keepAwake} />
       {DetailComponent && (
-        <DetailComponent settings={baseSettings} onClose={handleDetailClose} />
+        <DetailComponent settings={activeSettings} onClose={handleDetailClose} />
       )}
       <Overlay
         clockVisible={clockVisible}
@@ -80,23 +65,7 @@ export function App(): React.ReactElement {
       >
         <ViewRenderer key={historyPos} type={view.type} settings={activeSettings} />
       </div>
-      {shouldPreloadNext && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            opacity: 0,
-            pointerEvents: 'none',
-            zIndex: -1,
-          }}
-        >
-          <ViewRenderer type={nextView.type} settings={mergeViewSettings(config, nextView)} />
-        </div>
-      )}
+      {shouldPreloadNext && nextView && <PreloadView config={config} view={nextView} />}
     </div>
   );
 }
