@@ -1,0 +1,236 @@
+/* ── Slide view layout ─────────────────────────────────── */
+
+.layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: clamp(16px, 3vw, 40px);
+  padding: clamp(20px, 3.5vw, 48px) clamp(24px, 4vw, 56px);
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  align-items: center;
+}
+
+.leftCol {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1.2vh, 14px);
+  width: clamp(160px, 26vw, 280px);
+}
+
+.cover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: clamp(6px, 1vw, 14px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+  object-fit: cover;
+}
+
+.artist {
+  font-size: clamp(12px, 1.5vw, 18px);
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.albumName {
+  font-size: clamp(14px, 1.8vw, 22px);
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+/* ── Shared track list (used in both slide + detail) ───── */
+
+.rightCol {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.trackList {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.trackRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.2vw, 16px);
+  padding: 0 clamp(8px, 1.2vw, 16px);
+  border-radius: clamp(4px, 0.6vw, 8px);
+  flex: 1;
+  min-height: 0;
+}
+
+.trackNum {
+  font-size: clamp(11px, 1.4vw, 16px);
+  color: rgba(255, 255, 255, 0.3);
+  min-width: 1.8em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.trackTitle {
+  flex: 1;
+  font-size: clamp(13px, 1.7vw, 20px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackDuration {
+  font-size: clamp(11px, 1.4vw, 16px);
+  color: rgba(255, 255, 255, 0.3);
+  font-variant-numeric: tabular-nums;
+  min-width: 3.2em;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Detail view layout ────────────────────────────────── */
+
+.detailLayout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: clamp(16px, 2.5vw, 36px);
+  box-sizing: border-box;
+  gap: clamp(10px, 1.6vh, 18px);
+}
+
+.detailTop {
+  display: flex;
+  gap: clamp(16px, 2.5vw, 36px);
+  flex: 1;
+  min-height: 0;
+}
+
+.detailLeft {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(8px, 1.2vh, 14px);
+  width: clamp(120px, 20vw, 220px);
+}
+
+.detailCover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: clamp(6px, 1vw, 14px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+  object-fit: cover;
+}
+
+.detailArtist {
+  font-size: clamp(12px, 1.5vw, 18px);
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.detailAlbumName {
+  font-size: clamp(14px, 1.8vw, 22px);
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.detailRight {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detailTrackList {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+
+.detailTrackRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.2vw, 16px);
+  padding: clamp(6px, 1vh, 12px) clamp(8px, 1vw, 14px);
+  border-radius: clamp(4px, 0.6vw, 8px);
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0.08);
+}
+
+.detailTrackRow:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.detailTrackRowActive {
+  color: #e5a00d;
+}
+
+.detailTrackRowActive .detailTrackNum {
+  color: #e5a00d;
+}
+
+.detailTrackNum {
+  font-size: clamp(11px, 1.4vw, 16px);
+  color: rgba(255, 255, 255, 0.3);
+  min-width: 1.8em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.detailTrackTitle {
+  flex: 1;
+  font-size: clamp(13px, 1.7vw, 20px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detailTrackDuration {
+  font-size: clamp(11px, 1.4vw, 16px);
+  color: rgba(255, 255, 255, 0.3);
+  font-variant-numeric: tabular-nums;
+  min-width: 3.2em;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Controls bar (detail view) ────────────────────────── */
+
+.detailControls {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.8vh, 10px);
+}

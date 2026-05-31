@@ -221,6 +221,54 @@ export async function plexRoute(fastify: FastifyInstance): Promise<void> {
     return artistsRes.json();
   });
 
+  // GET /api/plex/random-album — pick a random album and return it with its tracks
+  fastify.get('/api/plex/random-album', async (request, reply) => {
+    const plex = getPlexConfig();
+    if (!plex) return reply.status(503).send({ error: 'Plex not configured' });
+
+    // Find the music library section
+    const sectionsRes = await fetch(`${plex.url}/library/sections?X-Plex-Token=${plex.token}`, {
+      headers: { Accept: 'application/json' },
+    });
+    if (!sectionsRes.ok) return reply.status(sectionsRes.status).send({ error: 'Sections fetch failed' });
+    const sectionsData = await sectionsRes.json();
+    const sections = sectionsData?.MediaContainer?.Directory || [];
+    const musicSection = sections.find((s: { type: string }) => s.type === 'artist');
+    if (!musicSection) return reply.status(404).send({ error: 'No music library found' });
+
+    // Get total album count (type=9 = album)
+    const countRes = await fetch(
+      `${plex.url}/library/sections/${musicSection.key}/all?type=9&X-Plex-Container-Size=0&X-Plex-Container-Start=0&X-Plex-Token=${plex.token}`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (!countRes.ok) return reply.status(countRes.status).send({ error: 'Album count failed' });
+    const countData = await countRes.json();
+    const totalSize = countData?.MediaContainer?.totalSize ?? 0;
+    if (totalSize === 0) return reply.status(404).send({ error: 'No albums found' });
+
+    // Fetch one album at a random offset
+    const randomOffset = Math.floor(Math.random() * totalSize);
+    const albumRes = await fetch(
+      `${plex.url}/library/sections/${musicSection.key}/all?type=9&X-Plex-Container-Start=${randomOffset}&X-Plex-Container-Size=1&X-Plex-Token=${plex.token}`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (!albumRes.ok) return reply.status(albumRes.status).send({ error: 'Album fetch failed' });
+    const albumData = await albumRes.json();
+    const album = albumData?.MediaContainer?.Metadata?.[0];
+    if (!album) return reply.status(404).send({ error: 'Album not found' });
+
+    // Fetch tracks for this album
+    const tracksRes = await fetch(
+      `${plex.url}/library/metadata/${album.ratingKey}/children?X-Plex-Token=${plex.token}`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (!tracksRes.ok) return reply.status(tracksRes.status).send({ error: 'Tracks fetch failed' });
+    const tracksData = await tracksRes.json();
+    const tracks = tracksData?.MediaContainer?.Metadata || [];
+
+    return { album, tracks };
+  });
+
   // GET /api/plex/history — recently played music for primary account
   fastify.get<{ Querystring: { limit?: string } }>('/api/plex/history', async (request, reply) => {
     const plex = getPlexConfig();
