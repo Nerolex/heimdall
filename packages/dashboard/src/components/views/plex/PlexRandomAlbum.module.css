@@ -13,8 +13,7 @@
   z-index: 1;
   display: flex;
   gap: clamp(20px, 3.5vw, 48px);
-  padding: 0 clamp(28px, 4vw, 56px) clamp(16px, 2.5vh, 32px);
-  padding-top: calc(var(--overlay-height, 8vw) + clamp(8px, 1.2vh, 14px));
+  padding: 9vw clamp(28px, 4vw, 56px) clamp(16px, 2.5vh, 32px);
   width: 100%;
   height: 100%;
   box-sizing: border-box;
