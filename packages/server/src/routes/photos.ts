@@ -10,8 +10,8 @@ const SUPPORTED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic',
 
 // Cache directory for converted HEIC files
 const CACHE_DIR = path.join(process.env.CACHE_DIR || '/tmp', 'heimdall-photo-cache');
-// Bump this version to invalidate stale cached HEIC conversions
-const CACHE_VERSION = 'v4';
+// Bump this version to invalidate stale cached HEIC conversions on deployed servers
+const CACHE_VERSION = 'v5';
 if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
 
 function cacheKey(filePath: string, suffix: string): string {
@@ -20,6 +20,72 @@ function cacheKey(filePath: string, suffix: string): string {
     .createHash('md5')
     .update(`${filePath}:${stat.mtimeMs}:${suffix}`)
     .digest('hex');
+}
+
+/**
+ * Parse heif-info output to get the HEIC container-level irot transform.
+ * Returns pixel dimensions and the CCW rotation angle, or null on failure.
+ * heif-info is available on Linux via the libheif-examples apt package.
+ */
+function readHeifInfo(filePath: string): { pixelWidth: number; pixelHeight: number; angleCcw: number } | null {
+  try {
+    const output = execSync(`heif-info "${filePath}"`, { stdio: 'pipe' }).toString();
+    const sizeMatch = output.match(/image:\s*(\d+)x(\d+)/);
+    const angleMatch = output.match(/angle \(ccw\):\s*(\d+)/);
+    if (!sizeMatch) return null;
+    return {
+      pixelWidth: parseInt(sizeMatch[1], 10),
+      pixelHeight: parseInt(sizeMatch[2], 10),
+      angleCcw: angleMatch ? parseInt(angleMatch[1], 10) : 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Compute the expected display dimensions after applying the irot transform.
+ * 90° and 270° CCW rotations swap width and height; 0° and 180° do not.
+ */
+function applyIrotToDims(
+  pixelWidth: number,
+  pixelHeight: number,
+  angleCcw: number
+): { width: number; height: number } {
+  return angleCcw === 90 || angleCcw === 270
+    ? { width: pixelHeight, height: pixelWidth }
+    : { width: pixelWidth, height: pixelHeight };
+}
+
+/**
+ * Fix output orientation when heif-convert dropped the irot transform (ARM64 libheif 1.15.1 bug).
+ *
+ * On ARM64 Linux with libheif ≤ 1.15.1, heif-convert may output landscape pixels for photos
+ * that should be portrait (or vice versa) because it ignores the container-level irot box.
+ * sharp().rotate() cannot fix this because the output JPEG carries no EXIF orientation tag.
+ *
+ * We detect the mismatch by comparing the actual output dimensions against the expected
+ * display dimensions derived from heif-info (pixel dims + irot angle). When they are
+ * swapped we apply the corrective rotation.
+ */
+async function fixHeifConvertOrientation(
+  buffer: Buffer,
+  heifInfo: { pixelWidth: number; pixelHeight: number; angleCcw: number }
+): Promise<Buffer> {
+  const expected = applyIrotToDims(heifInfo.pixelWidth, heifInfo.pixelHeight, heifInfo.angleCcw);
+  const outMeta = await sharp(buffer).metadata();
+  const outWidth = outMeta.width ?? 0;
+  const outHeight = outMeta.height ?? 0;
+
+  const expectPortrait = expected.height > expected.width;
+  const outPortrait = outHeight > outWidth;
+  if (expectPortrait === outPortrait) return buffer; // Orientation correct — nothing to do
+
+  // Output aspect ratio is inverted vs expected: apply corrective rotation.
+  // Expected portrait but got landscape → rotate 90° CCW (270° CW).
+  // Expected landscape but got portrait → rotate 90° CW (90° CW).
+  const degrees = expectPortrait ? 270 : 90;
+  return await sharp(buffer).rotate(degrees).jpeg({ quality: 90 }).toBuffer();
 }
 
 /** Convert HEIC/HEIF to JPEG, returning the JPEG buffer. Uses cache. */
@@ -41,10 +107,29 @@ async function convertHeicToJpeg(filePath: string): Promise<Buffer> {
     // Fall back to heif-convert CLI tool
   }
 
+  // heif-info (from libheif-examples) is available on the same Linux systems that have heif-convert.
+  // Read it before conversion so we can detect and fix any dropped irot transform below.
+  const heifInfo = readHeifInfo(filePath);
+
   try {
     const tmpPath = cachedPath + '.tmp.jpg';
     execSync(`heif-convert -q 90 "${filePath}" "${tmpPath}"`, { stdio: 'pipe' });
-    // Apply EXIF rotation via sharp
+    // Apply EXIF rotation first (handles any orientation tag heif-convert wrote)
+    let buffer = await sharp(tmpPath).rotate().jpeg({ quality: 90 }).toBuffer();
+    fs.unlinkSync(tmpPath);
+    // Then fix any dropped irot transforms (ARM64 libheif 1.15.1 bug)
+    if (heifInfo) buffer = await fixHeifConvertOrientation(buffer, heifInfo);
+    fs.writeFileSync(cachedPath, buffer);
+    return buffer;
+  } catch {
+    // fall through to next converter
+  }
+
+  try {
+    // sips is available on macOS — use it as a final fallback
+    const tmpPath = cachedPath + '.tmp.jpg';
+    execSync(`sips -s format jpeg "${filePath}" --out "${tmpPath}"`, { stdio: 'pipe' });
+    // sips bakes the irot into pixels and strips the orientation tag — no further correction needed
     const buffer = await sharp(tmpPath).rotate().jpeg({ quality: 90 }).toBuffer();
     fs.writeFileSync(cachedPath, buffer);
     fs.unlinkSync(tmpPath);
