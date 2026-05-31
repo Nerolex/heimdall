@@ -1,4 +1,298 @@
+/* ── Marquee scroll animation ──────────────────────────── */
+
+@keyframes marqueeScroll {
+  0%, 15%   { transform: translateX(0); }
+  42%, 58%  { transform: translateX(var(--marquee-offset, 0px)); }
+  85%, 100% { transform: translateX(0); }
+}
+
 /* ── Slide view layout ─────────────────────────────────── */
+
+.layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: clamp(20px, 3.5vw, 48px);
+  padding: 0 clamp(28px, 4vw, 56px) clamp(16px, 2.5vh, 32px);
+  padding-top: calc(var(--overlay-height, 8vw) + clamp(8px, 1.2vh, 14px));
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  align-items: stretch;
+}
+
+.leftCol {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.5vh, 18px);
+  width: clamp(200px, 34vw, 360px);
+}
+
+.cover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: clamp(8px, 1.2vw, 18px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+  object-fit: cover;
+}
+
+.artist {
+  font-size: clamp(13px, 1.6vw, 19px);
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.albumName {
+  font-size: clamp(15px, 2vw, 24px);
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+/* ── Shared track list ─────────────────────────────────── */
+
+.rightCol {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.trackList {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: clamp(10px, 1.5vw, 20px);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.trackRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.5vw, 20px);
+  padding: 0 clamp(14px, 2vw, 28px);
+  flex: 1;
+  min-height: clamp(36px, 6.5vh, 52px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s;
+}
+
+.trackRow:last-child {
+  border-bottom: none;
+}
+
+.trackNum {
+  font-size: clamp(10px, 1.3vw, 14px);
+  color: rgba(255, 255, 255, 0.25);
+  min-width: 1.6em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.trackTitleWrap {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.trackTitle {
+  font-size: clamp(14px, 1.85vw, 22px);
+  font-weight: 500;
+  white-space: nowrap;
+  display: inline-block;
+  letter-spacing: 0.01em;
+}
+
+.trackTitleScrolling {
+  animation: marqueeScroll 9s ease-in-out infinite;
+}
+
+.trackDuration {
+  font-size: clamp(11px, 1.3vw, 15px);
+  color: rgba(255, 255, 255, 0.28);
+  font-variant-numeric: tabular-nums;
+  min-width: 3em;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Detail view layout ────────────────────────────────── */
+
+.detailLayout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: clamp(16px, 2.5vw, 36px);
+  box-sizing: border-box;
+  gap: clamp(10px, 1.6vh, 18px);
+}
+
+.detailTop {
+  display: flex;
+  gap: clamp(20px, 3vw, 40px);
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.detailLeft {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.2vh, 14px);
+  width: clamp(130px, 22vw, 240px);
+}
+
+.detailCover {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: clamp(8px, 1.2vw, 18px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+  object-fit: cover;
+}
+
+.detailArtist {
+  font-size: clamp(11px, 1.4vw, 16px);
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.detailAlbumName {
+  font-size: clamp(13px, 1.8vw, 22px);
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.detailRight {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detailTrackList {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: clamp(10px, 1.5vw, 20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.detailTrackRow {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.5vw, 20px);
+  padding: 0 clamp(14px, 2vw, 28px);
+  min-height: clamp(38px, 6.5vh, 52px);
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.detailTrackRow:last-child {
+  border-bottom: none;
+}
+
+.detailTrackRow:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.detailTrackRowActive {
+  background: rgba(229, 160, 13, 0.1);
+}
+
+.detailTrackRowActive .detailTrackNum {
+  color: #e5a00d;
+}
+
+.detailTrackRowActive .detailTrackTitle {
+  color: #e5a00d;
+  font-weight: 600;
+}
+
+.detailTrackNum {
+  font-size: clamp(10px, 1.3vw, 14px);
+  color: rgba(255, 255, 255, 0.25);
+  min-width: 1.6em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.detailTrackTitleWrap {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.detailTrackTitle {
+  font-size: clamp(14px, 1.85vw, 22px);
+  font-weight: 500;
+  white-space: nowrap;
+  display: inline-block;
+  letter-spacing: 0.01em;
+}
+
+.detailTrackTitle.detailTrackTitleScrolling {
+  animation: marqueeScroll 9s ease-in-out infinite;
+}
+
+.detailTrackDuration {
+  font-size: clamp(11px, 1.3vw, 15px);
+  color: rgba(255, 255, 255, 0.28);
+  font-variant-numeric: tabular-nums;
+  min-width: 3em;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Controls bar (detail view) ────────────────────────── */
+
+.detailControls {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.8vh, 10px);
+}
+
 
 .layout {
   position: relative;

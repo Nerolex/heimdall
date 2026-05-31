@@ -1,10 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styles from './Plex.module.css';
 import ra from './PlexRandomAlbum.module.css';
 import detailStyles from '../../detail/Detail.module.css';
 import type { PlexSession } from './plexTypes';
 import { formatTime, usePlexPlayback } from './usePlexPlayback';
 import type { RandomAlbumData } from './PlexRandomAlbumView';
+
+function MarqueeText({ text, wrapClass, textClass, activeClass }: { text: string; wrapClass: string; textClass: string; activeClass?: string }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const spanRef = useRef<HTMLSpanElement>(null);
+  const [scrolling, setScrolling] = useState(false);
+
+  useEffect(() => {
+    const w = wrapRef.current;
+    const s = spanRef.current;
+    if (!w || !s) return;
+    const overflow = s.scrollWidth - w.clientWidth;
+    if (overflow > 4) {
+      s.style.setProperty('--marquee-offset', `-${overflow}px`);
+      setScrolling(true);
+    } else {
+      setScrolling(false);
+    }
+  }, [text]);
+
+  return (
+    <div ref={wrapRef} className={wrapClass}>
+      <span ref={spanRef} className={`${textClass}${activeClass ? ` ${activeClass}` : ''}${scrolling ? ` ${ra.detailTrackTitleScrolling}` : ''}`}>
+        {text}
+      </span>
+    </div>
+  );
+}
 
 interface Props {
   settings: Record<string, unknown>;
@@ -109,7 +136,12 @@ export function PlexRandomAlbumDetailView({ settings, onClose }: Props): React.R
                     <span className={ra.detailTrackNum}>
                       {isActive && localPlaying ? '▶' : (track.index ?? i + 1)}
                     </span>
-                    <span className={ra.detailTrackTitle}>{track.title}</span>
+                    <MarqueeText
+                      text={track.title}
+                      wrapClass={ra.detailTrackTitleWrap}
+                      textClass={ra.detailTrackTitle}
+                      activeClass={isActive ? ra.detailTrackRowActive : undefined}
+                    />
                     <span className={ra.detailTrackDuration}>
                       {isActive && localDuration > 0
                         ? formatTime(localProgress)

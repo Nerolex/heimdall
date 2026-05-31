@@ -13,6 +13,33 @@ interface Props {
   settings: Record<string, unknown>;
 }
 
+function MarqueeText({ text, wrapClass, textClass }: { text: string; wrapClass: string; textClass: string }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const spanRef = useRef<HTMLSpanElement>(null);
+  const [scrolling, setScrolling] = useState(false);
+
+  useEffect(() => {
+    const w = wrapRef.current;
+    const s = spanRef.current;
+    if (!w || !s) return;
+    const overflow = s.scrollWidth - w.clientWidth;
+    if (overflow > 4) {
+      s.style.setProperty('--marquee-offset', `-${overflow}px`);
+      setScrolling(true);
+    } else {
+      setScrolling(false);
+    }
+  }, [text]);
+
+  return (
+    <div ref={wrapRef} className={wrapClass}>
+      <span ref={spanRef} className={`${textClass} ${scrolling ? ra.trackTitleScrolling : ''}`}>
+        {text}
+      </span>
+    </div>
+  );
+}
+
 export function PlexRandomAlbumView({ settings }: Props): React.ReactElement {
   const savedState = settings.__savedState as RandomAlbumData | undefined;
   const onStateChange = settings.__onStateChange as ((s: unknown) => void) | undefined;
@@ -81,7 +108,11 @@ export function PlexRandomAlbumView({ settings }: Props): React.ReactElement {
             {tracks.map((track, i) => (
               <div key={track.ratingKey} className={ra.trackRow}>
                 <span className={ra.trackNum}>{track.index ?? i + 1}</span>
-                <span className={ra.trackTitle}>{track.title}</span>
+                <MarqueeText
+                  text={track.title}
+                  wrapClass={ra.trackTitleWrap}
+                  textClass={ra.trackTitle}
+                />
                 <span className={ra.trackDuration}>
                   {track.duration ? formatTime(track.duration) : ''}
                 </span>
