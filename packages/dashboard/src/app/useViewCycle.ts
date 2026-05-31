@@ -179,6 +179,7 @@ export function useViewCycle(
     if (!config || config.views.length <= 1 || detailMode) return;
 
     const interval = normalizeCycleInterval(config.cycleInterval) * 1000;
+    const delay = Math.max(0, interval - FADE_DURATION);
     cycleTimer.current = setTimeout(() => {
       const nextIdx = nextViewIndexRef.current ?? getNextIndex(activeViewIndexRef.current);
       // Truncate any forward history past current position, then push a fresh entry.
@@ -187,12 +188,19 @@ export function useViewCycle(
       const newPos = historyPosRef.current + 1;
       viewSnapshots.current.delete(newPos);
       transitionTo(nextIdx, newPos);
-    }, interval - FADE_DURATION);
+    }, delay);
 
     return () => {
       if (cycleTimer.current) clearTimeout(cycleTimer.current);
     };
   }, [config, detailMode, activeViewIndex, transitionTo]);
+
+  const onOpenDetail = useCallback(() => {
+    const view = config?.views[activeViewIndexRef.current];
+    if (view && hasDetailForType(view.type) && !detailMode) {
+      setDetailMode(true);
+    }
+  }, [config, detailMode, hasDetailForType]);
 
   const withInternalSettings = useCallback((settings: Record<string, unknown>) => {
     return {
@@ -200,8 +208,9 @@ export function useViewCycle(
       __savedState: viewSnapshots.current.get(historyPosRef.current),
       __onStateChange: onActiveViewStateChange,
       __onEmpty: onActiveViewEmpty,
+      __onOpenDetail: onOpenDetail,
     };
-  }, [onActiveViewEmpty, onActiveViewStateChange]);
+  }, [onActiveViewEmpty, onActiveViewStateChange, onOpenDetail]);
 
   return {
     activeViewIndex,

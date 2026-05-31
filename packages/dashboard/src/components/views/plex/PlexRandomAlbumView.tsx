@@ -43,6 +43,7 @@ function MarqueeText({ text, wrapClass, textClass }: { text: string; wrapClass: 
 export function PlexRandomAlbumView({ settings }: Props): React.ReactElement {
   const savedState = settings.__savedState as RandomAlbumData | undefined;
   const onStateChange = settings.__onStateChange as ((s: unknown) => void) | undefined;
+  const onOpenDetail = settings.__onOpenDetail as (() => void) | undefined;
 
   const [data, setData] = useState<RandomAlbumData | null>(savedState ?? null);
   const [loading, setLoading] = useState(!savedState);
@@ -98,6 +99,8 @@ export function PlexRandomAlbumView({ settings }: Props): React.ReactElement {
               src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`}
               alt={album.title}
               className={ra.cover}
+              onClick={(e) => { e.stopPropagation(); onOpenDetail?.(); }}
+              style={{ cursor: 'pointer' }}
             />
           )}
           {artistName && <div className={ra.artist}>{artistName}</div>}
