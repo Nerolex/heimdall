@@ -10,6 +10,7 @@ import { getDetailComponent } from './components/registry';
 import { useDashboardConfig } from './app/useDashboardConfig';
 import { useViewCycle } from './app/useViewCycle';
 import { deriveActiveView } from './app/deriveActiveView';
+import { mergeViewSettings } from './app/viewSettings';
 
 export function App(): React.ReactElement {
   const { state, config, errorMessage } = useDashboardConfig();
@@ -31,7 +32,7 @@ export function App(): React.ReactElement {
   if (state === 'empty') return <EmptyState />;
   if (state === 'error' || !config) return <ErrorState message={errorMessage} />;
 
-  const { view, nextView, shouldPreloadNext, DetailComponent, baseSettings, activeSettings } =
+  const { view, nextView, shouldPreloadNext, DetailComponent, activeSettings } =
     deriveActiveView(config, activeViewIndex, nextViewIndex, detailMode, withInternalSettings);
 
   return (
@@ -65,7 +66,9 @@ export function App(): React.ReactElement {
       >
         <ViewRenderer key={historyPos} type={view.type} settings={activeSettings} />
       </div>
-      {shouldPreloadNext && nextView && <PreloadView config={config} view={nextView} />}
+      {shouldPreloadNext && nextView && (
+        <PreloadView type={nextView.type} settings={mergeViewSettings(config, nextView)} />
+      )}
     </div>
   );
 }

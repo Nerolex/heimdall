@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { ComponentProps, WeatherConfig } from '@heimdall/shared';
+import type { ComponentProps } from '@heimdall/shared';
 import { setCurrentPhotoId } from '../photos/currentPhotoId';
 import styles from './Clock.module.css';
 
@@ -7,9 +7,6 @@ interface WeatherData {
   temp: number;
   iconCode: string;
 }
-
-/** Shared state so the detail view can pick up the clock's current photo */
-export let clockCurrentPhotoId: string | null = null;
 
 const WEEKDAYS = ['SO', 'MO', 'DI', 'MI', 'DO', 'FR', 'SA'];
 const MONTHS = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.'];
@@ -89,15 +86,22 @@ function formatTime(now: Date): string {
   return now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 }
 
+/** Settings injected by mergeViewSettings for the clock view type */
+interface ClockViewSettings {
+  weatherApiKey?: string;
+  weatherCity?: string;
+  weatherUnits?: string;
+  /** Weather poll interval in seconds. Mirrors WeatherConfig.refreshInterval. */
+  weatherRefreshInterval?: number;
+}
+
 export function ClockView({ settings }: ComponentProps): React.ReactElement {
   const [time, setTime] = useState(new Date());
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
-  const weatherConfig = settings as unknown as WeatherConfig | undefined;
-  const apiKey = (settings.weatherApiKey as string) || weatherConfig?.apiKey;
-  const city = (settings.weatherCity as string) || weatherConfig?.city;
-  const units = (settings.weatherUnits as string) || weatherConfig?.units || 'metric';
+  const { weatherApiKey: apiKey, weatherCity: city, weatherUnits: units = 'metric', weatherRefreshInterval } =
+    settings as ClockViewSettings;
 
   // Update clock every second
   useEffect(() => {
@@ -113,7 +117,6 @@ export function ClockView({ settings }: ComponentProps): React.ReactElement {
         const photo = data.photo || data.photos?.[0];
         if (photo) {
           setPhotoUrl(`/api/photos/file/${photo.id}`);
-          clockCurrentPhotoId = photo.id;
           setCurrentPhotoId(photo.id);
         }
       })
@@ -135,7 +138,8 @@ export function ClockView({ settings }: ComponentProps): React.ReactElement {
     }
 
     fetchWeather();
-    const timer = setInterval(fetchWeather, 15 * 60 * 1000);
+    // refreshInterval is in minutes, matching WeatherConfig and the overlay Weather component
+    const timer = setInterval(fetchWeather, (weatherRefreshInterval ?? 15) * 60 * 1000);
     return () => clearInterval(timer);
   }, [apiKey, city, units]);
 

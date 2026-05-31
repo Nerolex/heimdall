@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import type { PhotoEntry, MemoriesResponse } from '@heimdall/shared';
+import type { PhotosMemoriesSavedState, ViewInternalSettings } from '../../../app/internalSettings';
 import { setCurrentPhotoId } from './currentPhotoId';
 import styles from './Photos.module.css';
 
@@ -17,10 +18,14 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
   const dir = settings.dir as string | undefined;
   const queryParam = dir ? `?dir=${encodeURIComponent(dir)}` : '';
 
+  const { __savedState, __onStateChange, __onEmpty } = settings as ViewInternalSettings;
+
   // Capture savedState and callback once at mount
-  const savedStateRef = useRef(settings.__savedState as MemoryEntry | undefined);
-  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
-  const onEmptyRef = useRef(settings.__onEmpty as (() => void) | undefined);
+  const savedStateRef = useRef(
+    __savedState?.__view === 'photos-memories' ? (__savedState as PhotosMemoriesSavedState) : undefined
+  );
+  const onStateChangeRef = useRef(__onStateChange);
+  const onEmptyRef = useRef(__onEmpty);
 
   useEffect(() => {
     // Skip fetch when restoring saved state (back navigation — instant restore)
@@ -45,7 +50,10 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
 
   // Restore saved memory or pick randomly — stable once memories are loaded
   const current = useMemo((): MemoryEntry | null => {
-    if (savedStateRef.current) return savedStateRef.current;
+    if (savedStateRef.current) {
+      const { label, photo } = savedStateRef.current;
+      return { label, photo };
+    }
     const slides: MemoryEntry[] = [];
     for (const [label, photos] of Object.entries(memories)) {
       for (const photo of photos) slides.push({ label, photo });
@@ -58,15 +66,21 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
   useEffect(() => {
     if (current) {
       setCurrentPhotoId(current.photo.id);
-      onStateChangeRef.current?.(current);
+      onStateChangeRef.current?.({ __view: 'photos-memories', ...current });
     }
   }, [current]);
+
+  // Notify parent when there are no memories to display
+  useEffect(() => {
+    if (!loading && !error && !current) {
+      onEmptyRef.current?.();
+    }
+  }, [loading, error, current]);
 
   if (loading) return <div className={styles.container} />;
   if (error) return <div className={styles.loading}>Photos unavailable</div>;
 
   if (!current) {
-    onEmptyRef.current?.();
     const dateStr = new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'long' });
     return (
       <div className={styles.emptyContainer}>

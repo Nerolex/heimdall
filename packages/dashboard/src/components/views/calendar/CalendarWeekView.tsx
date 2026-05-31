@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { CalendarSource } from '@heimdall/shared';
 import { useCalendarEvents } from '../../../hooks/useCalendarEvents';
-import { getWeekDays, isEventOnDay, getHourPosition, formatTime } from './calendarUtils';
+import { getWeekDays, isEventOnDay, clampEventToGrid } from './calendarUtils';
 import styles from './Calendar.module.css';
 
 interface Props {
@@ -37,6 +37,8 @@ export function CalendarWeekView({ settings }: Props): React.ReactElement {
   }
 
   // Separate all-day events from timed events
+  const allDayEvents = events.filter(e => e.allDay);
+  const hasAllDay = weekDays.some(day => allDayEvents.some(e => isEventOnDay(e, day)));
   const timeLabels = Array.from({ length: TOTAL_HOURS }, (_, i) => START_HOUR + i);
 
   return (
@@ -55,6 +57,25 @@ export function CalendarWeekView({ settings }: Props): React.ReactElement {
             );
           })}
         </div>
+
+        {/* All-day events strip — shown only when there are all-day events this week */}
+        {hasAllDay && (
+          <div style={{ display: 'flex', paddingBottom: '0.5vh', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ width: '6vw', flexShrink: 0 }} />
+            {weekDays.map((day) => {
+              const dayAllDayEvents = allDayEvents.filter(e => isEventOnDay(e, day));
+              return (
+                <div key={day.toISOString()} style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.2vh', padding: '0.3vh 0.2vw' }}>
+                  {dayAllDayEvents.map(event => (
+                    <div key={event.id} className={styles.allDayPill} style={{ background: event.color }}>
+                      {event.title}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Body: time gutter + day columns with positioned events */}
         <div className={styles.ttBody}>
@@ -84,12 +105,11 @@ export function CalendarWeekView({ settings }: Props): React.ReactElement {
                   <div className={styles.ttNowLine} style={{ top: `${nowPosition}%` }} />
                 )}
 
-                {/* Events */}
+                {/* Events — start/end clamped to this day's boundaries for multi-day events */}
                 {dayEvents.map((event) => {
-                  const startHour = Math.max(getHourPosition(event.start), START_HOUR);
-                  const endHour = Math.min(getHourPosition(event.end), END_HOUR);
-                  const top = ((startHour - START_HOUR) / TOTAL_HOURS) * 100;
-                  const height = Math.max(((endHour - startHour) / TOTAL_HOURS) * 100, 3);
+                  const { clampedStart, clampedEnd } = clampEventToGrid(event, day, START_HOUR, END_HOUR);
+                  const top = ((clampedStart - START_HOUR) / TOTAL_HOURS) * 100;
+                  const height = Math.max(((clampedEnd - clampedStart) / TOTAL_HOURS) * 100, 3);
 
                   return (
                     <div

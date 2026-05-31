@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import type { PhotoEntry } from '@heimdall/shared';
+import type { PhotosRandomSavedState, ViewInternalSettings } from '../../../app/internalSettings';
 import { setCurrentPhotoId } from './currentPhotoId';
 import styles from './Photos.module.css';
 
@@ -15,9 +16,13 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
   const dir = settings.dir as string | undefined;
   const queryParam = dir ? `?dir=${encodeURIComponent(dir)}` : '';
 
+  const { __savedState, __onStateChange } = settings as ViewInternalSettings;
+
   // Capture savedState and callback once at mount — refs stay stable across re-renders
-  const savedStateRef = useRef(settings.__savedState as { photo: PhotoEntry } | undefined);
-  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
+  const savedStateRef = useRef(
+    __savedState?.__view === 'photos-random' ? (__savedState as PhotosRandomSavedState) : undefined
+  );
+  const onStateChangeRef = useRef(__onStateChange);
 
   const fetchPhoto = useCallback(async () => {
     try {
@@ -27,7 +32,7 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
       if (data.photo) {
         setPhoto(data.photo);
         setCurrentPhotoId(data.photo.id);
-        onStateChangeRef.current?.({ photo: data.photo });
+        onStateChangeRef.current?.({ __view: 'photos-random', photo: data.photo });
       }
       setLoading(false);
     } catch {
@@ -39,9 +44,10 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
   useEffect(() => {
     // Restore previously shown photo when navigating back
     if (savedStateRef.current?.photo) {
-      setPhoto(savedStateRef.current.photo);
-      setCurrentPhotoId(savedStateRef.current.photo.id);
-      onStateChangeRef.current?.({ photo: savedStateRef.current.photo });
+      const saved = savedStateRef.current.photo;
+      setPhoto(saved);
+      setCurrentPhotoId(saved.id);
+      onStateChangeRef.current?.({ __view: 'photos-random', photo: saved });
       setLoading(false);
       return;
     }

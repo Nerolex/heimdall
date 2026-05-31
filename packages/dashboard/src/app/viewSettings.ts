@@ -3,42 +3,44 @@ import { normalizeOverlayMode } from '@heimdall/shared';
 
 /** Merge top-level config sections into view settings so views inherit shared credentials */
 export function mergeViewSettings(config: DashboardConfig, view: DashboardConfig['views'][number]): Record<string, unknown> {
-  const base = view.settings || {};
+  const base = (view.settings || {}) as Record<string, unknown>;
   const type = view.type;
-  const cfg = config as unknown as Record<string, unknown>;
-  if (type.startsWith('retro') && cfg.retro) {
-    return { ...(cfg.retro as Record<string, unknown>), ...base };
+
+  if (type.startsWith('retro') && config.retro) {
+    return { ...config.retro, ...base };
   }
   if (type.startsWith('gaming')) {
-    const retro = (cfg.retro as Record<string, unknown>) || {};
-    const steam = (cfg.steam as Record<string, unknown>) || {};
     return {
-      raApiUser: retro.apiUser,
-      raApiKey: retro.apiKey,
-      raUser: retro.user,
-      steamApiKey: steam.apiKey,
-      steamId: steam.steamId,
-      igdbClientId: retro.igdbClientId,
-      igdbClientSecret: retro.igdbClientSecret,
-      sgdbApiKey: retro.sgdbApiKey,
+      raApiUser: config.retro?.apiUser,
+      raApiKey: config.retro?.apiKey,
+      raUser: config.retro?.user,
+      steamApiKey: config.steam?.apiKey,
+      steamId: config.steam?.steamId,
+      igdbClientId: config.retro?.igdbClientId,
+      igdbClientSecret: config.retro?.igdbClientSecret,
+      sgdbApiKey: config.retro?.sgdbApiKey,
       ...base,
     };
   }
-  if (type.startsWith('calendar') && cfg.calendar) {
-    return { ...(cfg.calendar as Record<string, unknown>), ...base };
+  if (type.startsWith('calendar') && config.calendar) {
+    return { ...config.calendar, ...base };
   }
-  if (type.startsWith('music') && cfg.lastfm) {
-    const lastfm = cfg.lastfm as Record<string, unknown>;
-    return { lastfmApiKey: lastfm.apiKey, lastfmUser: lastfm.user, ...base };
+  if (type.startsWith('music') && config.lastfm) {
+    return { lastfmApiKey: config.lastfm.apiKey, lastfmUser: config.lastfm.user, ...base };
   }
   if (type.startsWith('weather') && config.weather) {
-    return { ...(config.weather as unknown as Record<string, unknown>), ...base };
+    return { ...config.weather, ...base };
   }
   if (type === 'clock' && config.weather) {
-    const w = config.weather as unknown as Record<string, unknown>;
-    return { weatherApiKey: w.apiKey, weatherCity: w.city, weatherUnits: w.units, ...base };
+    return {
+      weatherApiKey: config.weather.apiKey,
+      weatherCity: config.weather.city,
+      weatherUnits: config.weather.units,
+      weatherRefreshInterval: config.weather.refreshInterval,
+      ...base,
+    };
   }
-  return base as Record<string, unknown>;
+  return base;
 }
 
 export function getOverlayMode(config: DashboardConfig, index: number): OverlayMode {

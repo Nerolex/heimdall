@@ -3,6 +3,8 @@ import type { EventsViewSnapshot } from '@heimdall/shared';
 
 type SnapshotStatus = 'loading' | 'ready' | 'empty' | 'error' | 'stale';
 
+export type { SnapshotStatus as EventsSnapshotStatus };
+
 interface CacheEntry {
   snapshot: EventsViewSnapshot;
   status: SnapshotStatus;

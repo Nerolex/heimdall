@@ -58,6 +58,7 @@ registerComponent('calendar-agenda', CalendarAgendaView);
 registerComponent('calendar-day', CalendarDayView);
 registerComponent('calendar-week', CalendarWeekView);
 registerComponent('calendar-month', CalendarMonthView);
+// Legacy alias: 'calendar' maps to CalendarDayView for backward compatibility with older config files
 registerComponent('calendar', CalendarDayView);
 registerComponent('photos-memories', PhotosMemoriesView);
 registerComponent('photos-random', PhotosRandomView);
@@ -73,7 +74,7 @@ registerComponent('gaming-achievement', GamingAchievementView);
 registerComponent('clock', ClockView);
 registerComponent('plex-now-playing', PlexNowPlayingView);
 registerComponent('plex-random-album', PlexRandomAlbumView);
-registerComponent('gametrailers', GameTrailersView as React.ComponentType<{ settings: Record<string, unknown> }>);
+registerComponent('gametrailers', GameTrailersView);
 registerDetailComponent('clock', PhotoSlideshow);
 registerDetailComponent('photos-random', PhotoSlideshow);
 registerDetailComponent('photos-memories', PhotoSlideshow);

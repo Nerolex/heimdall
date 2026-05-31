@@ -1,7 +1,7 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import type { CalendarSource } from '@heimdall/shared';
 import { useCalendarEvents } from '../../../hooks/useCalendarEvents';
-import { getHourPosition } from './calendarUtils';
+import { getEventsForDay, clampEventToGrid } from './calendarUtils';
 import { getRandomQuote } from './emptyDayQuotes';
 import styles from './Calendar.module.css';
 
@@ -24,21 +24,26 @@ export function CalendarDayView({ settings }: Props): React.ReactElement {
   const quote = useMemo(() => getRandomQuote(), []);
 
   const today = new Date();
-  const todayStr = today.toDateString();
-  const todayEvents = events.filter((e) => new Date(e.start).toDateString() === todayStr && !e.allDay);
-  const allDayEvents = events.filter((e) => new Date(e.start).toDateString() === todayStr && e.allDay);
+  // getEventsForDay uses overlap logic (start <= dayEnd && end >= dayStart),
+  // so multi-day and overnight events that span into today are included.
+  const dayEvents = getEventsForDay(events, today);
+  const todayEvents = dayEvents.filter(e => !e.allDay);
+  const allDayEvents = dayEvents.filter(e => e.allDay);
   const isEmpty = todayEvents.length === 0 && allDayEvents.length === 0;
 
   const hours = Array.from({ length: TOTAL_HOURS + 1 }, (_, i) => START_HOUR + i);
   const currentHour = today.getHours() + today.getMinutes() / 60;
   const currentPosition = ((currentHour - START_HOUR) / TOTAL_HOURS) * 100;
 
+  // Notify parent after render, not during — avoids React render-phase state updates.
+  useEffect(() => {
+    if (isEmpty && !loading && !error) {
+      onEmptyRef.current?.();
+    }
+  }, [isEmpty, loading, error]);
+
   if (loading || error) {
     return <div className={styles.loading}>{error ? 'Calendar unavailable' : 'Loading calendar…'}</div>;
-  }
-
-  if (isEmpty) {
-    onEmptyRef.current?.();
   }
 
   return (
@@ -80,11 +85,11 @@ export function CalendarDayView({ settings }: Props): React.ReactElement {
         )}
 
         {todayEvents.map((event) => {
-          const eventStart = getHourPosition(event.start);
-          const eventEnd = getHourPosition(event.end);
-          const top = ((Math.max(eventStart, START_HOUR) - START_HOUR) / TOTAL_HOURS) * 100;
-          const bottom = ((Math.min(eventEnd, END_HOUR) - START_HOUR) / TOTAL_HOURS) * 100;
-          const height = Math.max(bottom - top, 2);
+          // Clamp start/end to the current day's grid to correctly render
+          // multi-day and overnight events that only partially overlap today.
+          const { clampedStart, clampedEnd } = clampEventToGrid(event, today, START_HOUR, END_HOUR);
+          const top = ((clampedStart - START_HOUR) / TOTAL_HOURS) * 100;
+          const height = Math.max(((clampedEnd - clampedStart) / TOTAL_HOURS) * 100, 2);
 
           return (
             <div

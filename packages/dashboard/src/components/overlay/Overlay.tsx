@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import type { WeatherConfig } from '@heimdall/shared';
 import { Clock } from './Clock';
 import { Weather } from './Weather';
@@ -25,12 +25,19 @@ export function Overlay({ clockVisible, weatherVisible, weatherConfig, showFulls
 
   const [isHovered, setIsHovered] = useState(false);
 
+  // Track real browser fullscreen state — handles Esc, rejected promises, external exits
+  useEffect(() => {
+    const onFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
   const buttonOpacity = isFullscreen ? (isHovered ? 0.75 : 0) : 0.75;
 
   const handleFullscreen = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     toggleFullscreen();
-    setTimeout(() => setIsFullscreen(!!document.fullscreenElement), 200);
+    // isFullscreen updates via the fullscreenchange event listener above
   }, []);
 
   return (

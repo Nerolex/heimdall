@@ -1,16 +1,20 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useEventsSnapshot } from './useEventsSnapshot';
+import { useEventsSkipEffect } from './useEventsSkipEffect';
+import type { ViewInternalSettings, EventsWeekendSavedState, ViewSavedState } from '../../../app/internalSettings';
 import styles from './Events.module.css';
 
 export function EventsWeekendView({ settings }: { settings: Record<string, unknown> }) {
   const { snapshot, status } = useEventsSnapshot('events-weekend');
-  const skipIfEmpty = settings.skipIfEmpty === true;
-  const onEmpty = settings.__onEmpty as (() => void) | undefined;
-
-  const savedStateRef = useRef(settings.__savedState as { bgImageUrl: string | undefined } | undefined);
-  const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
+  const skipIfEmpty = settings.skipIfEmpty !== false;
+  const { __onEmpty, __onStateChange, __savedState } = settings as ViewInternalSettings;
 
   const events = snapshot?.events ?? [];
+
+  const savedStateRef = useRef(
+    __savedState?.__view === 'events-weekend' ? (__savedState as EventsWeekendSavedState) : undefined
+  );
+  const onStateChangeRef = useRef(__onStateChange as ((s: ViewSavedState) => void) | undefined);
 
   // All hooks must be called before any early returns
   const bgImage = useMemo(() => {
@@ -21,19 +25,18 @@ export function EventsWeekendView({ settings }: { settings: Record<string, unkno
       : undefined;
     // Save on first pick so back navigation restores the same image
     if (picked !== undefined) {
-      onStateChangeRef.current?.({ bgImageUrl: picked });
+      onStateChangeRef.current?.({ __view: 'events-weekend', bgImageUrl: picked });
     }
     return picked;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snapshot?.refreshedAt]);
 
-  useEffect(() => {
-    if (status === 'empty' && skipIfEmpty && onEmpty) onEmpty();
-  }, [status, skipIfEmpty, onEmpty]);
+  useEventsSkipEffect(status, skipIfEmpty, __onEmpty);
 
   if (status === 'loading') return <div className={styles.groupedContainer} />;
-  if (status === 'error') return <div className={styles.errorState}>Events konnten nicht geladen werden</div>;
-  if (status === 'empty') return <div className={styles.emptyState}>Keine Events am Wochenende</div>;
+  if (status === 'error' || status === 'empty' || events.length === 0) {
+    return skipIfEmpty ? null : <div className={styles.groupedContainer} />;
+  }
 
   // Group by date
   const groups = new Map<string, typeof events>();
@@ -70,5 +73,4 @@ export function EventsWeekendView({ settings }: { settings: Record<string, unkno
     </div>
   );
 }
-
 

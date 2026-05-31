@@ -26,11 +26,16 @@ export function groupByDay(events: CalendarEvent[]): Map<string, CalendarEvent[]
   return groups;
 }
 
-export function getEventsForDay(events: CalendarEvent[], date: Date): CalendarEvent[] {
+function getDayBoundaries(date: Date): { dayStart: Date; dayEnd: Date } {
   const dayStart = new Date(date);
   dayStart.setHours(0, 0, 0, 0);
   const dayEnd = new Date(date);
   dayEnd.setHours(23, 59, 59, 999);
+  return { dayStart, dayEnd };
+}
+
+export function getEventsForDay(events: CalendarEvent[], date: Date): CalendarEvent[] {
+  const { dayStart, dayEnd } = getDayBoundaries(date);
   return events.filter((e) => {
     const start = new Date(e.start);
     const end = new Date(e.end);
@@ -39,13 +44,38 @@ export function getEventsForDay(events: CalendarEvent[], date: Date): CalendarEv
 }
 
 export function isEventOnDay(event: CalendarEvent, day: Date): boolean {
+  const { dayStart, dayEnd } = getDayBoundaries(day);
   const start = new Date(event.start);
   const end = new Date(event.end);
+  return start <= dayEnd && end >= dayStart;
+}
+
+/**
+ * Returns the visible start/end hour positions for a timed event on a specific day,
+ * clamped to the given grid range. Handles multi-day and overnight events that
+ * only partially overlap the current day.
+ */
+export function clampEventToGrid(
+  event: CalendarEvent,
+  day: Date,
+  gridStart: number,
+  gridEnd: number
+): { clampedStart: number; clampedEnd: number } {
   const dayStart = new Date(day);
   dayStart.setHours(0, 0, 0, 0);
   const dayEnd = new Date(day);
   dayEnd.setHours(23, 59, 59, 999);
-  return start <= dayEnd && end >= dayStart;
+
+  const eventStartMs = Math.max(new Date(event.start).getTime(), dayStart.getTime());
+  const eventEndMs = Math.min(new Date(event.end).getTime(), dayEnd.getTime());
+
+  const startDate = new Date(eventStartMs);
+  const endDate = new Date(eventEndMs);
+
+  const clampedStart = Math.max(startDate.getHours() + startDate.getMinutes() / 60, gridStart);
+  const clampedEnd = Math.min(endDate.getHours() + endDate.getMinutes() / 60, gridEnd);
+
+  return { clampedStart, clampedEnd };
 }
 
 export function getHourPosition(iso: string): number {

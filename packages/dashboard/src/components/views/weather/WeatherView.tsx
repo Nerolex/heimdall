@@ -1,21 +1,14 @@
 import React from 'react';
+import type { WeatherSettings } from './types';
 import { useWeatherData } from './useWeatherData';
 import { getSunPhase, getSimParams } from './sunPhase';
 import { getGradient } from './weatherGradients';
 import { WeatherAccent } from './WeatherAccent';
 import styles from './WeatherView.module.css';
 
-interface WeatherViewProps {
-  settings: Record<string, unknown>;
-}
-
-export function WeatherView({ settings }: WeatherViewProps): React.ReactElement {
-  const { data, error } = useWeatherData({
-    apiKey: settings.apiKey as string | undefined,
-    city: settings.city as string | undefined,
-    units: (settings.units as string) || 'metric',
-    lang: (settings.lang as string) || 'de',
-  });
+export function WeatherView({ settings }: { settings: Record<string, unknown> }): React.ReactElement {
+  const weatherSettings = settings as WeatherSettings;
+  const { data, error } = useWeatherData(weatherSettings);
 
   if (error || !data) {
     return (
@@ -29,7 +22,7 @@ export function WeatherView({ settings }: WeatherViewProps): React.ReactElement 
   const conditionId = sim.conditionId ?? data.conditionId;
   const sunPhase = sim.sunPhase ?? getSunPhase(data.sunrise, data.sunset);
   const condition = sim.conditionText ?? data.condition;
-  const unitSymbol = (settings.units === 'imperial') ? '°F' : '°C';
+  const unitSymbol = weatherSettings.units === 'imperial' ? '°F' : '°C';
   const gradient = getGradient(conditionId, sunPhase);
 
   return (

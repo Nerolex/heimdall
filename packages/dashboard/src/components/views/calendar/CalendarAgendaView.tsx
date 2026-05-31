@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { CalendarSource } from '@heimdall/shared';
 import { useCalendarEvents } from '../../../hooks/useCalendarEvents';
 import { formatDate, formatTime, groupByDay } from './calendarUtils';
@@ -14,6 +14,13 @@ export function CalendarAgendaView({ settings }: Props): React.ReactElement {
   const onEmptyRef = useRef((settings.__onEmpty as (() => void) | undefined));
   const { events, loading, error } = useCalendarEvents(sources, daysAhead);
 
+  // Notify parent after render, not during — avoids React render-phase state updates.
+  useEffect(() => {
+    if (events.length === 0 && !loading && !error) {
+      onEmptyRef.current?.();
+    }
+  }, [events.length, loading, error]);
+
   if (loading || error) {
     return <div className={styles.loading}>{error ? 'Calendar unavailable' : 'Loading calendar…'}</div>;
   }
@@ -21,10 +28,6 @@ export function CalendarAgendaView({ settings }: Props): React.ReactElement {
   const grouped = groupByDay(events);
   const maxItems = window.innerHeight > 800 ? 8 : window.innerHeight > 500 ? 6 : 4;
   const todayStr = new Date().toDateString();
-
-  if (events.length === 0) {
-    onEmptyRef.current?.();
-  }
 
   // Calculate days from today for proximity scaling
   function daysFromToday(dateStr: string): number {
