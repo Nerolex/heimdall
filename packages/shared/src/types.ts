@@ -334,7 +334,10 @@ export function normalizeViewOrder(value: unknown): ViewOrder {
   return DEFAULT_VIEW_ORDER;
 }
 
-/** Check if a value looks like a valid ViewEntry */
+/**
+ * Shallow structural check: returns true if value is an object with a non-empty string `type` field.
+ * Does NOT validate individual settings or known type names — use this only as a parse-time guard.
+ */
 export function isValidViewEntry(value: unknown): value is ViewEntry {
   return (
     typeof value === 'object' &&
@@ -345,7 +348,10 @@ export function isValidViewEntry(value: unknown): value is ViewEntry {
   );
 }
 
-/** Check if a value looks like a valid DashboardConfig */
+/**
+ * Shallow structural check: returns true if value is an object with a `views` array.
+ * Does NOT validate view entries, required fields, or config semantics.
+ */
 export function isValidDashboardConfig(
   value: unknown
 ): value is DashboardConfig {
