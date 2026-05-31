@@ -3,9 +3,7 @@ import type { EventsProviderConfig } from '@heimdall/shared';
 
 vi.mock('../src/services/events/rausgegangen.js', () => ({
   fetchCsrfCookie: vi.fn(),
-}));
-vi.mock('../src/services/events/paginateFetch.js', () => ({
-  paginateFetch: vi.fn(),
+  scrapeTimePage: vi.fn(),
 }));
 vi.mock('../src/services/events/snapshotStore.js', () => ({
   getSnapshot: vi.fn(),
@@ -25,16 +23,16 @@ const mockConfig: EventsProviderConfig = {
 
 describe('refreshSnapshot', () => {
   it('writes stale:false snapshot on success', async () => {
-    const { fetchCsrfCookie } = await import('../src/services/events/rausgegangen.js');
-    const { paginateFetch } = await import('../src/services/events/paginateFetch.js');
+    const { fetchCsrfCookie, scrapeTimePage } = await import('../src/services/events/rausgegangen.js');
     const { setSnapshot } = await import('../src/services/events/snapshotStore.js');
 
-    vi.mocked(fetchCsrfCookie).mockResolvedValue({ cookie: 'c', csrfToken: 'csrf' });
-    vi.mocked(paginateFetch).mockResolvedValue([
+    vi.mocked(fetchCsrfCookie).mockResolvedValue({ cookie: 'c', csrfToken: 'csrf', html: '' });
+    vi.mocked(scrapeTimePage).mockResolvedValue([
       {
         id: '1',
         title: 'Event',
         categorySlug: 'party',
+        categoryLabelRaw: 'Party',
         date: new Date().toISOString().split('T')[0],
         description: 'Venue | 8pm',
         additionalInfos: null,
@@ -95,18 +93,26 @@ describe('refreshSnapshot', () => {
     );
   });
 
-  it('bootstrapRefreshScheduler calls setInterval per view type', async () => {
+  it('bootstrapRefreshScheduler schedules a midnight setTimeout per view type', async () => {
+    vi.useFakeTimers();
+    const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
     const setIntervalSpy = vi.spyOn(global, 'setInterval');
-    const { fetchCsrfCookie } = await import('../src/services/events/rausgegangen.js');
-    const { paginateFetch } = await import('../src/services/events/paginateFetch.js');
-    vi.mocked(fetchCsrfCookie).mockResolvedValue({ cookie: 'c', csrfToken: 'csrf' });
-    vi.mocked(paginateFetch).mockResolvedValue([]);
+    const { fetchCsrfCookie, scrapeTimePage } = await import('../src/services/events/rausgegangen.js');
+    vi.mocked(fetchCsrfCookie).mockResolvedValue({ cookie: 'c', csrfToken: 'csrf', html: '' });
+    vi.mocked(scrapeTimePage).mockResolvedValue([]);
 
     const { bootstrapRefreshScheduler } = await import(
       '../src/services/events/refreshDailySnapshot.js'
     );
     bootstrapRefreshScheduler(mockConfig, ['events-today', 'events-weekend']);
 
+    // Each view type gets a setTimeout scheduled for the next Berlin midnight
+    expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
+
+    // When the midnight timeout fires, setInterval is set up for subsequent daily refreshes
+    vi.runOnlyPendingTimers();
     expect(setIntervalSpy).toHaveBeenCalledTimes(2);
+
+    vi.useRealTimers();
   });
 });

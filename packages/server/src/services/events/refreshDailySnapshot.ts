@@ -4,7 +4,11 @@ import { fetchCsrfCookie, scrapeTimePage } from './rausgegangen.js';
 import { filterByWindow, filterByCategory } from './filterEvents.js';
 import { getSnapshot, setSnapshot } from './snapshotStore.js';
 
-// Page slugs for each view type
+// Page slugs for each view type.
+// NOTE: rausgegangen.de has no generic "upcoming N days" page. The weekend page is
+// the nearest available source for events-upcoming; filterByWindow then restricts
+// the results to the configured `days` window. Weekday-only events beyond the
+// weekend may be absent from the upcoming snapshot.
 const PAGE_SLUG: Record<string, string> = {
   'events-today': 'tipps-fuer-heute',
   'events-weekend': 'tips-for-the-weekend',
@@ -106,6 +110,24 @@ export async function refreshSnapshot(
 const ALLOWED_VIEW_TYPES = ['events-today', 'events-weekend', 'events-upcoming'] as const;
 type AllowedViewType = (typeof ALLOWED_VIEW_TYPES)[number];
 
+/**
+ * Returns milliseconds until the next midnight in Europe/Berlin.
+ * Used to schedule daily snapshot refreshes at the calendar day boundary.
+ */
+function msUntilNextMidnightBerlin(): number {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Berlin',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  }).formatToParts(now);
+  const hour = parseInt(parts.find(p => p.type === 'hour')!.value);
+  const minute = parseInt(parts.find(p => p.type === 'minute')!.value);
+  const second = parseInt(parts.find(p => p.type === 'second')!.value);
+  const msElapsedToday = (hour * 3600 + minute * 60 + second) * 1000;
+  return 24 * 60 * 60 * 1000 - msElapsedToday;
+}
+
 export function bootstrapRefreshScheduler(
   config: EventsProviderConfig,
   activeViewTypes: string[],
@@ -115,9 +137,13 @@ export function bootstrapRefreshScheduler(
     ALLOWED_VIEW_TYPES.includes(t as AllowedViewType)
   );
   for (const viewType of validTypes) {
+    // Refresh immediately on startup, then at each Berlin midnight so the
+    // "today" / "weekend" windows never serve the previous calendar day.
     void refreshSnapshot(viewType, config, days);
-    setInterval(() => {
+    const scheduleDaily = () => {
       void refreshSnapshot(viewType, config, days);
-    }, 24 * 60 * 60 * 1000);
+      setInterval(() => void refreshSnapshot(viewType, config, days), 24 * 60 * 60 * 1000);
+    };
+    setTimeout(scheduleDaily, msUntilNextMidnightBerlin());
   }
 }
