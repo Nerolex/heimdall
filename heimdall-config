@@ -1,0 +1,415 @@
+#!/usr/bin/env python3
+"""heimdall-config — CLI tool for managing the Heimdall dashboard config.
+
+Deploy next to config.json on the Pi (~/Docker/heimdall/heimdall-config).
+Uses only Python stdlib — no pip dependencies required.
+"""
+
+import json
+import os
+import shutil
+import sys
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+CONFIG_PATH = Path(os.environ.get("HEIMDALL_CONFIG", SCRIPT_DIR / "config.json"))
+
+# View type → (short description, known settings keys)
+VIEW_REGISTRY = {
+    "image":              ("Static image display",                       ["src"]),
+    "weather":            ("Current weather conditions",                 []),
+    "weather-forecast":   ("3-day weather forecast (Heute/Morgen/…)",    []),
+    "calendar-agenda":    ("Upcoming events list from iCal feeds",       []),
+    "calendar-day":       ("Today's schedule in day view",              []),
+    "calendar-week":      ("Week overview grid",                        []),
+    "calendar-month":     ("Monthly calendar with events",              []),
+    "photos-memories":    ("On-this-day photo memories",                 []),
+    "photos-random":      ("Random photo from library",                  []),
+    "retro-recent":       ("Recently played retro games",               []),
+    "retro-playing":      ("Currently playing retro game",              []),
+    "retro-profile":      ("RetroAchievements profile summary",         []),
+    "retro-showcase":     ("Retro achievement showcase",                []),
+    "music-now-playing":  ("Last.fm now-playing / recent track",        []),
+    "gaming-now":         ("Currently playing Steam game",              []),
+    "gaming-recent":      ("Recently played Steam games",               []),
+    "gaming-showcase":    ("Steam gaming showcase with art",            []),
+    "gaming-achievement": ("Latest gaming achievement",                 []),
+    "clock":              ("Full-screen clock",                          []),
+    "plex-now-playing":   ("Currently playing on Plex",                 []),
+    "plex-random-album":  ("Random album art from Plex library",        []),
+    "gametrailers":       ("Game trailer video playback",               []),
+    "events-today":       ("City events happening today",               ["days"]),
+    "events-weekend":     ("City events this weekend",                  ["days"]),
+    "events-upcoming":    ("City events in the next N days",            ["days"]),
+}
+
+KNOWN_VIEWS = list(VIEW_REGISTRY.keys())
+OVERLAY_MODES = ["clock", "weather", "both", "none"]
+FREQUENCY_VALUES = ["high", "normal", "low"]
+TOP_LEVEL_KEYS = {"type", "overlay", "frequency", "skipIfEmpty", "settings"}
+
+
+# ─── Colors ──────────────────────────────────────────────────────────────────
+
+def _supports_color():
+    if os.environ.get("NO_COLOR"):
+        return False
+    if not hasattr(sys.stdout, "isatty"):
+        return False
+    return sys.stdout.isatty()
+
+USE_COLOR = _supports_color()
+
+def c(code: str, text: str) -> str:
+    if not USE_COLOR:
+        return text
+    return f"\033[{code}m{text}\033[0m"
+
+def dim(t):    return c("2", t)
+def bold(t):   return c("1", t)
+def green(t):  return c("32", t)
+def yellow(t): return c("33", t)
+def red(t):    return c("31", t)
+def cyan(t):   return c("36", t)
+def mag(t):    return c("35", t)
+
+
+def load_config():
+    if not CONFIG_PATH.exists():
+        print(red(f"✗ Config not found: {CONFIG_PATH}"), file=sys.stderr)
+        sys.exit(1)
+    return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+
+
+def save_config(config):
+    backup = CONFIG_PATH.with_suffix(".json.bak")
+    if CONFIG_PATH.exists():
+        shutil.copy2(CONFIG_PATH, backup)
+    CONFIG_PATH.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    print(green("✓") + f" Saved {CONFIG_PATH}")
+    print(dim(f"  Backup: {backup}"))
+
+
+def parse_value(raw: str):
+    """Parse a CLI value string into the appropriate Python type."""
+    if raw == "true":
+        return True
+    if raw == "false":
+        return False
+    if raw == "null":
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        pass
+    try:
+        return float(raw)
+    except ValueError:
+        pass
+    try:
+        return json.loads(raw)
+    except (json.JSONDecodeError, ValueError):
+        pass
+    return raw
+
+
+def resolve_index(views, ref: str) -> int:
+    """Resolve an index or type name to a numeric index."""
+    try:
+        idx = int(ref)
+    except ValueError:
+        matches = [i for i, v in enumerate(views) if v["type"] == ref]
+        if not matches:
+            print(red(f"✗ No configured view with type \"{ref}\"."), file=sys.stderr)
+            sys.exit(1)
+        idx = matches[0]
+    if idx < 0 or idx >= len(views):
+        print(red(f"✗ Index {idx} out of range (0–{len(views) - 1})."), file=sys.stderr)
+        sys.exit(1)
+    return idx
+
+
+def validate_value(key: str, parsed, view_type: str = "") -> str | None:
+    """
+    Validate a value for a given key. Returns an error message string on failure, None on success.
+    For non-fatal issues (warnings), prints a yellow warning but returns None.
+    """
+    # Top-level property validation
+    if key == "overlay":
+        if parsed not in OVERLAY_MODES:
+            return f"Invalid overlay \"{parsed}\". Choose: {', '.join(OVERLAY_MODES)}"
+    elif key == "frequency":
+        if parsed not in FREQUENCY_VALUES:
+            return f"Invalid frequency \"{parsed}\". Choose: {', '.join(FREQUENCY_VALUES)}"
+    elif key == "skipIfEmpty":
+        if not isinstance(parsed, bool):
+            return f"skipIfEmpty must be true or false, got: {json.dumps(parsed)}"
+    elif key == "type":
+        if not isinstance(parsed, str) or not parsed.strip():
+            return "type must be a non-empty string"
+        if parsed not in KNOWN_VIEWS:
+            print(yellow(f"  ⚠ \"{parsed}\" is not a known view type — may cause blank screen"))
+    # Settings-level validation
+    elif key == "days":
+        if not isinstance(parsed, int) or parsed < 1:
+            return f"days must be a positive integer, got: {json.dumps(parsed)}"
+    elif key == "src":
+        if not isinstance(parsed, str) or not parsed.strip():
+            return "src must be a non-empty file path or URL"
+    else:
+        # Unknown settings key — warn but allow
+        if view_type and view_type in VIEW_REGISTRY:
+            known_settings = VIEW_REGISTRY[view_type][1]
+            if known_settings and key not in known_settings:
+                print(yellow(f"  ⚠ \"{key}\" is not a documented setting for {view_type}"))
+                print(dim(f"    Known: {', '.join(known_settings)}"))
+
+    return None
+
+
+# ─── Commands ────────────────────────────────────────────────────────────────
+
+
+def cmd_views():
+    print(f"\n{bold('Available view types:')}\n")
+    # Group by category
+    groups = {
+        "Photos":   ["photos-random", "photos-memories", "image"],
+        "Weather":  ["weather", "weather-forecast"],
+        "Calendar": ["calendar-agenda", "calendar-day", "calendar-week", "calendar-month"],
+        "Events":   ["events-today", "events-weekend", "events-upcoming"],
+        "Gaming":   ["gaming-now", "gaming-recent", "gaming-showcase", "gaming-achievement",
+                     "retro-recent", "retro-playing", "retro-profile", "retro-showcase", "gametrailers"],
+        "Music":    ["music-now-playing"],
+        "Media":    ["plex-now-playing", "plex-random-album"],
+        "Other":    ["clock"],
+    }
+    for group, types in groups.items():
+        print(f"  {bold(group)}")
+        for t in types:
+            desc = VIEW_REGISTRY.get(t, ("", []))[0]
+            type_col = pad_colored(cyan(t), t, 28)
+            print(f"    {type_col} {dim(desc)}")
+        print()
+    print(dim(f"  ({len(KNOWN_VIEWS)} types total)\n"))
+
+
+def pad_colored(text: str, visible: str, width: int) -> str:
+    """Pad a colored string to a fixed visible width."""
+    padding = max(0, width - len(visible))
+    return text + ' ' * padding
+
+
+def cmd_list():
+    config = load_config()
+    views = config.get("views", [])
+    if not views:
+        print(dim("\nNo views configured.\n"))
+        return
+    print(f"\n{bold('Configured views:')}\n")
+    print(f"  {'#':<4} {'Type':<26} {'Overlay':<10} {'Freq':<8} {'Skip':<6} Description")
+    print(f"  {'─'*3} {'─'*26} {'─'*10} {'─'*8} {'─'*5} {'─'*30}")
+    for i, v in enumerate(views):
+        overlay = v.get("overlay", "both")
+        freq = v.get("frequency", "normal")
+        skip_raw = "yes" if v.get("skipIfEmpty") else "–"
+        skip = green(skip_raw) if v.get("skipIfEmpty") else dim(skip_raw)
+        vtype = v["type"]
+        desc = VIEW_REGISTRY.get(vtype, ("?", []))[0]
+        known = vtype in VIEW_REGISTRY
+        type_str = cyan(vtype) if known else yellow(vtype)
+
+        idx_col = pad_colored(dim(str(i)), str(i), 4)
+        type_col = pad_colored(type_str, vtype, 26)
+        skip_col = pad_colored(skip, skip_raw, 6)
+        print(f"  {idx_col} {type_col} {overlay:<10} {freq:<8} {skip_col} {dim(desc)}")
+    print()
+
+
+def cmd_show(ref: str):
+    config = load_config()
+    views = config.get("views", [])
+    idx = resolve_index(views, ref)
+    view = views[idx]
+
+    desc = VIEW_REGISTRY.get(view["type"], ("", []))[0]
+    print(f"\n  {bold('View #' + str(idx))}: {cyan(view['type'])}  {dim(desc)}\n")
+    print(f"  overlay:     {mag(str(view.get('overlay', '(default: both)')))}")
+    print(f"  frequency:   {mag(str(view.get('frequency', '(default: normal)')))}")
+    print(f"  skipIfEmpty: {mag(str(view.get('skipIfEmpty', False)))}")
+    settings = view.get("settings", {})
+    if settings:
+        print(f"  {bold('settings:')}")
+        for k, val in settings.items():
+            display = json.dumps(val) if isinstance(val, (dict, list)) else str(val)
+            print(f"    {k}: {mag(display)}")
+    else:
+        print(f"  settings:    {dim('(none)')}")
+    print()
+
+
+def cmd_set(ref: str, key: str, value: str):
+    config = load_config()
+    views = config.get("views", [])
+    idx = resolve_index(views, ref)
+    parsed = parse_value(value)
+    view_type = views[idx]["type"]
+
+    err = validate_value(key, parsed, view_type)
+    if err:
+        print(red(f"✗ {err}"), file=sys.stderr)
+        sys.exit(1)
+
+    if key in ("overlay", "frequency", "skipIfEmpty", "type"):
+        views[idx][key] = parsed
+    else:
+        if "settings" not in views[idx]:
+            views[idx]["settings"] = {}
+        if parsed is None:
+            views[idx]["settings"].pop(key, None)
+            print(dim(f"  Removed settings.{key}"))
+        else:
+            views[idx]["settings"][key] = parsed
+
+    save_config(config)
+    print(f"  View #{idx} ({cyan(view_type)}): {bold(key)} = {mag(json.dumps(parsed))}")
+
+
+def cmd_add(view_type: str, setting_pairs: list):
+    if view_type not in KNOWN_VIEWS:
+        print(yellow(f"⚠ \"{view_type}\" is not a known view type — may cause blank screen"), file=sys.stderr)
+
+    config = load_config()
+    if "views" not in config:
+        config["views"] = []
+
+    entry = {"type": view_type}
+    settings = {}
+
+    for pair in setting_pairs:
+        if "=" not in pair:
+            print(red(f"✗ Invalid setting \"{pair}\". Use key=value format."), file=sys.stderr)
+            sys.exit(1)
+        k, v = pair.split("=", 1)
+        parsed = parse_value(v)
+
+        err = validate_value(k, parsed, view_type)
+        if err:
+            print(red(f"✗ {k}: {err}"), file=sys.stderr)
+            sys.exit(1)
+
+        if k in ("overlay", "frequency", "skipIfEmpty"):
+            entry[k] = parsed
+        else:
+            settings[k] = parsed
+
+    if settings:
+        entry["settings"] = settings
+
+    config["views"].append(entry)
+    save_config(config)
+    print(f"  Added view #{len(config['views']) - 1}: {cyan(view_type)}")
+    if settings:
+        print(f"  Settings: {mag(json.dumps(settings))}")
+
+
+def cmd_remove(ref: str):
+    config = load_config()
+    views = config.get("views", [])
+    idx = resolve_index(views, ref)
+    removed = views.pop(idx)
+    save_config(config)
+    print(f"  Removed view #{idx}: {cyan(removed['type'])}")
+
+
+def cmd_move(from_ref: str, to_ref: str):
+    config = load_config()
+    views = config.get("views", [])
+    try:
+        from_idx = int(from_ref)
+        to_idx = int(to_ref)
+    except ValueError:
+        print(red("✗ move requires numeric indices."), file=sys.stderr)
+        sys.exit(1)
+    if not (0 <= from_idx < len(views)) or not (0 <= to_idx < len(views)):
+        print(red(f"✗ Invalid indices. Range: 0–{len(views) - 1}"), file=sys.stderr)
+        sys.exit(1)
+
+    item = views.pop(from_idx)
+    views.insert(to_idx, item)
+    save_config(config)
+    print(f"  Moved {cyan(item['type'])} from #{from_idx} → #{to_idx}")
+
+
+# ─── Main ────────────────────────────────────────────────────────────────────
+
+HELP = """\
+heimdall-config — manage dashboard views in config.json
+
+Usage:
+  heimdall-config views                        List all available view types
+  heimdall-config list                         List currently configured views
+  heimdall-config show <index|type>            Show settings for a view
+  heimdall-config set <index|type> <key> <val> Modify a setting
+  heimdall-config add <type> [key=val ...]     Add a view with optional settings
+  heimdall-config remove <index|type>          Remove a view
+  heimdall-config move <from> <to>             Reorder a view
+
+Environment:
+  HEIMDALL_CONFIG   Path to config.json (default: ./config.json)
+
+Examples:
+  heimdall-config add events-today overlay=none skipIfEmpty=true
+  heimdall-config set 0 overlay clock
+  heimdall-config set events-today days 7
+  heimdall-config remove 2
+  heimdall-config move 4 1
+"""
+
+
+def main():
+    args = sys.argv[1:]
+    if not args or args[0] in ("help", "--help", "-h"):
+        print(HELP)
+        return
+
+    cmd = args[0]
+    rest = args[1:]
+
+    if cmd == "views":
+        cmd_views()
+    elif cmd in ("list", "ls", "configured"):
+        cmd_list()
+    elif cmd in ("show", "get"):
+        if not rest:
+            print("Usage: heimdall-config show <index|type>", file=sys.stderr)
+            sys.exit(1)
+        cmd_show(rest[0])
+    elif cmd == "set":
+        if len(rest) < 3:
+            print("Usage: heimdall-config set <index|type> <key> <value>", file=sys.stderr)
+            sys.exit(1)
+        cmd_set(rest[0], rest[1], " ".join(rest[2:]))
+    elif cmd == "add":
+        if not rest:
+            print("Usage: heimdall-config add <type> [key=val ...]", file=sys.stderr)
+            sys.exit(1)
+        cmd_add(rest[0], rest[1:])
+    elif cmd in ("remove", "rm"):
+        if not rest:
+            print("Usage: heimdall-config remove <index|type>", file=sys.stderr)
+            sys.exit(1)
+        cmd_remove(rest[0])
+    elif cmd in ("move", "mv"):
+        if len(rest) < 2:
+            print("Usage: heimdall-config move <from> <to>", file=sys.stderr)
+            sys.exit(1)
+        cmd_move(rest[0], rest[1])
+    else:
+        print(f"Unknown command: {cmd}", file=sys.stderr)
+        print(HELP)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
