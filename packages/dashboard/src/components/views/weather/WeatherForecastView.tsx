@@ -15,7 +15,13 @@ const UNIT_SYMBOL: Record<string, string> = {
 };
 
 function DayColumn({ day, label, unitSymbol }: { day: ForecastDay; label: string; unitSymbol: string }): React.ReactElement {
-  const sunPhase = getSunPhase(day.sunrise, day.sunset, Math.floor(day.date.getTime() / 1000));
+  // Use noon of the forecast day as the reference time.
+  // Shift today's sunrise/sunset by the day offset so future days compare correctly.
+  const noonForDay = new Date(day.date);
+  noonForDay.setHours(12, 0, 0, 0);
+  const noonUnix = Math.floor(noonForDay.getTime() / 1000);
+  const dayOffsetSec = Math.round((noonUnix - Date.now() / 1000) / 86400) * 86400;
+  const sunPhase = getSunPhase(day.sunrise + dayOffsetSec, day.sunset + dayOffsetSec, noonUnix);
   const gradient = getGradient(day.conditionId, sunPhase);
 
   return (
