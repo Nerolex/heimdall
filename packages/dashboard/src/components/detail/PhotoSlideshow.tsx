@@ -40,10 +40,13 @@ export function PhotoSlideshow({ settings, onClose }: Props): React.ReactElement
     let cancelled = false;
     async function fetchTimeline(): Promise<void> {
       try {
-        // Use currentPhotoId (set by whichever photo view is active) rather than
-        // clockCurrentPhotoId so that opening the slideshow from PhotosRandomView
-        // or PhotosMemoriesView centres on the photo the user was actually viewing.
-        const photoId = currentPhotoId;
+        // Prefer the photo ID from the view's saved state (populated synchronously on every
+        // render from viewSnapshots), then fall back to the currentPhotoId global.  The
+        // global can be stale for a brief window on back-navigation (the view's useState init
+        // already shows the restored photo, but the useEffect that calls setCurrentPhotoId
+        // hasn't fired yet), which caused the slideshow to open on the wrong photo.
+        const savedState = settings.__savedState as { photo?: { id: string } } | undefined;
+        const photoId = savedState?.photo?.id ?? currentPhotoId;
         let url: string;
 
         if (photoId) {
