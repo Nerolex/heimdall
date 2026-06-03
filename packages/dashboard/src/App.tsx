@@ -23,6 +23,7 @@ export function App(): React.ReactElement {
     clockVisible,
     weatherVisible,
     hasOverlay,
+    hasOverlayLayout,
     handleNavClick,
     handleDetailClose,
     withInternalSettings,
@@ -43,7 +44,7 @@ export function App(): React.ReactElement {
         height: '100vh',
         position: 'relative',
         cursor: 'pointer',
-        '--overlay-height': hasOverlay ? '8vw' : '0px',
+        '--overlay-height': hasOverlayLayout ? '8vw' : '0px',
       } as React.CSSProperties}
     >
       <KeepAwake mode={config.keepAwake} />

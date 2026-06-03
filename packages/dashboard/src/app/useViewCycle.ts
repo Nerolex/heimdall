@@ -13,6 +13,9 @@ interface UseViewCycleResult {
   clockVisible: boolean;
   weatherVisible: boolean;
   hasOverlay: boolean;
+  /** True while the overlay bar occupies layout space — lags behind clockVisible/weatherVisible
+   *  so --overlay-height never snaps during a fade-out and causes a visible content jump. */
+  hasOverlayLayout: boolean;
   handleNavClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   handleDetailClose: () => void;
   withInternalSettings: (settings: Record<string, unknown>) => Record<string, unknown>;
@@ -32,6 +35,7 @@ export function useViewCycle(
   const [visible, setVisible] = useState(true);
   const [clockVisible, setClockVisible] = useState(true);
   const [weatherVisible, setWeatherVisible] = useState(true);
+  const [hasOverlayLayout, setHasOverlayLayout] = useState(true);
   const cycleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTransitioning = useRef(false);
 
@@ -88,6 +92,9 @@ export function useViewCycle(
       setVisible(true);
       setClockVisible(showsClock(nextMode));
       setWeatherVisible(showsWeather(nextMode));
+      // Update layout slot AFTER the new view is committed so --overlay-height never
+      // snaps mid-fade (which would cause a visible content jump on views with padding-top).
+      setHasOverlayLayout(showsClock(nextMode) || showsWeather(nextMode));
       isTransitioning.current = false;
     }, FADE_DURATION);
   }, [config]);
@@ -221,6 +228,7 @@ export function useViewCycle(
     clockVisible,
     weatherVisible,
     hasOverlay: clockVisible || weatherVisible,
+    hasOverlayLayout,
     handleNavClick,
     handleDetailClose,
     withInternalSettings,
