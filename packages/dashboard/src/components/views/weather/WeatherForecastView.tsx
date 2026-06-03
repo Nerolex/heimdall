@@ -3,6 +3,7 @@ import type { WeatherSettings } from './types';
 import { useForecastData } from './useForecastData';
 import type { ForecastDay } from './useForecastData';
 import { getSunPhase } from './sunPhase';
+import type { SunPhase } from './types';
 import { getGradient } from './weatherGradients';
 import { WeatherAccent } from './WeatherAccent';
 import styles from './WeatherForecastView.module.css';
@@ -13,6 +14,24 @@ const UNIT_SYMBOL: Record<string, string> = {
   imperial: '°F',
   metric: '°C',
 };
+
+function conditionGlyph(conditionId: number, sunPhase: SunPhase): string {
+  if (conditionId >= 200 && conditionId < 300) return '⛈️';
+  if (conditionId >= 300 && conditionId < 400) return '🌦️';
+  if (conditionId >= 500 && conditionId < 600) return '🌧️';
+  if (conditionId >= 600 && conditionId < 700) return '🌨️';
+  if (conditionId >= 700 && conditionId < 800) return '🌫️';
+  if (conditionId === 800) {
+    if (sunPhase === 'night') return '🌙';
+    if (sunPhase === 'golden') return '🌅';
+    return '☀️';
+  }
+  if (conditionId >= 801 && conditionId <= 802) {
+    return sunPhase === 'night' ? '☁️' : '🌤️';
+  }
+  // overcast (803+) or unknown
+  return '☁️';
+}
 
 function DayColumn({ day, label, unitSymbol }: { day: ForecastDay; label: string; unitSymbol: string }): React.ReactElement {
   // Use noon of the forecast day as the reference time.
@@ -28,12 +47,10 @@ function DayColumn({ day, label, unitSymbol }: { day: ForecastDay; label: string
     <div className={styles.dayCol} style={{ background: gradient }}>
       <WeatherAccent conditionId={day.conditionId} sunPhase={sunPhase} />
       <div className={styles.content}>
+        <div className={styles.glyph}>{conditionGlyph(day.conditionId, sunPhase)}</div>
         <div className={styles.label}>{label}</div>
-        <div className={styles.tempRange}>
-          {day.tempMax}{unitSymbol}
-          <span className={styles.tempSep}>/</span>
-          {day.tempMin}{unitSymbol}
-        </div>
+        <div className={styles.tempHigh}>{day.tempMax}{unitSymbol}</div>
+        <div className={styles.tempLow}>{day.tempMin}{unitSymbol}</div>
         <div className={styles.condition}>{day.condition}</div>
       </div>
     </div>

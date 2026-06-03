@@ -15,22 +15,27 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: clamp(14px, 2.5vw, 32px) clamp(12px, 2vw, 28px);
+  justify-content: center;
+  align-items: center;
   box-sizing: border-box;
 }
 
 /* Subtle divider between columns */
 .dayCol + .dayCol {
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* Bottom fade so text is always readable over the graphic */
+/* Vignette overlay — darkens center so text stays legible on all conditions */
 .dayCol::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 45%, transparent 70%);
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0.45) 0%,
+    rgba(0,0,0,0.25) 40%,
+    rgba(0,0,0,0.25) 60%,
+    rgba(0,0,0,0.50) 100%
+  );
   pointer-events: none;
   z-index: 0;
 }
@@ -42,37 +47,49 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: clamp(3px, 0.6vh, 8px);
-  text-shadow: 0 2px 12px rgba(0,0,0,0.7);
+  align-items: center;
+  text-align: center;
+  gap: clamp(4px, 0.7vh, 10px);
+  padding: clamp(12px, 2vw, 24px);
+  text-shadow:
+    0 1px 4px rgba(0,0,0,0.95),
+    0 3px 12px rgba(0,0,0,0.85),
+    0 6px 24px rgba(0,0,0,0.6);
+}
+
+.glyph {
+  font-size: clamp(42px, 7vw, 88px);
+  line-height: 1;
+  margin-bottom: clamp(4px, 0.8vh, 12px);
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+  /* Prevent text-shadow (which doesn't apply to emoji) from causing misalignment */
+  text-shadow: none;
 }
 
 .label {
-  font-size: clamp(11px, 1.5vw, 17px);
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: clamp(13px, 1.8vw, 20px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
-.tempRange {
-  font-size: clamp(22px, 5vw, 56px);
-  font-weight: 200;
-  line-height: 1;
-  letter-spacing: -0.02em;
+.tempHigh {
+  font-size: clamp(13px, 1.8vw, 20px);
+  font-weight: 700;
 }
 
-.tempSep {
-  font-size: clamp(14px, 2.5vw, 28px);
-  opacity: 0.5;
-  margin: 0 0.15em;
+.tempLow {
+  font-size: clamp(13px, 1.8vw, 20px);
+  font-weight: 600;
+  opacity: 0.65;
 }
 
 .condition {
-  font-size: clamp(11px, 1.4vw, 16px);
-  font-weight: 300;
+  font-size: clamp(13px, 1.8vw, 20px);
+  font-weight: 600;
   text-transform: capitalize;
-  opacity: 0.85;
-  margin-top: clamp(2px, 0.4vh, 6px);
+  opacity: 0.9;
 }
 
 .loading {

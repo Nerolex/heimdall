@@ -8,14 +8,19 @@
   justify-content: flex-end;
   padding: 6vw;
   color: #fff;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.6), 0 4px 32px rgba(0, 0, 0, 0.3);
+  /* Multi-layer shadow ensures legibility on both light (overcast/snow) and dark backgrounds */
+  text-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.95),
+    0 3px 12px rgba(0, 0, 0, 0.85),
+    0 6px 32px rgba(0, 0, 0, 0.7);
 }
 
 .container::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 40%, transparent 70%);
+  /* Stronger bottom vignette so text is always legible over light overcast/snow gradients */
+  background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.1) 70%, transparent 100%);
   pointer-events: none;
   z-index: 0;
 }
@@ -28,30 +33,30 @@
 
 .temperature {
   font-size: 14vw;
-  font-weight: 200;
+  font-weight: 300;
   line-height: 1;
   letter-spacing: -0.02em;
 }
 
 .condition {
   font-size: 3.8vw;
-  font-weight: 300;
+  font-weight: 600;
   margin-top: 1vw;
   text-transform: capitalize;
 }
 
 .city {
   font-size: 3.5vw;
-  font-weight: 300;
+  font-weight: 600;
   margin-top: 0.5vw;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .hiLo {
   font-size: 3vw;
-  font-weight: 300;
+  font-weight: 600;
   margin-top: 1vw;
-  opacity: 0.7;
+  opacity: 0.85;
 }
 
 .loading {
