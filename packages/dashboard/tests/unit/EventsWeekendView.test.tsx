@@ -55,7 +55,7 @@ describe('EventsWeekendView', () => {
     expect(container.textContent).toContain('Sa., 18. Mai');
   });
 
-  it('hides the view when no weekend events are available', async () => {
+  it('shows gradient fallback when no weekend events are available', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -64,8 +64,9 @@ describe('EventsWeekendView', () => {
 
     const { container } = await act(async () => render(<EventsWeekendView settings={{}} />));
 
-    expect(container.firstChild).toBeNull();
-    expect(container.textContent).toBe('');
+    expect(container.firstChild).not.toBeNull();
+    expect(container.querySelector('[class*="groupedContainer"]')).not.toBeNull();
+    expect(container.querySelector('[class*="showcaseFallback"]')).not.toBeNull();
   });
 
   it('calls __onEmpty when no weekend events are available and skipIfEmpty is enabled', async () => {

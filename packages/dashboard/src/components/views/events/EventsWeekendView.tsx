@@ -33,9 +33,14 @@ export function EventsWeekendView({ settings }: { settings: Record<string, unkno
 
   useEventsSkipEffect(status, skipIfEmpty, __onEmpty);
 
-  if (status === 'loading') return <div className={styles.groupedContainer} />;
-  if (status === 'error' || status === 'empty' || events.length === 0) {
-    return skipIfEmpty ? null : <div className={styles.groupedContainer} />;
+  if (status === 'loading' || status === 'error' || status === 'empty' || events.length === 0) {
+    // Render gradient fallback instead of blank/black.
+    // useEventsSkipEffect signals __onEmpty so the cycle advances when view.skipIfEmpty is set.
+    return (
+      <div className={styles.groupedContainer}>
+        <div className={styles.showcaseFallback} />
+      </div>
+    );
   }
 
   // Group by date

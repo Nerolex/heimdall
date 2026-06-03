@@ -33,11 +33,14 @@ export function EventsShowcaseView({
 
   useEventsSkipEffect(status, skipIfEmpty, __onEmpty);
 
-  if (status === 'loading') return <div className={styles.showcaseContainer} />;
-  if (status === 'error' || status === 'empty' || events.length === 0) {
-    // skipIfEmpty=true → __onEmpty() was called; return null so the cycle advances
-    // skipIfEmpty=false → stay visible with an empty container rather than a blank screen
-    return skipIfEmpty ? null : <div className={styles.showcaseContainer} />;
+  if (status === 'loading' || status === 'error' || status === 'empty' || events.length === 0) {
+    // Render the gradient fallback instead of a blank/black container.
+    // useEventsSkipEffect signals __onEmpty so the cycle advances when view.skipIfEmpty is set.
+    return (
+      <div className={styles.showcaseContainer}>
+        <div className={styles.showcaseFallback} />
+      </div>
+    );
   }
 
   const event = events[activeIndex] ?? events[0];

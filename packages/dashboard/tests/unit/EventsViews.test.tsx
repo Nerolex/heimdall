@@ -89,15 +89,17 @@ describe('EventsTodayView', () => {
     expect(container.textContent).not.toContain('Showing cached data');
   });
 
-  it('hides the view on empty status', async () => {
+  it('shows gradient fallback on empty status', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
       json: () => Promise.resolve({ ...mockSnapshot, events: [] }),
     });
     const { container } = await act(async () => render(<EventsTodayView settings={{}} />));
-    expect(container.firstChild).toBeNull();
-    expect(container.textContent).toBe('');
+    expect(container.firstChild).not.toBeNull();
+    const showcaseContainer = container.querySelector('[class*="showcaseContainer"]');
+    expect(showcaseContainer).not.toBeNull();
+    expect(container.querySelector('[class*="showcaseFallback"]')).not.toBeNull();
   });
 
   it('calls __onEmpty when empty and skipIfEmpty is true', async () => {
@@ -113,14 +115,14 @@ describe('EventsTodayView', () => {
     expect(onEmpty).toHaveBeenCalledOnce();
   });
 
-  it('hides the view on error', async () => {
+  it('shows gradient fallback on error', async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 404,
       json: () => Promise.resolve({ error: 'Not found' }),
     });
     const { container } = await act(async () => render(<EventsTodayView settings={{}} />));
-    expect(container.firstChild).toBeNull();
-    expect(container.textContent).toBe('');
+    expect(container.firstChild).not.toBeNull();
+    expect(container.querySelector('[class*="showcaseFallback"]')).not.toBeNull();
   });
 });
