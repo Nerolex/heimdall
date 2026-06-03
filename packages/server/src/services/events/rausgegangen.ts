@@ -25,11 +25,14 @@ const CATEGORY_SLUG_MAP: Record<string, string> = {
   'gesprochenes': 'spoken-word',
 };
 
-// German short month names → zero-padded numeric month
+// German and English short month names → zero-padded numeric month
 const MONTH_MAP: Record<string, string> = {
+  // German
   jan: '01', feb: '02', 'mär': '03', mar: '03', apr: '04',
   mai: '05', jun: '06', jul: '07', aug: '08', sep: '09',
   okt: '10', nov: '11', dez: '12',
+  // English (rausgegangen /en/ pages)
+  may: '05', oct: '10', dec: '12',
 };
 
 function categoryToSlug(label: string): string {
@@ -146,14 +149,14 @@ export async function scrapeTimePage(
 
 /**
  * Parse event tiles from rausgegangen HTML.
- * Each tile contains: href (slug), date span, h4 title, venue span, category pill.
+ * Each tile contains: href (slug), date span, title span, venue p, category badge.
  */
 export function parseEventTiles(html: string): RawEventRecord[] {
   const now = new Date();
   const events: RawEventRecord[] = [];
 
-  // Match each tile-large block
-  const tileRegex = /<div class="tile-large">([\s\S]*?)<\/div>\s*<\/a>\s*<\/div>/g;
+  // Match each tile-large block (new markup: "tile tile-large hover-lift")
+  const tileRegex = /<div class="tile tile-large hover-lift">([\s\S]*?)<\/a>\s*<\/div>/g;
   let match: RegExpExecArray | null;
 
   while ((match = tileRegex.exec(html)) !== null) {
@@ -164,36 +167,35 @@ export function parseEventTiles(html: string): RawEventRecord[] {
     if (!hrefMatch) continue;
     const slug = hrefMatch[1];
 
-    // First <span class="text-sm">…</span> → date text
-    const dateSpanMatch = tile.match(/<span class="text-sm">([^<]+)<\/span>/);
-    const dateText = dateSpanMatch?.[1]?.trim() ?? '';
+    // Date text: <span class="font-bold">Today, 03. Jun | </span> + <span>18:00</span>
+    const dateBoldMatch = tile.match(/<span class="font-bold">([^<]+)<\/span>/);
+    const timeSpanMatch = tile.match(/<span class="font-bold">[^<]*<\/span>\s*<span>(\d{1,2}:\d{2})<\/span>/);
+    const dateText = (dateBoldMatch?.[1]?.trim() ?? '') + (timeSpanMatch?.[1] ? ` ${timeSpanMatch[1]}` : '');
     const { date, time } = parseTileDateText(dateText, now);
 
-    // <h4 …>title</h4>
-    const titleMatch = tile.match(/<h4[^>]*>([^<]+)<\/h4>/);
+    // Title: <span class="h5 break-words line-clamp-2">Title</span>
+    const titleMatch = tile.match(/<span class="h5 break-words line-clamp-2">\s*([^<]+?)\s*<\/span>/);
     const title = decodeHtml(titleMatch?.[1]?.trim() ?? '');
 
-    // venue: <span class="text-sm pr-1 opacity-70">venue</span>
-    const venueMatch = tile.match(/<span class="text-sm pr-1 opacity-70">([^<]+)<\/span>/);
+    // Venue: <p class="text-sm opacity-70 leading-5 mb-0 truncate">Venue</p>
+    const venueMatch = tile.match(/<p class="text-sm opacity-70 leading-5 mb-0 truncate">([^<]+)<\/p>/);
     const venue = decodeHtml(venueMatch?.[1]?.trim() ?? '');
 
-    // category: <span class="event-text-pill-outline">…</span>
-    const catMatch = tile.match(/event-text-pill-outline[^>]*>([^<]+)</);
+    // Category: <span class="da-badge da-badge-sm da-badge-*">Category</span>
+    const catMatch = tile.match(/da-badge da-badge-sm da-badge-[^"]*">([^<]+)<\/span>/);
     const categoryLabel = decodeHtml(catMatch?.[1]?.trim() ?? '');
 
-    // image: background-image in tile style, or <img src/data-src>
+    // Image: <img src="..." class="w-full h-full object-cover object-center" />
     let imageUrl: string | undefined;
-    const bgMatch = tile.match(/background-image:\s*url\(['"]?([^'")\s]+)['"]?\)/);
-    if (bgMatch) {
-      imageUrl = decodeHtml(bgMatch[1]).replace(/[?&]width=\d+/, '?width=1920').replace(/[?&]height=\d+/, '&height=1080');
-    } else {
-      const imgMatch = tile.match(/<img[^>]+(?:src|data-src)="([^"]+)"/);
-      if (imgMatch) imageUrl = decodeHtml(imgMatch[1]).replace(/[?&]width=\d+/, '?width=1920').replace(/[?&]height=\d+/, '&height=1080');
+    const imgMatch = tile.match(/<img\s[^>]*src="([^"]+)"[^>]*class="w-full h-full object-cover/);
+    if (imgMatch) {
+      imageUrl = decodeHtml(imgMatch[1])
+        .replace(/[?&]width=\d+/, '?width=1920')
+        .replace(/[?&]height=\d+/, '&height=1080');
     }
 
     if (!title || !date) continue;
 
-    // Build description in the same "Venue | DD.MM.YYYY HH:MM" format
     const [year, month, day] = date.split('-');
     const dateFormatted = `${day}.${month}.${year}`;
     const description = venue ? `${venue} | ${dateFormatted} ${time}`.trim() : `${dateFormatted} ${time}`.trim();

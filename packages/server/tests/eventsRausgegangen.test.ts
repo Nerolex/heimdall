@@ -42,18 +42,21 @@ describe('fetchCsrfCookie', () => {
 
 describe('parseEventTiles', () => {
   it('extracts slug, title, category, and description from tile HTML', () => {
-    // The href must be inside the tile-large div; outer </a></div> closes the wrapper.
     const html = `
       <div>
-        <div class="tile-large">
-          <a href="/en/events/test-concert/">
-            <span class="text-sm">Sa, 18. Jan | 20:00</span>
-            <h4 class="font-bold">Test Concert</h4>
-            <span class="text-sm pr-1 opacity-70">Music Venue</span>
-            <span class="event-text-pill-outline">Konzerte &amp; Musik</span>
+        <div class="tile tile-large hover-lift">
+          <a class="event-tile" href="/en/events/test-concert/">
+            <div class="flex-1 min-h-0">
+              <p class="mb-0 min-w-0 flex-1 truncate text-sm">
+                <span class="font-bold">Sa, 18. Jan | </span>
+                <span>20:00</span>
+              </p>
+              <span class="h5 break-words line-clamp-2">Test Concert</span>
+              <p class="text-sm opacity-70 leading-5 mb-0 truncate">Music Venue</p>
+              <span class="da-badge da-badge-sm da-badge-info">Konzerte &amp; Musik</span>
+            </div>
           </a>
         </div>
-        </a>
       </div>
     `;
     const results = parseEventTiles(html);
@@ -67,12 +70,11 @@ describe('parseEventTiles', () => {
   it('skips tiles without a title or date', () => {
     const html = `
       <div>
-        <div class="tile-large">
-          <a href="/en/events/no-title/">
-            <span class="text-sm">Sa, 18. Jan | 20:00</span>
+        <div class="tile tile-large hover-lift">
+          <a class="event-tile" href="/en/events/no-title/">
+            <p class="text-sm opacity-70 leading-5 mb-0 truncate">Some Venue</p>
           </a>
         </div>
-        </a>
       </div>
     `;
     expect(parseEventTiles(html)).toHaveLength(0);
