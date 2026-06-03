@@ -32,7 +32,7 @@ export function Overlay({ clockVisible, weatherVisible, weatherConfig, showFulls
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, []);
 
-  const buttonOpacity = isFullscreen ? (isHovered ? 0.75 : 0) : 0.75;
+  const buttonOpacity = isHovered ? 0.75 : 0;
 
   const handleFullscreen = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();

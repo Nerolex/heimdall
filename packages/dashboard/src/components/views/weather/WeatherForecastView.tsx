@@ -49,8 +49,8 @@ function DayColumn({ day, label, unitSymbol }: { day: ForecastDay; label: string
       <div className={styles.content}>
         <div className={styles.glyph}>{conditionGlyph(day.conditionId, sunPhase)}</div>
         <div className={styles.label}>{label}</div>
-        <div className={styles.tempHigh}>{day.tempMax}{unitSymbol}</div>
-        <div className={styles.tempLow}>{day.tempMin}{unitSymbol}</div>
+        <div className={styles.tempHigh}>H {day.tempMax}{unitSymbol}</div>
+        <div className={styles.tempLow}>L {day.tempMin}{unitSymbol}</div>
         <div className={styles.condition}>{day.condition}</div>
       </div>
     </div>
