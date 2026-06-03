@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import type { ComponentProps } from '@heimdall/shared';
+import React, { useEffect, useState, useRef } from 'react';
+import type { ComponentProps, PhotoEntry } from '@heimdall/shared';
+import type { ClockSavedState, ViewInternalSettings } from '../../../app/internalSettings';
 import { setCurrentPhotoId } from '../photos/currentPhotoId';
 import styles from './Clock.module.css';
 
@@ -97,11 +98,17 @@ interface ClockViewSettings {
 
 export function ClockView({ settings }: ComponentProps): React.ReactElement {
   const [time, setTime] = useState(new Date());
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<PhotoEntry | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
   const { weatherApiKey: apiKey, weatherCity: city, weatherUnits: units = 'metric', weatherRefreshInterval } =
     settings as ClockViewSettings;
+
+  const { __savedState, __onStateChange } = settings as ViewInternalSettings;
+  const savedStateRef = useRef(
+    __savedState?.__view === 'clock' ? (__savedState as ClockSavedState) : undefined
+  );
+  const onStateChangeRef = useRef(__onStateChange);
 
   // Update clock every second
   useEffect(() => {
@@ -109,15 +116,22 @@ export function ClockView({ settings }: ComponentProps): React.ReactElement {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch random photo on mount
+  // Fetch random photo on mount, or restore saved photo on back-navigation
   useEffect(() => {
+    if (savedStateRef.current?.photo) {
+      const saved = savedStateRef.current.photo;
+      setPhoto(saved);
+      setCurrentPhotoId(saved.id);
+      return;
+    }
     fetch('/api/photos/random?count=1')
       .then(res => res.json())
       .then(data => {
-        const photo = data.photo || data.photos?.[0];
-        if (photo) {
-          setPhotoUrl(`/api/photos/file/${photo.id}`);
-          setCurrentPhotoId(photo.id);
+        const p: PhotoEntry | undefined = data.photo || data.photos?.[0];
+        if (p) {
+          setPhoto(p);
+          setCurrentPhotoId(p.id);
+          onStateChangeRef.current?.({ __view: 'clock', photo: p });
         }
       })
       .catch(() => {});
@@ -144,6 +158,7 @@ export function ClockView({ settings }: ComponentProps): React.ReactElement {
   }, [apiKey, city, units]);
 
   const unit = units === 'imperial' ? '°F' : '°C';
+  const photoUrl = photo ? `/api/photos/file/${photo.id}` : null;
 
   return (
     <div className={styles.container}>

@@ -34,9 +34,15 @@ export type PhotosRandomSavedState = {
   photo: import('@heimdall/shared').PhotoEntry;
 };
 
+export type ClockSavedState = {
+  readonly __view: 'clock';
+  photo: import('@heimdall/shared').PhotoEntry;
+};
+
 /** Discriminated union of all per-view saved states. Add a new member for each stateful view. */
 export type ViewSavedState =
   | EventsShowcaseSavedState
   | EventsWeekendSavedState
   | PhotosMemoriesSavedState
-  | PhotosRandomSavedState;
+  | PhotosRandomSavedState
+  | ClockSavedState;
