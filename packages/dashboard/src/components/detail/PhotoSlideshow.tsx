@@ -125,6 +125,20 @@ export function PhotoSlideshow({ settings, onClose }: Props): React.ReactElement
     };
   }, [photos, activeIndex]);
 
+  // Preload adjacent photos so the browser has them decoded before the
+  // transition starts — prevents the old image showing during fade-in.
+  useEffect(() => {
+    if (photos.length <= 1) return;
+    const toPreload = [
+      (activeIndex + 1) % photos.length,
+      (activeIndex - 1 + photos.length) % photos.length,
+    ];
+    toPreload.forEach((idx) => {
+      const img = new Image();
+      img.src = photos[idx].url;
+    });
+  }, [photos, activeIndex]);
+
   if (loading) {
     return (
       <div className={styles.container}>
