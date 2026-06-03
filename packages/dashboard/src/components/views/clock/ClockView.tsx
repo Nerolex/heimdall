@@ -98,7 +98,6 @@ interface ClockViewSettings {
 
 export function ClockView({ settings }: ComponentProps): React.ReactElement {
   const [time, setTime] = useState(new Date());
-  const [photo, setPhoto] = useState<PhotoEntry | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
   const { weatherApiKey: apiKey, weatherCity: city, weatherUnits: units = 'metric', weatherRefreshInterval } =
@@ -110,18 +109,16 @@ export function ClockView({ settings }: ComponentProps): React.ReactElement {
   );
   const onStateChangeRef = useRef(__onStateChange);
 
-  // Update clock every second
+  const [photo, setPhoto] = useState<PhotoEntry | null>(savedStateRef.current?.photo ?? null);
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch random photo on mount, or restore saved photo on back-navigation
+  // Fetch random photo on mount, or register saved photo on back-navigation
   useEffect(() => {
     if (savedStateRef.current?.photo) {
-      const saved = savedStateRef.current.photo;
-      setPhoto(saved);
-      setCurrentPhotoId(saved.id);
+      setCurrentPhotoId(savedStateRef.current.photo.id);
       return;
     }
     fetch('/api/photos/random?count=1')

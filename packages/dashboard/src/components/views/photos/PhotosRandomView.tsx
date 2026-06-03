@@ -9,8 +9,6 @@ interface Props {
 }
 
 export function PhotosRandomView({ settings }: Props): React.ReactElement {
-  const [photo, setPhoto] = useState<PhotoEntry | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   const dir = settings.dir as string | undefined;
@@ -23,6 +21,10 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
     __savedState?.__view === 'photos-random' ? (__savedState as PhotosRandomSavedState) : undefined
   );
   const onStateChangeRef = useRef(__onStateChange);
+
+  // Initialise directly from savedState so there's no blank-frame flash on back-navigation
+  const [photo, setPhoto] = useState<PhotoEntry | null>(savedStateRef.current?.photo ?? null);
+  const [loading, setLoading] = useState(!savedStateRef.current?.photo);
 
   const fetchPhoto = useCallback(async () => {
     try {
@@ -42,13 +44,11 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
   }, [queryParam]);
 
   useEffect(() => {
-    // Restore previously shown photo when navigating back
+    // savedState already set as initial state — just register it and skip fetch
     if (savedStateRef.current?.photo) {
       const saved = savedStateRef.current.photo;
-      setPhoto(saved);
       setCurrentPhotoId(saved.id);
       onStateChangeRef.current?.({ __view: 'photos-random', photo: saved });
-      setLoading(false);
       return;
     }
     fetchPhoto();

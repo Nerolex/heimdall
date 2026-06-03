@@ -125,6 +125,7 @@ export function useViewCycle(
     const firstOverlay = getOverlayMode(config, activeViewIndexRef.current);
     setClockVisible(showsClock(firstOverlay));
     setWeatherVisible(showsWeather(firstOverlay));
+    setHasOverlayLayout(showsClock(firstOverlay) || showsWeather(firstOverlay));
   }, [config]);
 
   // Preload the next view whenever active view changes.
