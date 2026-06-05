@@ -11,7 +11,7 @@ const SUPPORTED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic',
 // Cache directory for converted HEIC files
 const CACHE_DIR = path.join(process.env.CACHE_DIR || '/tmp', 'heimdall-photo-cache');
 // Bump this version to invalidate stale cached HEIC conversions on deployed servers
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
 
 function cacheKey(filePath: string, suffix: string): string {
@@ -30,8 +30,11 @@ function cacheKey(filePath: string, suffix: string): string {
 function readHeifInfo(filePath: string): { pixelWidth: number; pixelHeight: number; angleCcw: number } | null {
   try {
     const output = execSync(`heif-info "${filePath}"`, { stdio: 'pipe' }).toString();
-    const sizeMatch = output.match(/image:\s*(\d+)x(\d+)/);
-    const angleMatch = output.match(/angle \(ccw\):\s*(\d+)/);
+    // libheif ≤1.15.x (Debian Bookworm) outputs "image size: WxH"
+    // libheif ≥1.17.x (Homebrew/newer) outputs "image: WxH (id=N)"
+    // Match both by making " size" optional.
+    const sizeMatch = output.match(/image(?:\s+size)?:\s*(\d+)x(\d+)/);
+    const angleMatch = output.match(/angle\s*\(ccw\):\s*(\d+)/);
     if (!sizeMatch) return null;
     return {
       pixelWidth: parseInt(sizeMatch[1], 10),
