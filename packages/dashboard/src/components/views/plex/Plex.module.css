@@ -26,7 +26,7 @@
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: 4vw;
+  gap: 3vw;
   padding: 4vw;
   width: 90%;
   max-width: 90%;
@@ -41,36 +41,40 @@
 
 .coverStack {
   position: relative;
-  width: clamp(120px, 20vw, 280px);
+  width: clamp(180px, 28vw, 380px);
   flex-shrink: 0;
+  /* extra space below the front cover so back covers can peek out */
+  padding-bottom: 12%;
 }
 
 .coverStack img {
   width: 100%;
-  height: auto;
+  aspect-ratio: 1;
   border-radius: 1vw;
   display: block;
+  object-fit: cover;
 }
 
+/* Vertical stack: back covers shift straight down, no rotation */
 .coverBack2 {
   position: absolute;
   top: 0; left: 0;
-  transform: translate(-28px, 20px) rotate(-14deg) scale(0.88);
-  opacity: 0.5;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  transform: translateY(10%);
+  opacity: 0.35;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .coverBack1 {
   position: absolute;
   top: 0; left: 0;
-  transform: translate(-14px, 10px) rotate(-7deg) scale(0.94);
-  opacity: 0.7;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  transform: translateY(5%);
+  opacity: 0.6;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
 
 .coverFront {
   position: relative;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 44px rgba(0, 0, 0, 0.7);
 }
 
 .navOverlay {
