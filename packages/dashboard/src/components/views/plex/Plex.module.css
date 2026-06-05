@@ -43,8 +43,6 @@
   position: relative;
   width: clamp(180px, 28vw, 380px);
   flex-shrink: 0;
-  /* extra space below the front cover so back covers can peek out */
-  padding-bottom: 12%;
 }
 
 .coverStack img {
@@ -55,11 +53,12 @@
   object-fit: cover;
 }
 
-/* Vertical stack: back covers shift straight down, no rotation */
+/* Vertical stack going upward: each underlying cover shifts up and
+   slightly to the right, peeking above the front cover. */
 .coverBack2 {
   position: absolute;
   top: 0; left: 0;
-  transform: translateY(10%);
+  transform: translateX(clamp(10px, 1.6vw, 24px)) translateY(-10%);
   opacity: 0.35;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
@@ -67,7 +66,7 @@
 .coverBack1 {
   position: absolute;
   top: 0; left: 0;
-  transform: translateY(5%);
+  transform: translateX(clamp(5px, 0.8vw, 12px)) translateY(-5%);
   opacity: 0.6;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
 }
