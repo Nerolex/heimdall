@@ -94,7 +94,6 @@ export function PlexRandomAlbumView({ settings }: Props): React.ReactElement {
       )}
       <div className={ra.layout}>
         <div className={ra.leftCol}>
-          <div className={ra.zuletztLabel}>Zuletzt gehört</div>
           {thumb && (
             <img
               src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`}

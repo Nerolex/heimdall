@@ -64,6 +64,7 @@ export function PlexNowPlayingView({ settings }: Props): React.ReactElement {
           )}
         </div>
         <div className={styles.info}>
+          <div className={styles.viewLabel}>{session ? 'Jetzt läuft' : 'Zuletzt gehört'}</div>
           <div className={styles.title}>{title}</div>
           {subtitle && <div className={styles.subtitle}>{subtitle}</div>}
           {playerName && <div className={styles.playerName}>{playerName}</div>}

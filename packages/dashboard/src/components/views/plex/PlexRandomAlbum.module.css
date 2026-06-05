@@ -30,16 +30,6 @@
   width: clamp(220px, 38vw, 440px);
 }
 
-.zuletztLabel {
-  font-size: clamp(12px, 1.5vw, 17px);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-  padding-bottom: clamp(4px, 0.5vh, 8px);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
-}
-
 .cover {
   width: 100%;
   aspect-ratio: 1;

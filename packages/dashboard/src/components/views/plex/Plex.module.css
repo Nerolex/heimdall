@@ -223,6 +223,15 @@
   margin-top: 0.5vh;
 }
 
+.viewLabel {
+  font-size: clamp(12px, 1.5vw, 17px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
 .progressContainer {
   display: flex;
   align-items: center;
