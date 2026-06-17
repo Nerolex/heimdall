@@ -316,13 +316,21 @@
   padding: 0;
 }
 
-.controlBtnPlay {
-  padding: 2px 0 0 6px; /* ▶ nudge right */
+.controlBtnPlay::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: clamp(10px, 2vw, 16px) 0 clamp(10px, 2vw, 16px) clamp(16px, 3.2vw, 24px);
+  border-color: transparent transparent transparent currentColor;
+  margin-left: clamp(3px, 0.6vw, 5px);
 }
 
-.controlBtnPause {
-  padding: 0 0 2px 1px; /* ⏸ nudge left and up */
-  font-size: clamp(32px, 5vw, 50px); /* bigger */
+.controlBtnPause::before {
+  content: '';
+  width: clamp(16px, 3vw, 22px);
+  height: clamp(20px, 4vw, 28px);
+  background: linear-gradient(to right, currentColor 0%, currentColor 35%, transparent 35%, transparent 65%, currentColor 65%, currentColor 100%);
 }
 
 .controlBtnLarge:active {

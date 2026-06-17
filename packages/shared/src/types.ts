@@ -65,6 +65,48 @@ export interface PlexConfig {
   token: string;
 }
 
+/** Concerts provider configuration */
+export interface ConcertsProviderConfig {
+  /** Setlist.fm API key */
+  apiKey: string;
+  /** Latitude for location-based search (defaults to events provider lat if not set) */
+  lat?: number;
+  /** Longitude for location-based search (defaults to events provider lng if not set) */
+  lng?: number;
+  /** Radius in km for concert search (default: 100) */
+  radiusKm?: number;
+  /** Artist names to track (overrides Plex library auto-fetch if provided) */
+  artists?: string[];
+  /** Refresh interval in hours (default: 6) */
+  refreshInterval?: number;
+}
+
+/** Concert record from Setlist.fm */
+export interface ConcertRecord {
+  id: string;
+  artistName: string;
+  artistMbid: string | null;
+  date: string; // YYYY-MM-DD
+  dateDisplay: string;
+  venue: string;
+  city: string;
+  country: string;
+  coordinates: { lat: number; lng: number } | null;
+  distanceKm: number | null;
+  eventUrl: string | null;
+  lastFmUrl: string | null;
+}
+
+/** Snapshot of concerts for the view */
+export interface ConcertsViewSnapshot {
+  concerts: ConcertRecord[];
+  totalFetched: number;
+  refreshedAt: string;
+  stale: boolean;
+  error?: string;
+  artistsTracked: string[];
+}
+
 /** Keep-awake mode for kiosk devices */
 export type KeepAwakeMode = boolean | 'auto';
 
@@ -115,8 +157,11 @@ export interface DashboardConfig {
   steam?: SteamConfig;
   /** Plex server configuration */
   plex?: PlexConfig;
-  /** Provider configurations (events, etc.) */
-  providers?: { events?: EventsProviderConfig };
+  /** Provider configurations (events, concerts, etc.) */
+  providers?: { 
+    events?: EventsProviderConfig;
+    concerts?: ConcertsProviderConfig;
+  };
 }
 
 /** A calendar source (iCal URL) */
@@ -210,13 +255,14 @@ export interface EventRecord {
   recurrenceNote: string | null;
   detailUrl: string;
   imageUrl?: string;
+  city: string; // City slug (e.g., "dortmund", "bochum")
+  cityDisplay?: string; // Display name (e.g., "Dortmund", "Bochum")
 }
 
 /** Events provider configuration */
 export interface EventsProviderConfig {
-  city: string;
-  lat: number;
-  lng: number;
+  /** Single city or array of cities (e.g., ["dortmund", "bochum", "essen"]) */
+  cities: string | string[];
   categories?: string[];
 }
 

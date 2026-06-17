@@ -12,6 +12,7 @@ export function EventCard({ event }: EventCardProps) {
     <div className={styles.eventCard}>
       <div className={styles.cardHeader}>
         <span className={styles.categoryBadge}>{event.categoryLabel}</span>
+        {event.cityDisplay && <span className={styles.cityBadge}>{event.cityDisplay}</span>}
         <span className={styles.dateDisplay}>{event.dateDisplay}</span>
       </div>
       <h3 className={styles.eventTitle}>{event.title}</h3>

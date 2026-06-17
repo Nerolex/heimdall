@@ -16,8 +16,11 @@ import { gamingRoute } from './routes/gaming.js';
 import { plexRoute } from './routes/plex.js';
 import { youtubeRoute } from './routes/youtube.js';
 import { eventsRoute } from './routes/events.js';
+import { concertsRoute } from './routes/concerts.js';
 import { bootstrapRefreshScheduler } from './services/events/refreshDailySnapshot.js';
 import { loadFromDisk, persistToDisk } from './services/events/snapshotStore.js';
+import { loadSnapshotFromDisk as loadConcertsSnapshot } from './services/concerts/snapshotStore.js';
+import { startConcertsRefreshScheduler } from './services/concerts/refreshSnapshot.js';
 import { loadConfig } from './config.js';
 import { findProjectRoot, resolveConfigPath } from './utils/projectRoot.js';
 
@@ -79,6 +82,38 @@ async function bootstrapEventsService(app: FastifyInstance, projectRoot: string)
   await app.register(eventsRoute);
 }
 
+async function bootstrapConcertsService(app: FastifyInstance): Promise<void> {
+  loadConcertsSnapshot();
+
+  const configResult = loadConfig(resolveConfigPath());
+  const concertsConfig = configResult.config?.providers?.concerts;
+  const plexConfig = configResult.config?.plex;
+  
+  // Load raw config to get lat/lng from events provider
+  let eventsLatLng: { lat?: number; lng?: number } | undefined;
+  try {
+    const rawConfig = JSON.parse(fs.readFileSync(resolveConfigPath(), 'utf-8'));
+    const eventsRaw = rawConfig?.providers?.events;
+    if (eventsRaw && typeof eventsRaw.lat === 'number' && typeof eventsRaw.lng === 'number') {
+      eventsLatLng = { lat: eventsRaw.lat, lng: eventsRaw.lng };
+    }
+  } catch (err) {
+    // Ignore - lat/lng are optional fallbacks
+  }
+
+  if (concertsConfig && concertsConfig.apiKey) {
+    startConcertsRefreshScheduler({
+      concerts: concertsConfig,
+      plex: plexConfig,
+      events: eventsLatLng,
+    });
+  } else {
+    server.log.info('[concerts] Concerts provider not configured or missing API key');
+  }
+
+  await app.register(concertsRoute);
+}
+
 async function registerStaticFiles(app: FastifyInstance, projectRoot: string, currentDir: string): Promise<void> {
   const assetsDir = path.resolve(projectRoot, 'assets');
   if (fs.existsSync(assetsDir)) {
@@ -114,6 +149,7 @@ async function start(): Promise<void> {
 
   await registerRoutes(server);
   await bootstrapEventsService(server, PROJECT_ROOT);
+  await bootstrapConcertsService(server);
   await registerStaticFiles(server, PROJECT_ROOT, currentDir);
 
   try {

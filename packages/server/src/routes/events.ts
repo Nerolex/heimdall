@@ -25,7 +25,9 @@ export async function eventsRoute(fastify: FastifyInstance): Promise<void> {
         return reply.status(422).send({ error: 'Events provider not configured' });
       }
 
-      const snapshot = getSnapshot(eventsConfig.city, type);
+      const cities = Array.isArray(eventsConfig.cities) ? eventsConfig.cities : [eventsConfig.cities];
+      const citiesKey = cities.join('+');
+      const snapshot = getSnapshot(citiesKey, type);
       if (!snapshot) {
         return reply.status(404).send({ error: 'No snapshot available for this view type' });
       }
@@ -41,12 +43,15 @@ export async function eventsRoute(fastify: FastifyInstance): Promise<void> {
       return reply.status(422).send({ error: 'Events provider not configured' });
     }
 
+    const cities = Array.isArray(eventsConfig.cities) ? eventsConfig.cities : [eventsConfig.cities];
+    const citiesKey = cities.join('+');
+
     const activeTypes = (result.config?.views ?? [])
       .map(v => v.type)
       .filter(t => ALLOWED_TYPES.includes(t as (typeof ALLOWED_TYPES)[number]));
 
     const viewTypes: RefreshStatus[] = activeTypes.map(viewType => {
-      const snapshot = getSnapshot(eventsConfig.city, viewType);
+      const snapshot = getSnapshot(citiesKey, viewType);
       return {
         viewType,
         lastRefreshed: snapshot?.refreshedAt ?? null,
@@ -56,7 +61,7 @@ export async function eventsRoute(fastify: FastifyInstance): Promise<void> {
     });
 
     return reply.status(200).send({
-      city: eventsConfig.city,
+      cities,
       configuredCategories: eventsConfig.categories ?? [],
       viewTypes,
     });

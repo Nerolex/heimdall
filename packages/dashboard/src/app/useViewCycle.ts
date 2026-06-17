@@ -173,6 +173,7 @@ export function useViewCycle(
 
     const view = config.views[activeViewIndexRef.current];
     if (view && hasDetailForType(view.type)) {
+      if (cycleTimer.current) clearTimeout(cycleTimer.current);
       setDetailMode(true);
     }
   }, [config, detailMode, hasDetailForType, transitionTo]);

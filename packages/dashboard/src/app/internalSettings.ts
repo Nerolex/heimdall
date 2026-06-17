@@ -39,10 +39,17 @@ export type ClockSavedState = {
   photo: import('@heimdall/shared').PhotoEntry;
 };
 
+export type ConcertsShowcaseSavedState = {
+  readonly __view: 'concerts-upcoming';
+  __lastConcertId?: string;
+  __lastRotation?: number;
+};
+
 /** Discriminated union of all per-view saved states. Add a new member for each stateful view. */
 export type ViewSavedState =
   | EventsShowcaseSavedState
   | EventsWeekendSavedState
   | PhotosMemoriesSavedState
   | PhotosRandomSavedState
-  | ClockSavedState;
+  | ClockSavedState
+  | ConcertsShowcaseSavedState;

@@ -104,6 +104,7 @@ export function PlexRandomAlbumDetailView({ settings, onClose }: Props): React.R
           alt=""
           className={styles.bgArt}
           style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(40px) brightness(0.3)', transform: 'scale(1.2)', zIndex: 0 }}
+          onError={(e) => e.currentTarget.style.display = 'none'}
         />
       )}
 
@@ -116,6 +117,7 @@ export function PlexRandomAlbumDetailView({ settings, onClose }: Props): React.R
                 src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`}
                 alt={album.title}
                 className={ra.detailCover}
+                onError={(e) => e.currentTarget.style.display = 'none'}
               />
             )}
             {artistName && <div className={ra.detailArtist}>{artistName}</div>}
@@ -170,9 +172,7 @@ export function PlexRandomAlbumDetailView({ settings, onClose }: Props): React.R
             <button
               className={`${styles.controlBtnLarge} ${localPlaying ? styles.controlBtnPause : styles.controlBtnPlay}`}
               onClick={handlePlay}
-            >
-              {localPlaying ? '⏸' : '▶'}
-            </button>
+            />
             <button className={styles.controlBtn} onClick={() => handleSkip(1)}>⏭</button>
           </div>
         </div>

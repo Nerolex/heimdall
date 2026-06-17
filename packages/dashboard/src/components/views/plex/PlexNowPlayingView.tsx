@@ -50,17 +50,17 @@ export function PlexNowPlayingView({ settings }: Props): React.ReactElement {
 
   return (
     <div className={styles.container}>
-      {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} />}
+      {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} onError={(e) => e.currentTarget.style.display = 'none'} />}
       <div className={styles.content}>
         <div className={styles.coverStack}>
           {recentThumbs[1] && (
-            <img src={`/api/plex/thumb?path=${encodeURIComponent(recentThumbs[1])}`} alt="" className={styles.coverBack2} />
+            <img src={`/api/plex/thumb?path=${encodeURIComponent(recentThumbs[1])}`} alt="" className={styles.coverBack2} onError={(e) => e.currentTarget.style.display = 'none'} />
           )}
           {recentThumbs[0] && (
-            <img src={`/api/plex/thumb?path=${encodeURIComponent(recentThumbs[0])}`} alt="" className={styles.coverBack1} />
+            <img src={`/api/plex/thumb?path=${encodeURIComponent(recentThumbs[0])}`} alt="" className={styles.coverBack1} onError={(e) => e.currentTarget.style.display = 'none'} />
           )}
           {thumb && (
-            <img src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`} alt="" className={styles.coverFront} />
+            <img src={`/api/plex/thumb?path=${encodeURIComponent(thumb)}`} alt="" className={styles.coverFront} onError={(e) => e.currentTarget.style.display = 'none'} />
           )}
         </div>
         <div className={styles.info}>
@@ -195,7 +195,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
   return (
     <div className={detailStyles.container} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={closeNav}>
       <audio ref={audioRef} preload="none" />
-      {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} />}
+      {art && <img src={`/api/plex/thumb?path=${encodeURIComponent(art)}`} alt="" className={styles.bgArt} onError={(e) => e.currentTarget.style.display = 'none'} />}
 
       <PlexNavOverlay
         navStack={navStack}
@@ -216,6 +216,7 @@ export function PlexDetailView({ settings, onClose }: { settings: Record<string,
             className={styles.poster}
             onClick={handlePosterClick}
             style={{ cursor: 'pointer' }}
+            onError={(e) => e.currentTarget.style.display = 'none'}
           />
         )}
         <div className={styles.info} onClick={(e) => e.stopPropagation()}>

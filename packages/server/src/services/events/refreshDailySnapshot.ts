@@ -45,64 +45,91 @@ export async function refreshSnapshot(
     ({ windowStart, windowEnd } = getUpcomingWindow(days));
   }
 
+  const cities = Array.isArray(config.cities) ? config.cities : [config.cities];
+  const allEvents: EventRecord[] = [];
+  let totalFetched = 0;
+  let anyError: string | undefined;
+
+  // Fetch each city in parallel
+  await Promise.all(
+    cities.map(async city => {
+      try {
+        const { cookie } = await fetchCsrfCookie(city);
+        const pageSlug = PAGE_SLUG[viewType] ?? 'tipps-fuer-heute';
+        const raw = await scrapeTimePage(city, cookie, pageSlug);
+        const windowed = filterByWindow(raw, windowStart, windowEnd);
+        const filtered = filterByCategory(windowed, config.categories ?? []);
+
+        totalFetched += raw.length;
+
+        const cityDisplay = city.charAt(0).toUpperCase() + city.slice(1);
+        const events: EventRecord[] = filtered.map(r => {
+          const parts = r.description.split(' | ');
+          const venue = parts[0]?.trim() || null;
+          const timeStr = parts[1]?.trim() || null;
+          const startTime = timeStr?.match(/(\d{1,2}:\d{2})$/)?.[1] ?? null;
+          return {
+            id: `${city}-${r.id}`,
+            title: r.title,
+            categorySlug: r.categorySlug,
+            categoryLabel: r.categoryLabelRaw || titleCase(r.categorySlug),
+            date: r.date,
+            dateDisplay: formatDateDisplay(r.date),
+            venue,
+            startTime,
+            venueAndTime: venue && startTime ? `${venue} · ${startTime} Uhr` : (venue ?? startTime),
+            rawDescription: r.description,
+            recurrenceNote: r.additionalInfos,
+            detailUrl: `https://rausgegangen.de/events/${r.slug}/`,
+            imageUrl: r.imageUrl,
+            city,
+            cityDisplay,
+          };
+        });
+
+        allEvents.push(...events);
+      } catch (err) {
+        anyError = anyError ?? (err as Error).message;
+      }
+    })
+  );
+
+  // Sort by date, then time
+  allEvents.sort((a, b) => {
+    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    return (a.startTime ?? '').localeCompare(b.startTime ?? '');
+  });
+
+  const citiesKey = cities.join('+');
   try {
-    const { cookie } = await fetchCsrfCookie(config.city);
-    const pageSlug = PAGE_SLUG[viewType] ?? 'tipps-fuer-heute';
-    const raw = await scrapeTimePage(config.city, cookie, pageSlug);
-    const windowed = filterByWindow(raw, windowStart, windowEnd);
-    const filtered = filterByCategory(windowed, config.categories ?? []);
-
-    const events: EventRecord[] = filtered.map(r => {
-      const parts = r.description.split(' | ');
-      const venue = parts[0]?.trim() || null;
-      const timeStr = parts[1]?.trim() || null;
-      // Extract HH:MM from "DD.MM.YYYY HH:MM"
-      const startTime = timeStr?.match(/(\d{1,2}:\d{2})$/)?.[1] ?? null;
-      return {
-        id: r.id,
-        title: r.title,
-        categorySlug: r.categorySlug,
-        categoryLabel: r.categoryLabelRaw || titleCase(r.categorySlug),
-        date: r.date,
-        dateDisplay: formatDateDisplay(r.date),
-        venue,
-        startTime,
-        venueAndTime: venue && startTime ? `${venue} · ${startTime} Uhr` : (venue ?? startTime),
-        rawDescription: r.description,
-        recurrenceNote: r.additionalInfos,
-        detailUrl: `https://rausgegangen.de/events/${r.slug}/`,
-        imageUrl: r.imageUrl,
-      };
-    });
-
     const snapshot: EventsViewSnapshot = {
       viewType,
-      city: config.city,
-      events,
-      totalFetched: raw.length,
+      city: citiesKey,
+      events: allEvents,
+      totalFetched,
       windowStart,
       windowEnd,
       refreshedAt: new Date().toISOString(),
       stale: false,
     };
-    setSnapshot(config.city, viewType, snapshot);
+    setSnapshot(citiesKey, viewType, snapshot);
   } catch (err) {
-    const prior = getSnapshot(config.city, viewType);
+    const prior = getSnapshot(citiesKey, viewType);
     if (prior) {
-      setSnapshot(config.city, viewType, { ...prior, stale: true });
+      setSnapshot(citiesKey, viewType, { ...prior, stale: true });
     } else {
       const errorSnapshot: EventsViewSnapshot = {
         viewType,
-        city: config.city,
+        city: citiesKey,
         events: [],
         totalFetched: 0,
         windowStart,
         windowEnd,
         refreshedAt: new Date().toISOString(),
         stale: true,
-        error: (err as Error).message,
+        error: anyError,
       };
-      setSnapshot(config.city, viewType, errorSnapshot);
+      setSnapshot(citiesKey, viewType, errorSnapshot);
     }
   }
 }

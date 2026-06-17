@@ -49,7 +49,7 @@ export function PlexNavOverlay({
             }}
           >
             {(current.kind !== 'tracks') && item.thumb && (
-              <img src={`/api/plex/thumb?path=${encodeURIComponent(item.thumb)}`} alt="" className={styles.albumThumb} />
+              <img src={`/api/plex/thumb?path=${encodeURIComponent(item.thumb)}`} alt="" className={styles.albumThumb} onError={(e) => e.currentTarget.style.display = 'none'} />
             )}
             {current.kind === 'tracks' && (
               <span className={styles.trackIndex}>{item.index ?? '·'}</span>

@@ -90,6 +90,7 @@ export function PlexRandomAlbumView({ settings }: Props): React.ReactElement {
           src={`/api/plex/thumb?path=${encodeURIComponent(art)}`}
           alt=""
           className={styles.bgArt}
+          onError={(e) => e.currentTarget.style.display = 'none'}
         />
       )}
       <div className={ra.layout}>
@@ -101,6 +102,7 @@ export function PlexRandomAlbumView({ settings }: Props): React.ReactElement {
               className={ra.cover}
               onClick={(e) => { e.stopPropagation(); onOpenDetail?.(); }}
               style={{ cursor: 'pointer' }}
+              onError={(e) => e.currentTarget.style.display = 'none'}
             />
           )}
           {artistName && <div className={ra.artist}>{artistName}</div>}

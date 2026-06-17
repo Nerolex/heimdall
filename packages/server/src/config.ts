@@ -25,18 +25,30 @@ function getObject(value: unknown): JsonObject | undefined {
 
 function normalizeEventsProvider(raw: unknown): EventsProviderConfig | null {
   if (!isObject(raw)) return null;
-  const city = raw.city;
-  if (typeof city !== 'string' || city.trim() === '') return null;
-  const lat = raw.lat;
-  const lng = raw.lng;
-  if (typeof lat !== 'number' || lat < -90 || lat > 90) return null;
-  if (typeof lng !== 'number' || lng < -180 || lng > 180) return null;
+  
+  // Support both old "city" and new "cities" field
+  const cities = raw.cities ?? raw.city;
+  
+  // Validate cities format
+  if (typeof cities === 'string') {
+    if (cities.trim() === '') return null;
+  } else if (Array.isArray(cities)) {
+    if (cities.length === 0) return null;
+    if (!cities.every(c => typeof c === 'string' && c.trim() !== '')) return null;
+  } else {
+    return null;
+  }
+  
   const rawCategories = Array.isArray(raw.categories) ? raw.categories : [];
   const categories = rawCategories
     .filter((c): c is string => typeof c === 'string')
     .map(c => c.toLowerCase().trim())
     .filter(c => c !== 'available-anytime');
-  return { city: city.trim(), lat, lng, categories };
+  
+  return { 
+    cities: typeof cities === 'string' ? cities.trim() : cities.map(c => c.trim()),
+    categories 
+  };
 }
 
 function normalizeGroupedShape(parsed: JsonObject): JsonObject {
@@ -50,6 +62,7 @@ function normalizeGroupedShape(parsed: JsonObject): JsonObject {
   const steam = getObject(gaming?.steam) ?? getObject(parsed.steam);
   const plex = getObject(providers?.plex) ?? getObject(parsed.plex);
   const eventsProvider = getObject(providers?.events);
+  const concertsProvider = getObject(providers?.concerts);
   const legacyRetro = getObject(parsed.retro);
   const groupedRetro = getObject(gaming?.retro);
   const igdb = getObject(gaming?.igdb);
@@ -75,7 +88,12 @@ function normalizeGroupedShape(parsed: JsonObject): JsonObject {
     ...(Object.keys(retro).length > 0 ? { retro } : {}),
     ...(steam ? { steam } : {}),
     ...(plex ? { plex } : {}),
-    ...(eventsProvider ? { providers: { events: eventsProvider } } : {}),
+    ...(eventsProvider || concertsProvider ? { 
+      providers: { 
+        ...(eventsProvider ? { events: eventsProvider } : {}),
+        ...(concertsProvider ? { concerts: concertsProvider } : {}),
+      } 
+    } : {}),
   };
 }
 
@@ -146,8 +164,11 @@ export function loadConfig(configPath: string): ConfigResult {
   if (normalizedParsed.providers) {
     const rawProviders = normalizedParsed.providers as Record<string, unknown>;
     const normalizedEvents = normalizeEventsProvider(rawProviders.events);
-    if (normalizedEvents) {
-      config.providers = { events: normalizedEvents };
+    if (normalizedEvents || rawProviders.concerts) {
+      config.providers = {
+        ...(normalizedEvents ? { events: normalizedEvents } : {}),
+        ...(rawProviders.concerts ? { concerts: rawProviders.concerts as any } : {}),
+      };
     }
   }
 
