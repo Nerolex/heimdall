@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "app": {
+    "cycleInterval": 20,
+    "viewOrder": "random",
+    "showFullscreenButton": false,
+    "keepAwake": "auto"
+  },
+  "providers": {
+    "weather": {
+      "apiKey": "<OpenWeatherMap API key>",
+      "city": "Dortmund",
+      "units": "metric",
+      "refreshInterval": 15
+    },
+    "calendar": {
+      "sources": [
+        {
+          "url": "https://calendar.example.com/feed.ics",
+          "name": "Main",
+          "color": "#4a90d9"
+        }
+      ]
+    },
+    "plex": {
+      "url": "http://192.168.178.51:32400",
+      "token": "<Plex token>"
+    }
+  },
+  "views": [
+    {
+      "type": "clock",
+      "overlay": "weather",
+      "frequency": "high"
+    },
+    {
+      "type": "weather",
+      "overlay": "clock",
+      "frequency": "high"
+    },
+    {
+      "type": "photos-random",
+      "overlay": "both"
+    },
+    {
+      "type": "photos-memories",
+      "overlay": "both",
+      "skipIfEmpty": true
+    },
+    {
+      "type": "calendar-day",
+      "overlay": "clock",
+      "skipIfEmpty": true
+    },
+    {
+      "type": "plex-now-playing",
+      "overlay": "clock"
+    }
+  ]
+}

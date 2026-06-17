@@ -29,7 +29,11 @@ export function findProjectRoot(): string {
 /**
  * Resolve the config.json path.
  * Honors the HEIMDALL_CONFIG environment variable; falls back to walking up the directory tree.
+ * @param filename - Optional config filename (default: 'config.json')
  */
-export function resolveConfigPath(): string {
-  return process.env.HEIMDALL_CONFIG ?? findFileUpward('config.json');
+export function resolveConfigPath(filename: string = 'config.json'): string {
+  if (process.env.HEIMDALL_CONFIG && filename === 'config.json') {
+    return process.env.HEIMDALL_CONFIG;
+  }
+  return findFileUpward(filename);
 }

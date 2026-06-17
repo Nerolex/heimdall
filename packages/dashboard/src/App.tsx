@@ -13,7 +13,7 @@ import { deriveActiveView } from './app/deriveActiveView';
 import { mergeViewSettings } from './app/viewSettings';
 
 export function App(): React.ReactElement {
-  const { state, config, errorMessage } = useDashboardConfig();
+  const { state, config, errorMessage, profile } = useDashboardConfig();
   const {
     activeViewIndex,
     historyPos,

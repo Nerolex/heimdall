@@ -10,9 +10,16 @@ interface ConfigFetchResult {
 }
 
 async function fetchDashboardConfig(): Promise<ConfigFetchResult> {
+  // Read profile from URL query params
+  const params = new URLSearchParams(window.location.search);
+  const profile = params.get('profile');
+  
+  // Build API URL with optional profile parameter
+  const apiUrl = profile ? `/api/config?profile=${encodeURIComponent(profile)}` : '/api/config';
+  
   let res: Response;
   try {
-    res = await fetch('/api/config');
+    res = await fetch(apiUrl);
   } catch (err) {
     return { state: 'error', errorMessage: `Failed to connect to server: ${(err as Error).message}` };
   }
@@ -43,5 +50,9 @@ export function useDashboardConfig() {
     });
   }, []);
 
-  return { state, config, errorMessage };
+  // Get current profile from URL
+  const params = new URLSearchParams(window.location.search);
+  const profile = params.get('profile') || 'default';
+
+  return { state, config, errorMessage, profile };
 }
