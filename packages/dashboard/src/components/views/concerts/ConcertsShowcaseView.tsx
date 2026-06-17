@@ -45,9 +45,13 @@ export function ConcertsShowcaseView({
 
   const qrUrl = concert.eventUrl || concert.lastFmUrl || `https://www.setlist.fm/search?query=${encodeURIComponent(concert.artistName)}`;
   
-  // Use Plex artist art/thumb if available
+  // Background: prefer Plex art, fallback to Fanart.tv via artist MBID
   const artPath = concert.plexArt || concert.plexThumb;
-  const artUrl = artPath ? `/api/plex/thumb?path=${encodeURIComponent(artPath)}` : null;
+  const artUrl = artPath
+    ? `/api/plex/thumb?path=${encodeURIComponent(artPath)}`
+    : concert.artistMbid
+      ? `/api/concerts/artist-image/${concert.artistMbid}`
+      : null;
 
   return (
     <div className={styles.showcaseContainer} data-testid="concerts-upcoming-view">
