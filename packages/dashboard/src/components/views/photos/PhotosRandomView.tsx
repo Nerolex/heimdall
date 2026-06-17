@@ -64,7 +64,10 @@ export function PhotosRandomView({ settings }: Props): React.ReactElement {
       <img src={photo.url} alt="" className={styles.blurredBg} />
       <img src={photo.url} alt={photo.filename} className={styles.photo} />
       <div className={styles.randomGradient} />
-      <div className={styles.randomDate}>{dateStr}</div>
+      <div className={styles.randomMeta}>
+        {photo.location && <div className={styles.randomLocation}>{photo.location}</div>}
+        <div className={styles.randomDate}>{dateStr}</div>
+      </div>
     </div>
   );
 }

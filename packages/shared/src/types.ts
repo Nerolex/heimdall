@@ -208,6 +208,8 @@ export interface PhotoEntry {
   width?: number;
   /** Height in pixels */
   height?: number;
+  /** Location (city name) from EXIF GPS data */
+  location?: string;
 }
 
 /** Photos API response for memories */

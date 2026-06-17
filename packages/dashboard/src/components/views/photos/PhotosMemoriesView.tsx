@@ -99,6 +99,7 @@ export function PhotosMemoriesView({ settings }: Props): React.ReactElement {
       <div className={styles.memoriesGradient} />
       <div className={styles.memoriesText}>
         <div className={styles.memoriesLabel}>{current.label}</div>
+        {current.photo.location && <div className={styles.memoriesLocation}>{current.photo.location}</div>}
         <div className={styles.memoriesDate}>{dateStr}</div>
       </div>
     </div>

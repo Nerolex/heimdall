@@ -272,6 +272,62 @@ function findImages(dir: string): string[] {
   return results;
 }
 
+/** Extract GPS coordinates from EXIF data */
+async function getGpsCoordinates(filePath: string): Promise<{ lat: number; lon: number } | null> {
+  try {
+    const metadata = await sharp(filePath).metadata();
+    if (metadata.exif) {
+      const exifReader = await import('exif-reader');
+      const exifData = exifReader.default(metadata.exif) as any;
+      const gps = exifData?.GPS;
+      if (gps?.GPSLatitude && gps?.GPSLongitude && gps?.GPSLatitudeRef && gps?.GPSLongitudeRef) {
+        // Convert from degrees/minutes/seconds to decimal
+        const latDeg = gps.GPSLatitude[0] + gps.GPSLatitude[1] / 60 + gps.GPSLatitude[2] / 3600;
+        const lonDeg = gps.GPSLongitude[0] + gps.GPSLongitude[1] / 60 + gps.GPSLongitude[2] / 3600;
+        const lat = gps.GPSLatitudeRef === 'S' ? -latDeg : latDeg;
+        const lon = gps.GPSLongitudeRef === 'W' ? -lonDeg : lonDeg;
+        return { lat, lon };
+      }
+    }
+  } catch {
+    // Ignore EXIF parsing errors
+  }
+  return null;
+}
+
+/** Reverse geocode coordinates to city name (German) using Nominatim */
+async function reverseGeocode(lat: number, lon: number): Promise<string | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=de`;
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'Heimdall-Dashboard/1.0' }
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as { address?: { city?: string; town?: string; village?: string; municipality?: string } };
+    return data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || null;
+  } catch {
+    return null;
+  }
+}
+
+// Cache for reverse geocoded locations (lat,lon → city name)
+const geocodeCache = new Map<string, string | null>();
+
+/** Get location (city name) from GPS coordinates with caching */
+async function getLocation(filePath: string): Promise<string | undefined> {
+  const coords = await getGpsCoordinates(filePath);
+  if (!coords) return undefined;
+
+  const cacheKey = `${coords.lat.toFixed(3)},${coords.lon.toFixed(3)}`;
+  if (geocodeCache.has(cacheKey)) {
+    return geocodeCache.get(cacheKey) || undefined;
+  }
+
+  const city = await reverseGeocode(coords.lat, coords.lon);
+  geocodeCache.set(cacheKey, city);
+  return city || undefined;
+}
+
 /** Extract date taken from EXIF or fall back to file mtime */
 async function getDateTaken(filePath: string): Promise<Date> {
   try {
@@ -306,6 +362,7 @@ async function getPhotoIndex(photosDir: string): Promise<PhotoIndex> {
   for (const filePath of imagePaths) {
     const id = crypto.createHash('md5').update(filePath).digest('hex').slice(0, 12);
     const dateTaken = await getDateTaken(filePath);
+    const location = await getLocation(filePath);
     let width: number | undefined;
     let height: number | undefined;
     try {
@@ -330,6 +387,7 @@ async function getPhotoIndex(photosDir: string): Promise<PhotoIndex> {
       dateTaken: dateTaken.toISOString(),
       width,
       height,
+      location,
     });
   }
 
