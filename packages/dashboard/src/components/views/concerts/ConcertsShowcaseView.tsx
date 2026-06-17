@@ -13,7 +13,7 @@ interface ConcertsShowcaseViewProps {
 
 /**
  * Showcase layout for concerts-upcoming view.
- * Displays a single concert rotating through upcoming concerts.
+ * Displays a single concert rotating through upcoming concerts with artist images from Plex.
  */
 export function ConcertsShowcaseView({
   skipIfEmpty,
@@ -44,10 +44,23 @@ export function ConcertsShowcaseView({
   if (!concert) return <div className={styles.showcaseContainer} />;
 
   const qrUrl = concert.eventUrl || concert.lastFmUrl || `https://www.setlist.fm/search?query=${encodeURIComponent(concert.artistName)}`;
+  
+  // Use Plex artist art/thumb if available
+  const artPath = concert.plexArt || concert.plexThumb;
+  const artUrl = artPath ? `/api/plex/thumb?path=${encodeURIComponent(artPath)}` : null;
 
   return (
     <div className={styles.showcaseContainer} data-testid="concerts-upcoming-view">
+      {artUrl && (
+        <img 
+          src={artUrl} 
+          alt="" 
+          className={styles.showcaseBackground}
+          onError={(e) => e.currentTarget.style.display = 'none'}
+        />
+      )}
       <div className={styles.showcaseFallback} />
+      <div className={styles.showcaseGradient} />
       <div className={styles.showcaseOverlay}>
         <div className={styles.showcaseQr}>
           <QRCode

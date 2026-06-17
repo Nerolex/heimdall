@@ -2,7 +2,7 @@
  * Hook to rotate through concerts with saved state
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { ConcertRecord } from '@heimdall/shared';
 import type { ConcertsShowcaseSavedState, ViewInternalSettings } from '../../../app/internalSettings';
 
@@ -19,6 +19,24 @@ export function useConcertRotation(
     }
     return 0;
   });
+
+  // Track if we've just mounted/returned to this view
+  const lastConcertsLength = useRef(concerts.length);
+  
+  useEffect(() => {
+    // When concerts array changes (new data loaded), reset to saved state or 0
+    if (concerts.length !== lastConcertsLength.current) {
+      lastConcertsLength.current = concerts.length;
+      if (savedState && savedState.__lastConcertId) {
+        const idx = concerts.findIndex(c => c.id === savedState.__lastConcertId);
+        if (idx >= 0) {
+          setActiveIndex(idx);
+          return;
+        }
+      }
+      setActiveIndex(0);
+    }
+  }, [concerts, savedState]);
 
   useEffect(() => {
     if (concerts.length === 0) return;

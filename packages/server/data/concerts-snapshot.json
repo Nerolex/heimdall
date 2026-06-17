@@ -1,0 +1,197 @@
+{
+  "concerts": [
+    {
+      "id": "7341ce05",
+      "artistName": "Subway to Sally",
+      "artistMbid": "5533fa1c-4102-4ae7-92ae-78dddb17fe7f",
+      "date": "07-05-2026",
+      "dateDisplay": "2026. November 7",
+      "venue": "Theater",
+      "city": "Cologne",
+      "country": "Germany",
+      "coordinates": {
+        "lat": 50.9333333,
+        "lng": 6.95
+      },
+      "distanceKm": 73.83000241533689,
+      "eventUrl": "https://www.setlist.fm/setlist/subway-to-sally/2026/theater-cologne-germany-7341ce05.html",
+      "lastFmUrl": "https://www.last.fm/music/Subway%20to%20Sally/+events",
+      "plexThumb": null,
+      "plexArt": null
+    },
+    {
+      "id": "37619f3",
+      "artistName": "Fiddler’s Green",
+      "artistMbid": "03eb47c4-61a5-4334-bf03-1efc1e75dfb3",
+      "date": "10-04-2026",
+      "dateDisplay": "2026. Oktober 10",
+      "venue": "Rosenhof",
+      "city": "Osnabrück",
+      "country": "Germany",
+      "coordinates": {
+        "lat": 52.2666667,
+        "lng": 8.05
+      },
+      "distanceKm": 92.85393956338457,
+      "eventUrl": "https://www.setlist.fm/setlist/fiddlers-green/2026/rosenhof-osnabruck-germany-37619f3.html",
+      "lastFmUrl": "https://www.last.fm/music/Fiddler%E2%80%99s%20Green/+events"
+    },
+    {
+      "id": "734786dd",
+      "artistName": "Santiano",
+      "artistMbid": "af689c12-a808-4f12-8ffb-f68dd021f5c0",
+      "date": "12-04-2026",
+      "dateDisplay": "2026. Oktober 12",
+      "venue": "Lanxess Arena",
+      "city": "Cologne",
+      "country": "Germany",
+      "coordinates": {
+        "lat": 50.9333333,
+        "lng": 6.95
+      },
+      "distanceKm": 73.83000241533689,
+      "eventUrl": "https://www.setlist.fm/setlist/santiano/2026/lanxess-arena-cologne-germany-734786dd.html",
+      "lastFmUrl": "https://www.last.fm/music/Santiano/+events",
+      "plexThumb": null,
+      "plexArt": null
+    },
+    {
+      "id": "3b49cc60",
+      "artistName": "Fiddler’s Green",
+      "artistMbid": "03eb47c4-61a5-4334-bf03-1efc1e75dfb3",
+      "date": "13-03-2026",
+      "dateDisplay": "2026. September 13",
+      "venue": "Leffe Stage",
+      "city": "Enschede",
+      "country": "Netherlands",
+      "coordinates": {
+        "lat": 52.218333,
+        "lng": 6.895833
+      },
+      "distanceKm": 87.57579473527517,
+      "eventUrl": "https://www.setlist.fm/setlist/fiddlers-green/2026/leffe-stage-enschede-netherlands-3b49cc60.html",
+      "lastFmUrl": "https://www.last.fm/music/Fiddler%E2%80%99s%20Green/+events"
+    },
+    {
+      "id": "4b424b0e",
+      "artistName": "Mr. Hurley & Die Pulveraffen",
+      "artistMbid": "f9d70a0e-2c93-4ff6-81cf-2c1ac6884ea6",
+      "date": "13-09-2025",
+      "dateDisplay": "2025. März 13",
+      "venue": "Amphitheater Gelsenkirchen",
+      "city": "Gelsenkirchen",
+      "country": "Germany",
+      "coordinates": {
+        "lat": 51.5166667,
+        "lng": 7.05
+      },
+      "distanceKm": 28.73969883535873,
+      "eventUrl": "https://www.setlist.fm/setlist/mr-hurley-and-die-pulveraffen/2025/amphitheater-gelsenkirchen-gelsenkirchen-germany-4b424b0e.html",
+      "lastFmUrl": "https://www.last.fm/music/Mr.%20Hurley%20%26%20Die%20Pulveraffen/+events"
+    },
+    {
+      "id": "134ed115",
+      "artistName": "Feuerschwanz",
+      "artistMbid": "107fe9d9-903d-4bdc-ba88-d1df3c2fa32c",
+      "date": "20-03-2026",
+      "dateDisplay": "2026. September 20",
+      "venue": "Turbinenhalle",
+      "city": "Oberhausen",
+      "country": "Germany",
+      "coordinates": {
+        "lat": 51.47,
+        "lng": 6.85
+      },
+      "distanceKm": 42.87387518325344,
+      "eventUrl": "https://www.setlist.fm/setlist/feuerschwanz/2026/turbinenhalle-oberhausen-germany-134ed115.html",
+      "lastFmUrl": "https://www.last.fm/music/Feuerschwanz/+events",
+      "plexThumb": null,
+      "plexArt": null
+    },
+    {
+      "id": "b4ed10a",
+      "artistName": "Feuerschwanz",
+      "artistMbid": "107fe9d9-903d-4bdc-ba88-d1df3c2fa32c",
+      "date": "21-03-2026",
+      "dateDisplay": "2026. September 21",
+      "venue": "Hyde Park",
+      "city": "Osnabrück",
+      "country": "Germany",
+      "coordinates": {
+        "lat": 52.2666667,
+        "lng": 8.05
+      },
+      "distanceKm": 92.85393956338457,
+      "eventUrl": "https://www.setlist.fm/setlist/feuerschwanz/2026/hyde-park-osnabruck-germany-b4ed10a.html",
+      "lastFmUrl": "https://www.last.fm/music/Feuerschwanz/+events",
+      "plexThumb": null,
+      "plexArt": null
+    },
+    {
+      "id": "334e3c65",
+      "artistName": "Mr. Hurley & Die Pulveraffen",
+      "artistMbid": "f9d70a0e-2c93-4ff6-81cf-2c1ac6884ea6",
+      "date": "21-11-2025",
+      "dateDisplay": "2025. Mai 21",
+      "venue": "Turbinenhalle 2",
+      "city": "Oberhausen",
+      "country": "Germany",
+      "coordinates": {
+        "lat": 51.47,
+        "lng": 6.85
+      },
+      "distanceKm": 42.87387518325344,
+      "eventUrl": "https://www.setlist.fm/setlist/mr-hurley-and-die-pulveraffen/2025/turbinenhalle-2-oberhausen-germany-334e3c65.html",
+      "lastFmUrl": "https://www.last.fm/music/Mr.%20Hurley%20%26%20Die%20Pulveraffen/+events"
+    },
+    {
+      "id": "634786e3",
+      "artistName": "Santiano",
+      "artistMbid": "af689c12-a808-4f12-8ffb-f68dd021f5c0",
+      "date": "24-03-2026",
+      "dateDisplay": "2026. September 24",
+      "venue": "Rudolf Weber-Arena",
+      "city": "Oberhausen",
+      "country": "Germany",
+      "coordinates": {
+        "lat": 51.47,
+        "lng": 6.85
+      },
+      "distanceKm": 42.87387518325344,
+      "eventUrl": "https://www.setlist.fm/setlist/santiano/2026/rudolf-weber-arena-oberhausen-germany-634786e3.html",
+      "lastFmUrl": "https://www.last.fm/music/Santiano/+events",
+      "plexThumb": null,
+      "plexArt": null
+    },
+    {
+      "id": "634786cb",
+      "artistName": "Santiano",
+      "artistMbid": "af689c12-a808-4f12-8ffb-f68dd021f5c0",
+      "date": "24-04-2026",
+      "dateDisplay": "2026. Oktober 24",
+      "venue": "Westfalenhalle",
+      "city": "Dortmund",
+      "country": "Germany",
+      "coordinates": {
+        "lat": 51.5166667,
+        "lng": 7.45
+      },
+      "distanceKm": 1.112282863463849,
+      "eventUrl": "https://www.setlist.fm/setlist/santiano/2026/westfalenhalle-dortmund-germany-634786cb.html",
+      "lastFmUrl": "https://www.last.fm/music/Santiano/+events",
+      "plexThumb": null,
+      "plexArt": null
+    }
+  ],
+  "totalFetched": 10,
+  "refreshedAt": "2026-06-17T12:36:30.341Z",
+  "stale": false,
+  "artistsTracked": [
+    "ASP",
+    "Fiddlers Green",
+    "Santiano",
+    "Subway To Sally",
+    "Feuerschwanz",
+    "Mr Hurley und die Pulveraffen"
+  ]
+}

@@ -10,6 +10,8 @@ interface PlexConfig {
 interface PlexArtist {
   title: string;
   guid?: string;
+  thumb?: string;
+  art?: string;
 }
 
 interface PlexMediaContainer {
@@ -33,7 +35,7 @@ function extractMbid(guid: string | undefined): string | null {
  */
 export async function fetchPlexArtists(
   plexConfig: PlexConfig
-): Promise<Array<{ name: string; mbid: string | null }>> {
+): Promise<Array<{ name: string; mbid: string | null; thumb: string | null; art: string | null }>> {
   try {
     const { url, token } = plexConfig;
     const baseUrl = url.replace(/\/$/, '');
@@ -78,6 +80,8 @@ export async function fetchPlexArtists(
     return artists.map(artist => ({
       name: artist.title,
       mbid: extractMbid(artist.guid),
+      thumb: artist.thumb || null,
+      art: artist.art || null,
     }));
   } catch (error) {
     console.error('[concerts] Error fetching Plex artists:', error);

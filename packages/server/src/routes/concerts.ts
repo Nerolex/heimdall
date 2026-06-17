@@ -39,4 +39,45 @@ export async function concertsRoute(fastify: FastifyInstance): Promise<void> {
       artistsTracked: snapshot?.artistsTracked.length ?? 0,
     });
   });
+
+  // GET /api/concerts/artist-image/:mbid
+  // Fetch artist image from Fanart.tv
+  fastify.get<{ Params: { mbid: string } }>('/api/concerts/artist-image/:mbid', async (request, reply) => {
+    const { mbid } = request.params;
+    
+    if (!mbid) {
+      return reply.status(400).send({ error: 'MBID required' });
+    }
+
+    // Try Fanart.tv for artist background/thumb
+    try {
+      const url = `https://webservice.fanart.tv/v3/music/${mbid}?api_key=d2d1f4df4999d6ed9092452ce92e3a83`;
+      const response = await fetch(url);
+      
+      if (response.ok) {
+        const data = await response.json() as { 
+          artistbackground?: Array<{ url: string }>;
+          artistthumb?: Array<{ url: string }>;
+          hdmusiclogo?: Array<{ url: string }>;
+        };
+        
+        // Prefer artist background, fallback to thumb
+        const imageUrl = data.artistbackground?.[0]?.url || data.artistthumb?.[0]?.url;
+        
+        if (imageUrl) {
+          // Proxy the image to avoid CORS
+          const imageResponse = await fetch(imageUrl);
+          if (imageResponse.ok) {
+            const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+            const buffer = Buffer.from(await imageResponse.arrayBuffer());
+            return reply.type(contentType).send(buffer);
+          }
+        }
+      }
+    } catch {
+      // Continue to fallback
+    }
+
+    return reply.status(404).send({ error: 'No image found' });
+  });
 }

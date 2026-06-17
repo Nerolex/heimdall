@@ -95,6 +95,10 @@ export interface ConcertRecord {
   distanceKm: number | null;
   eventUrl: string | null;
   lastFmUrl: string | null;
+  /** Plex artist thumb path (for /api/plex/thumb?path=...) */
+  plexThumb?: string | null;
+  /** Plex artist art path (for /api/plex/thumb?path=...) */
+  plexArt?: string | null;
 }
 
 /** Snapshot of concerts for the view */

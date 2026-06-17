@@ -28,11 +28,11 @@ export async function refreshConcertsSnapshot(config: ConcertsConfig): Promise<v
 
   try {
     // Determine artists to track
-    let artistsToTrack: Array<{ name: string; mbid: string | null }> = [];
+    let artistsToTrack: Array<{ name: string; mbid: string | null; thumb: string | null; art: string | null }> = [];
 
     if (concertsConfig.artists && concertsConfig.artists.length > 0) {
       // Use manually configured artists
-      artistsToTrack = concertsConfig.artists.map((name: string) => ({ name, mbid: null }));
+      artistsToTrack = concertsConfig.artists.map((name: string) => ({ name, mbid: null, thumb: null, art: null }));
       console.log('[concerts] Using configured artists:', artistsToTrack.length);
     } else if (config.plex) {
       // Fetch from Plex library
@@ -68,6 +68,21 @@ export async function refreshConcertsSnapshot(config: ConcertsConfig): Promise<v
       { apiKey: concertsConfig.apiKey, lat, lng, radiusKm },
       artistsToTrack
     );
+
+    // Map Plex thumbs/art to concerts by artist name
+    const artistImageMap = new Map<string, { thumb: string | null; art: string | null }>();
+    for (const artist of artistsToTrack) {
+      artistImageMap.set(artist.name.toLowerCase(), { thumb: artist.thumb, art: artist.art });
+    }
+
+    // Add Plex thumb/art to each concert
+    for (const concert of concerts) {
+      const images = artistImageMap.get(concert.artistName.toLowerCase());
+      if (images) {
+        concert.plexThumb = images.thumb;
+        concert.plexArt = images.art;
+      }
+    }
 
     // Save snapshot
     const snapshot: ConcertsViewSnapshot = {
