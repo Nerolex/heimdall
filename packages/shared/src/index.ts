@@ -28,6 +28,8 @@ export {
   type EventsViewSettings,
   type RefreshStatus,
   type EventsViewSnapshot,
+  type ShowcaseItem,
+  type GroupedListItem,
   DEFAULT_CYCLE_INTERVAL,
   DEFAULT_DISPLAY_MODE,
   DEFAULT_OVERLAY_MODE,

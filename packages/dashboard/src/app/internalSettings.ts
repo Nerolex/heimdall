@@ -45,6 +45,11 @@ export type ConcertsShowcaseSavedState = {
   __lastRotation?: number;
 };
 
+export type ConcertsWeekendSavedState = {
+  readonly __view: 'concerts-weekend';
+  bgImageUrl: string | undefined;
+};
+
 /** Discriminated union of all per-view saved states. Add a new member for each stateful view. */
 export type ViewSavedState =
   | EventsShowcaseSavedState
@@ -52,4 +57,5 @@ export type ViewSavedState =
   | PhotosMemoriesSavedState
   | PhotosRandomSavedState
   | ClockSavedState
-  | ConcertsShowcaseSavedState;
+  | ConcertsShowcaseSavedState
+  | ConcertsWeekendSavedState;

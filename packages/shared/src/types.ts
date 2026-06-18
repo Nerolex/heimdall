@@ -342,6 +342,37 @@ export interface EventsViewSnapshot {
   error?: string;
 }
 
+/**
+ * Normalized item for the unified ShowcaseView.
+ * Both ConcertRecord and EventRecord map to this shape.
+ */
+/**
+ * Normalized item for the shared GroupedListView.
+ */
+export interface GroupedListItem {
+  id: string;
+  title: string;
+  categoryLabel: string | null;
+  date: string;
+  dateDisplay: string;
+  timeDisplay: string | null;
+  venue: string | null;
+  imageUrl?: string | null;
+}
+
+export interface ShowcaseItem {
+  id: string;
+  title: string;
+  venue: string | null;
+  dateDisplay: string;
+  timeDisplay?: string;
+  detailUrl: string;
+  categoryLabel: string | null;
+  backgroundUrl: string | null;
+  extraLine: string | null;
+  city: string | null;
+}
+
 // --- Type guards and defaults ---
 
 export const DEFAULT_CYCLE_INTERVAL = 30;
