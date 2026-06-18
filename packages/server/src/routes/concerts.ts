@@ -1,11 +1,11 @@
 import { type FastifyInstance } from 'fastify';
 import { loadConfig } from '../config.js';
 import { getSnapshot } from '../services/concerts/snapshotStore.js';
-import { resolveConfigPath } from '../utils/projectRoot.js';
+import { resolveConfigPath, resolveProfileConfigPath } from '../utils/projectRoot.js';
 
 export async function concertsRoute(fastify: FastifyInstance): Promise<void> {
-  fastify.get('/api/concerts/snapshot', async (_request, reply) => {
-    const result = loadConfig(resolveConfigPath());
+  fastify.get<{ Querystring: { profile?: string } }>('/api/concerts/snapshot', async (request, reply) => {
+    const result = loadConfig(request.query.profile ? resolveProfileConfigPath(request.query.profile) : resolveConfigPath());
     const concertsConfig = result.config?.providers?.concerts;
     
     if (!concertsConfig) {
@@ -21,8 +21,8 @@ export async function concertsRoute(fastify: FastifyInstance): Promise<void> {
     return reply.status(200).send(snapshot);
   });
 
-  fastify.get('/api/concerts/health', async (_request, reply) => {
-    const result = loadConfig(resolveConfigPath());
+  fastify.get<{ Querystring: { profile?: string } }>('/api/concerts/health', async (request, reply) => {
+    const result = loadConfig(request.query.profile ? resolveProfileConfigPath(request.query.profile) : resolveConfigPath());
     const concertsConfig = result.config?.providers?.concerts;
     
     if (!concertsConfig) {

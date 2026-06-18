@@ -1,10 +1,11 @@
 import type { FastifyInstance } from 'fastify';
+import { loadConfig } from '../config.js';
+import { resolveConfigPath, resolveProfileConfigPath } from '../utils/projectRoot.js';
 
 const STEAM_BASE = 'https://api.steampowered.com';
 
-// Simple cache
 const cache = new Map<string, { data: unknown; ts: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
 
 async function fetchSteam(url: string): Promise<unknown> {
   const cached = cache.get(url);
@@ -17,10 +18,18 @@ async function fetchSteam(url: string): Promise<unknown> {
   return data;
 }
 
+function steamCredentials(query: { apiKey?: string; steamId?: string; profile?: string }) {
+  const result = loadConfig(query.profile ? resolveProfileConfigPath(query.profile) : resolveConfigPath());
+  const fromConfig = result.config?.steam;
+  return {
+    apiKey: fromConfig?.apiKey || query.apiKey || '',
+    steamId: fromConfig?.steamId || query.steamId || '',
+  };
+}
+
 export async function steamRoute(fastify: FastifyInstance): Promise<void> {
-  // Player summary (online status, currently playing)
   fastify.get('/api/steam/player-summary', async (request, reply) => {
-    const { apiKey, steamId } = request.query as { apiKey: string; steamId: string };
+    const { apiKey, steamId } = steamCredentials(request.query as { apiKey?: string; steamId?: string; profile?: string });
     if (!apiKey || !steamId) return reply.status(400).send({ error: 'Missing apiKey or steamId' });
 
     try {
@@ -41,9 +50,9 @@ export async function steamRoute(fastify: FastifyInstance): Promise<void> {
     }
   });
 
-  // Recently played games
   fastify.get('/api/steam/recent-games', async (request, reply) => {
-    const { apiKey, steamId, count } = request.query as { apiKey: string; steamId: string; count?: string };
+    const { apiKey, steamId } = steamCredentials(request.query as { apiKey?: string; steamId?: string; profile?: string });
+    const count = (request.query as { count?: string }).count;
     if (!apiKey || !steamId) return reply.status(400).send({ error: 'Missing apiKey or steamId' });
 
     try {
@@ -55,9 +64,9 @@ export async function steamRoute(fastify: FastifyInstance): Promise<void> {
     }
   });
 
-  // Achievements for a specific game
   fastify.get('/api/steam/achievements', async (request, reply) => {
-    const { apiKey, steamId, appId } = request.query as { apiKey: string; steamId: string; appId: string };
+    const { apiKey, steamId } = steamCredentials(request.query as { apiKey?: string; steamId?: string; profile?: string });
+    const appId = (request.query as { appId?: string }).appId;
     if (!apiKey || !steamId || !appId) return reply.status(400).send({ error: 'Missing apiKey, steamId, or appId' });
 
     try {
@@ -74,14 +83,13 @@ export async function steamRoute(fastify: FastifyInstance): Promise<void> {
         unlocked: achievements.length,
       });
     } catch (err) {
-      // Some games don't have achievements
       return reply.send({ gameName: null, achievements: [], total: 0, unlocked: 0 });
     }
   });
 
-  // Game schema (achievement names/descriptions/icons)
   fastify.get('/api/steam/game-schema', async (request, reply) => {
-    const { apiKey, appId } = request.query as { apiKey: string; appId: string };
+    const { apiKey } = steamCredentials(request.query as { apiKey?: string; profile?: string });
+    const appId = (request.query as { appId?: string }).appId;
     if (!apiKey || !appId) return reply.status(400).send({ error: 'Missing apiKey or appId' });
 
     try {

@@ -11,7 +11,7 @@
       "apiKey": "<OpenWeatherMap API key>",
       "city": "Dortmund",
       "units": "metric",
-      "refreshInterval": 15
+      "refreshIntervalMinutes": 15
     },
     "calendar": {
       "sources": [

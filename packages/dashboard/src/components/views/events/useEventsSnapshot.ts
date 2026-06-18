@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { EventsViewSnapshot } from '@heimdall/shared';
+import { withActiveProfile } from '../../../app/apiProfile';
 
 type SnapshotStatus = 'loading' | 'ready' | 'empty' | 'error' | 'stale';
 
@@ -38,7 +39,7 @@ export function useEventsSnapshot(
   useEffect(() => {
     let cancelled = false;
     const hadCachedData = isValid; // capture at effect-run time; don't put isValid in deps
-    const url = `/api/events/snapshot?type=${encodeURIComponent(viewType)}${days != null ? `&days=${days}` : ''}`;
+    const url = withActiveProfile(`/api/events/snapshot?type=${encodeURIComponent(viewType)}${days != null ? `&days=${days}` : ''}`);
 
     fetch(url)
       .then(async res => {

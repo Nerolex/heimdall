@@ -29,7 +29,18 @@ export interface WeatherConfig {
   /** Units: "metric" (°C) or "imperial" (°F). Defaults to "metric". */
   units?: 'metric' | 'imperial';
   /** Refresh interval in minutes. Defaults to 15. */
-  refreshInterval?: number;
+  refreshIntervalMinutes?: number;
+}
+
+/** IGDB (Twitch) API configuration for game art/screenshots */
+export interface IgdbConfig {
+  clientId: string;
+  clientSecret: string;
+}
+
+/** SteamGridDB API configuration for game art */
+export interface SgdbConfig {
+  apiKey: string;
 }
 
 /** Last.fm API configuration */
@@ -44,14 +55,11 @@ export interface SteamConfig {
   steamId: string;
 }
 
-/** RetroAchievements and related gaming API configuration */
+/** RetroAchievements API configuration */
 export interface RetroConfig {
   apiUser: string;
   apiKey: string;
   user: string;
-  igdbClientId?: string;
-  igdbClientSecret?: string;
-  sgdbApiKey?: string;
 }
 
 /** Calendar provider configuration */
@@ -78,7 +86,7 @@ export interface ConcertsProviderConfig {
   /** Artist names to track (overrides Plex library auto-fetch if provided) */
   artists?: string[];
   /** Refresh interval in hours (default: 6) */
-  refreshInterval?: number;
+  refreshIntervalHours?: number;
 }
 
 /** Concert record from Setlist.fm */
@@ -155,10 +163,14 @@ export interface DashboardConfig {
   calendar?: CalendarConfig;
   /** Last.fm provider configuration */
   lastfm?: LastfmConfig;
-  /** RetroAchievements / gaming provider configuration */
+  /** RetroAchievements provider configuration */
   retro?: RetroConfig;
   /** Steam provider configuration */
   steam?: SteamConfig;
+  /** IGDB provider configuration for game art/screenshots */
+  igdb?: IgdbConfig;
+  /** SteamGridDB provider configuration for game art */
+  sgdb?: SgdbConfig;
   /** Plex server configuration */
   plex?: PlexConfig;
   /** Provider configurations (events, concerts, etc.) */
@@ -166,6 +178,37 @@ export interface DashboardConfig {
     events?: EventsProviderConfig;
     concerts?: ConcertsProviderConfig;
   };
+}
+
+/**
+ * On-disk (v2 grouped) dashboard configuration format.
+ * Mirrors the shape of config.json / config.<profile>.json files.
+ * Normalized at load time into DashboardConfig by normalizeGroupedShape().
+ */
+export interface OnDiskDashboardConfig {
+  schemaVersion?: number;
+  app?: {
+    /** Seconds between view transitions. Defaults to 30. Must be > 0. */
+    cycleInterval?: number;
+    viewOrder?: ViewOrder;
+    keepAwake?: KeepAwakeMode;
+    showFullscreenButton?: boolean;
+  };
+  providers?: {
+    weather?: WeatherConfig;
+    calendar?: CalendarConfig;
+    music?: { lastfm?: LastfmConfig };
+    gaming?: {
+      retro?: RetroConfig;
+      steam?: SteamConfig;
+      igdb?: IgdbConfig;
+      sgdb?: SgdbConfig;
+    };
+    plex?: PlexConfig;
+    events?: EventsProviderConfig & { lat?: number; lng?: number };
+    concerts?: ConcertsProviderConfig;
+  };
+  views: ViewEntry[];
 }
 
 /** A calendar source (iCal URL) */

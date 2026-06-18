@@ -16,9 +16,9 @@ export function mergeViewSettings(config: DashboardConfig, view: DashboardConfig
       raUser: config.retro?.user,
       steamApiKey: config.steam?.apiKey,
       steamId: config.steam?.steamId,
-      igdbClientId: config.retro?.igdbClientId,
-      igdbClientSecret: config.retro?.igdbClientSecret,
-      sgdbApiKey: config.retro?.sgdbApiKey,
+      igdbClientId: config.igdb?.clientId,
+      igdbClientSecret: config.igdb?.clientSecret,
+      sgdbApiKey: config.sgdb?.apiKey,
       ...base,
     };
   }
@@ -36,7 +36,7 @@ export function mergeViewSettings(config: DashboardConfig, view: DashboardConfig
       weatherApiKey: config.weather.apiKey,
       weatherCity: config.weather.city,
       weatherUnits: config.weather.units,
-      weatherRefreshInterval: config.weather.refreshInterval,
+      weatherRefreshInterval: config.weather.refreshIntervalMinutes,
       ...base,
     };
   }

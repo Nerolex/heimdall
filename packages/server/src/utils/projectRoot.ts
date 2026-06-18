@@ -37,3 +37,26 @@ export function resolveConfigPath(filename: string = 'config.json'): string {
   }
   return findFileUpward(filename);
 }
+
+function sanitizeProfile(profile: string): string {
+  return profile.replace(/[^a-zA-Z0-9-_]/g, '');
+}
+
+/** Resolve a config file for the active profile, falling back to config.json. */
+export function resolveProfileConfigPath(profile?: string, filename: string = 'config.json'): string {
+  if (!profile || profile === 'default') {
+    return resolveConfigPath(filename);
+  }
+
+  const safeName = sanitizeProfile(profile);
+  if (!safeName) {
+    return resolveConfigPath(filename);
+  }
+
+  const profileFile = `config.${safeName}.json`;
+  if (process.env.HEIMDALL_CONFIG && filename === 'config.json') {
+    return path.join(path.dirname(process.env.HEIMDALL_CONFIG), profileFile);
+  }
+
+  return findFileUpward(profileFile);
+}

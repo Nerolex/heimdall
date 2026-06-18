@@ -25,6 +25,7 @@ function makeEvent(overrides: Partial<EventRecord> = {}): EventRecord {
     rawDescription: 'Club Stage | 2024-05-18 20:00',
     recurrenceNote: null,
     detailUrl: 'https://rausgegangen.de/en/dortmund/weekend-concert',
+    city: 'dortmund',
     imageUrl: 'https://example.com/weekend.jpg',
     ...overrides,
   };

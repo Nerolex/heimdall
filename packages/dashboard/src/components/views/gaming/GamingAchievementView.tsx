@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { withActiveProfile } from '../../../app/apiProfile';
 import styles from './Gaming.module.css';
 
 interface UnifiedAchievement {
@@ -36,20 +37,10 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
   const savedStateRef = useRef(settings.__savedState as { achievement: UnifiedAchievement; bgUrl: string | null } | undefined);
   const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
 
-  const steamApiKey = settings.steamApiKey as string | undefined;
-  const steamId = settings.steamId as string | undefined;
-  const raApiUser = settings.raApiUser as string | undefined;
-  const raApiKey = settings.raApiKey as string | undefined;
-  const raUser = settings.raUser as string | undefined;
-  const sgdbApiKey = settings.sgdbApiKey as string | undefined;
-  const igdbClientId = settings.igdbClientId as string | undefined;
-  const igdbClientSecret = settings.igdbClientSecret as string | undefined;
-
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
-    // Restore from navigation history without re-fetching
     if (savedStateRef.current?.achievement) {
       setAchievement(savedStateRef.current.achievement);
       setBgUrl(savedStateRef.current.bgUrl);
@@ -59,19 +50,7 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
 
     async function fetchData(): Promise<void> {
       try {
-        const params = new URLSearchParams();
-        if (steamApiKey && steamId) {
-          params.set('steamApiKey', steamApiKey);
-          params.set('steamId', steamId);
-        }
-        if (raApiUser && raApiKey && raUser) {
-          params.set('raApiUser', raApiUser);
-          params.set('raApiKey', raApiKey);
-          params.set('raUser', raUser);
-        }
-        params.set('limit', '20');
-
-        const res = await fetch(`/api/gaming/recent-achievements?${params}`);
+        const res = await fetch(withActiveProfile('/api/gaming/recent-achievements?limit=20'));
         const data: UnifiedAchievement[] = await res.json();
         if (!Array.isArray(data) || data.length === 0) {
           setLoading(false);
@@ -84,13 +63,13 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
         let finalBgUrl: string | null = null;
         let foundBg = false;
 
-        if (sgdbApiKey && picked.gameName) {
+        if (picked.gameName) {
           try {
-            const searchRes = await fetch(`/api/sgdb/search?apiKey=${sgdbApiKey}&term=${encodeURIComponent(picked.gameName)}`);
+            const searchRes = await fetch(withActiveProfile(`/api/sgdb/search?term=${encodeURIComponent(picked.gameName)}`));
             const searchData = await searchRes.json();
             if (searchData.success && searchData.data?.length > 0) {
               const sgdbGameId = searchData.data[0].id;
-              const heroRes = await fetch(`/api/sgdb/heroes?apiKey=${sgdbApiKey}&gameId=${sgdbGameId}`);
+              const heroRes = await fetch(withActiveProfile(`/api/sgdb/heroes?gameId=${sgdbGameId}`));
               const heroData = await heroRes.json();
               if (heroData.success && heroData.data?.length > 0) {
                 const originalUrl = heroData.data[0].url as string;
@@ -102,11 +81,9 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
           } catch { /* ignore */ }
         }
 
-        if (!foundBg && igdbClientId && igdbClientSecret && picked.gameName && picked.consoleName === 'Steam') {
+        if (!foundBg && picked.gameName && picked.consoleName === 'Steam') {
           try {
-            const igdbRes = await fetch(
-              `/api/igdb/screenshots?clientId=${igdbClientId}&clientSecret=${igdbClientSecret}&game=${encodeURIComponent(picked.gameName)}`
-            );
+            const igdbRes = await fetch(withActiveProfile(`/api/igdb/screenshots?game=${encodeURIComponent(picked.gameName)}`));
             const igdbData = await igdbRes.json();
             if (igdbData.success && igdbData.screenshots?.length > 0) {
               const shots = igdbData.screenshots;
@@ -121,7 +98,7 @@ export function GamingAchievementView({ settings }: Props): React.ReactElement {
       setLoading(false);
     }
     fetchData();
-  }, [steamApiKey, steamId, raApiUser, raApiKey, raUser, sgdbApiKey, igdbClientId, igdbClientSecret]);
+  }, [settings.__savedState, settings.__onStateChange]);
 
   if (loading) return <div className={styles.showcaseContainer} />;
   if (!achievement) return <div className={styles.loading}>Keine Achievements verfügbar</div>;

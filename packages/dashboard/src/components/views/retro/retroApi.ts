@@ -2,18 +2,7 @@ export const RA_MEDIA = '/api/retro/media';
 
 const POLL_INTERVAL_MS = 5 * 60 * 1000;
 
-export interface RetroSettings {
-  apiUser: string;
-  apiKey: string;
-  user?: string;
-}
-
-export function extractRetroSettings(settings: Record<string, unknown>): RetroSettings {
-  const apiUser = settings.apiUser as string;
-  const apiKey = settings.apiKey as string;
-  const user = (settings.user as string) || apiUser;
-  return { apiUser, apiKey, user };
-}
+export { POLL_INTERVAL_MS };
 
 /** Generic fetcher with polling for RetroAchievements API */
 export function createRetroFetcher<T>(

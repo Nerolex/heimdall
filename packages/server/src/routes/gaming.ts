@@ -1,9 +1,10 @@
 import type { FastifyInstance } from 'fastify';
+import { loadConfig } from '../config.js';
+import { resolveConfigPath, resolveProfileConfigPath } from '../utils/projectRoot.js';
 
 const RA_BASE = 'https://retroachievements.org/API';
 const STEAM_BASE = 'https://api.steampowered.com';
 
-// Shared cache
 const cache = new Map<string, { data: unknown; ts: number }>();
 const CACHE_TTL = 5 * 60 * 1000;
 
@@ -32,19 +33,29 @@ interface UnifiedAchievement {
   consoleName: string;
   points?: number;
   icon?: string;
-  unlockedAt: string; // ISO date string
+  unlockedAt: string;
   source: 'steam' | 'retro';
   hardcore?: boolean;
 }
 
+function gamingCreds(query: Record<string, string>) {
+  const result = loadConfig(query.profile ? resolveProfileConfigPath(query.profile) : resolveConfigPath());
+  const config = result.config;
+  return {
+    steamApiKey: config?.steam?.apiKey || query.steamApiKey || '',
+    steamId: config?.steam?.steamId || query.steamId || '',
+    raApiUser: config?.retro?.apiUser || query.raApiUser || '',
+    raApiKey: config?.retro?.apiKey || query.raApiKey || '',
+    raUser: config?.retro?.user || query.raUser || '',
+  };
+}
+
 export async function gamingRoute(fastify: FastifyInstance): Promise<void> {
-  // Unified "now playing" — checks Steam then RA
   fastify.get('/api/gaming/now-playing', async (request, reply) => {
-    const { steamApiKey, steamId, raApiUser, raApiKey, raUser } = request.query as Record<string, string>;
+    const { steamApiKey, steamId, raApiUser, raApiKey, raUser } = gamingCreds(request.query as Record<string, string>);
 
     const result: NowPlayingResult = { source: null, gameName: null, gameId: null };
 
-    // Check Steam first
     if (steamApiKey && steamId) {
       try {
         const url = `${STEAM_BASE}/ISteamUser/GetPlayerSummaries/v2/?key=${steamApiKey}&steamids=${steamId}`;
@@ -60,7 +71,6 @@ export async function gamingRoute(fastify: FastifyInstance): Promise<void> {
       } catch { /* ignore */ }
     }
 
-    // Check RA
     if (raApiUser && raApiKey && raUser) {
       try {
         const url = `${RA_BASE}/API_GetUserSummary.php?z=${raApiUser}&y=${raApiKey}&u=${raUser}`;
@@ -78,13 +88,11 @@ export async function gamingRoute(fastify: FastifyInstance): Promise<void> {
     return reply.send(result);
   });
 
-  // Unified recent achievements — merges RA + Steam
   fastify.get('/api/gaming/recent-achievements', async (request, reply) => {
-    const { steamApiKey, steamId, raApiUser, raApiKey, raUser, limit } = request.query as Record<string, string>;
-    const maxItems = parseInt(limit || '10', 10);
+    const { steamApiKey, steamId, raApiUser, raApiKey, raUser } = gamingCreds(request.query as Record<string, string>);
+    const maxItems = parseInt((request.query as Record<string, string>).limit || '10', 10);
     const achievements: UnifiedAchievement[] = [];
 
-    // Fetch RA recent achievements
     if (raApiUser && raApiKey && raUser) {
       try {
         const url = `${RA_BASE}/API_GetUserRecentAchievements.php?z=${raApiUser}&y=${raApiKey}&u=${raUser}&m=43200`;
@@ -107,14 +115,12 @@ export async function gamingRoute(fastify: FastifyInstance): Promise<void> {
       } catch { /* ignore */ }
     }
 
-    // Fetch Steam recent achievements (from recently played games)
     if (steamApiKey && steamId) {
       try {
         const gamesUrl = `${STEAM_BASE}/IPlayerService/GetRecentlyPlayedGames/v1/?key=${steamApiKey}&steamid=${steamId}&count=5`;
         const gamesData = await cachedFetch(gamesUrl) as { response: { games?: Array<Record<string, unknown>> } };
         const games = gamesData.response.games || [];
 
-        // Fetch achievements + schema for each game in parallel
         const gamePromises = games.map(async (game) => {
           const appId = game.appid as number;
           try {
@@ -132,7 +138,6 @@ export async function gamingRoute(fastify: FastifyInstance): Promise<void> {
             const schemaAchs = schemaData.game.availableGameStats?.achievements || [];
             const schemaMap = new Map(schemaAchs.map((s: Record<string, unknown>) => [s.name, s]));
 
-            // Only get achievements from last 30 days
             const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
             for (const ach of playerAchs) {
               const unlockTime = (ach.unlocktime as number) * 1000;
@@ -155,14 +160,12 @@ export async function gamingRoute(fastify: FastifyInstance): Promise<void> {
       } catch { /* ignore */ }
     }
 
-    // Sort by unlock date descending and limit
     achievements.sort((a, b) => new Date(b.unlockedAt).getTime() - new Date(a.unlockedAt).getTime());
     return reply.send(achievements.slice(0, maxItems));
   });
 
-  // Unified showcase — random game from combined sources
   fastify.get('/api/gaming/showcase-game', async (request, reply) => {
-    const { steamApiKey, steamId, raApiUser, raApiKey, raUser } = request.query as Record<string, string>;
+    const { steamApiKey, steamId, raApiUser, raApiKey, raUser } = gamingCreds(request.query as Record<string, string>);
 
     interface GameCandidate {
       name: string;
@@ -175,14 +178,12 @@ export async function gamingRoute(fastify: FastifyInstance): Promise<void> {
 
     const candidates: GameCandidate[] = [];
 
-    // Get RA recent games
     if (raApiUser && raApiKey && raUser) {
       try {
         const url = `${RA_BASE}/API_GetUserRecentlyPlayedGames.php?z=${raApiUser}&y=${raApiKey}&u=${raUser}&c=10`;
         const data = await cachedFetch(url) as Array<Record<string, unknown>>;
         if (Array.isArray(data)) {
           for (const g of data) {
-            // Skip placeholder games
             if (/\/Images\/00000[0-9]\.png$/.test(g.ImageIcon as string || '')) continue;
             candidates.push({
               name: g.Title as string,
@@ -199,7 +200,6 @@ export async function gamingRoute(fastify: FastifyInstance): Promise<void> {
       } catch { /* ignore */ }
     }
 
-    // Get Steam recent games
     if (steamApiKey && steamId) {
       try {
         const url = `${STEAM_BASE}/IPlayerService/GetRecentlyPlayedGames/v1/?key=${steamApiKey}&steamid=${steamId}&count=10`;

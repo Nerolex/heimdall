@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { withActiveProfile } from '../../../app/apiProfile';
 import styles from './Gaming.module.css';
 
 interface GameCandidate {
@@ -24,15 +25,6 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
   const savedStateRef = useRef(settings.__savedState as { game: GameCandidate; heroUrl: string | null; screenshotUrl: string | null } | undefined);
   const onStateChangeRef = useRef(settings.__onStateChange as ((s: unknown) => void) | undefined);
 
-  const steamApiKey = settings.steamApiKey as string | undefined;
-  const steamId = settings.steamId as string | undefined;
-  const raApiUser = settings.raApiUser as string | undefined;
-  const raApiKey = settings.raApiKey as string | undefined;
-  const raUser = settings.raUser as string | undefined;
-  const sgdbApiKey = settings.sgdbApiKey as string | undefined;
-  const igdbClientId = settings.igdbClientId as string | undefined;
-  const igdbClientSecret = settings.igdbClientSecret as string | undefined;
-
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
@@ -47,18 +39,7 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
 
     async function fetchData(): Promise<void> {
       try {
-        const params = new URLSearchParams();
-        if (steamApiKey && steamId) {
-          params.set('steamApiKey', steamApiKey);
-          params.set('steamId', steamId);
-        }
-        if (raApiUser && raApiKey && raUser) {
-          params.set('raApiUser', raApiUser);
-          params.set('raApiKey', raApiKey);
-          params.set('raUser', raUser);
-        }
-
-        const res = await fetch(`/api/gaming/showcase-game?${params}`);
+        const res = await fetch(withActiveProfile('/api/gaming/showcase-game'));
         const data = await res.json();
         if (!data.game) { setLoading(false); return; }
 
@@ -68,13 +49,13 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
         let finalHeroUrl: string | null = null;
         let finalScreenshotUrl: string | null = null;
 
-        const heroPromise = sgdbApiKey ? (async () => {
+        const heroPromise = (async () => {
           try {
-            const searchRes = await fetch(`/api/sgdb/search?apiKey=${sgdbApiKey}&term=${encodeURIComponent(picked.name)}`);
+            const searchRes = await fetch(withActiveProfile(`/api/sgdb/search?term=${encodeURIComponent(picked.name)}`));
             const searchData = await searchRes.json();
             if (searchData.success && searchData.data?.length > 0) {
               const sgdbGameId = searchData.data[0].id;
-              const heroRes = await fetch(`/api/sgdb/heroes?apiKey=${sgdbApiKey}&gameId=${sgdbGameId}`);
+              const heroRes = await fetch(withActiveProfile(`/api/sgdb/heroes?gameId=${sgdbGameId}`));
               const heroData = await heroRes.json();
               if (heroData.success && heroData.data?.length > 0) {
                 const originalUrl = heroData.data[0].url as string;
@@ -83,24 +64,21 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
               }
             }
           } catch { /* ignore */ }
-        })() : Promise.resolve();
+        })();
 
-        const screenshotPromise = (igdbClientId && igdbClientSecret) ? (async () => {
+        const screenshotPromise = (async () => {
           try {
-            const igdbRes = await fetch(
-              `/api/igdb/screenshots?clientId=${igdbClientId}&clientSecret=${igdbClientSecret}&game=${encodeURIComponent(picked.name)}`
-            );
+            const igdbRes = await fetch(withActiveProfile(`/api/igdb/screenshots?game=${encodeURIComponent(picked.name)}`));
             const igdbData = await igdbRes.json();
             if (igdbData.success && igdbData.screenshots?.length > 0) {
               const shots = igdbData.screenshots;
               finalScreenshotUrl = shots[Math.floor(Math.random() * shots.length)].url;
             }
           } catch { /* ignore */ }
-        })() : Promise.resolve();
+        })();
 
         await Promise.all([heroPromise, screenshotPromise]);
 
-        // For Steam games without SGDB hero, fall back to Steam library hero
         if (!finalHeroUrl && picked.source === 'steam' && picked.appId) {
           finalHeroUrl = `https://steamcdn-a.akamaihd.net/steam/apps/${picked.appId}/library_hero.jpg`;
         }
@@ -112,7 +90,7 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
       setLoading(false);
     }
     fetchData();
-  }, [steamApiKey, steamId, raApiUser, raApiKey, raUser, sgdbApiKey, igdbClientId, igdbClientSecret]);
+  }, [settings.__savedState, settings.__onStateChange]);
 
   if (loading) return <div className={styles.loading}>Loading…</div>;
   if (!game) return <div className={styles.loading}>Keine Spieldaten verfügbar</div>;
@@ -121,7 +99,6 @@ export function GamingShowcaseView({ settings }: Props): React.ReactElement {
     ? Math.round((game.achievements.earned / game.achievements.total) * 100)
     : null;
 
-  // Use Steam header as fallback background
   const bgUrl = heroUrl || (game.source === 'steam' && game.appId
     ? `https://steamcdn-a.akamaihd.net/steam/apps/${game.appId}/library_hero.jpg`
     : null);

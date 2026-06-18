@@ -15,9 +15,7 @@ afterEach(() => {
 });
 
 const mockConfig: EventsProviderConfig = {
-  city: 'dortmund',
-  lat: 51.5136,
-  lng: 7.4653,
+  cities: 'dortmund',
   categories: [],
 };
 

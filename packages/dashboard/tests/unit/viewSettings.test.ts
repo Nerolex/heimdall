@@ -10,9 +10,13 @@ describe('viewSettings helpers', () => {
         apiUser: 'ra-api-user',
         apiKey: 'ra-api-key',
         user: 'ra-user',
-        igdbClientId: 'igdb-id',
-        igdbClientSecret: 'igdb-secret',
-        sgdbApiKey: 'sgdb-key',
+      },
+      igdb: {
+        clientId: 'igdb-id',
+        clientSecret: 'igdb-secret',
+      },
+      sgdb: {
+        apiKey: 'sgdb-key',
       },
       steam: {
         apiKey: 'steam-key',

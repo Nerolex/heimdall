@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import type { ConcertsViewSnapshot } from '@heimdall/shared';
+import { withActiveProfile } from '../../../app/apiProfile';
 
 type SnapshotStatus = 'loading' | 'success' | 'error' | 'empty';
 
@@ -21,7 +22,7 @@ export function useConcertsSnapshot(): UseConcertsSnapshotResult {
 
     const fetchSnapshot = async () => {
       try {
-        const res = await fetch('/api/concerts/snapshot');
+        const res = await fetch(withActiveProfile('/api/concerts/snapshot'));
         
         if (!mounted) return;
 

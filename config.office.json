@@ -11,7 +11,7 @@
       "apiKey": "<OpenWeatherMap API key>",
       "city": "Dortmund",
       "units": "metric",
-      "refreshInterval": 15
+      "refreshIntervalMinutes": 15
     },
     "calendar": {
       "sources": [
@@ -27,7 +27,7 @@
       "token": "<Plex token>"
     },
     "events": {
-      "city": "dortmund",
+      "cities": "dortmund",
       "lat": 51.5136,
       "lng": 7.4653,
       "categories": []

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { RA_MEDIA, extractRetroSettings } from './retroApi';
+import { withActiveProfile } from '../../../app/apiProfile';
+import { RA_MEDIA } from './retroApi';
 import styles from './Retro.module.css';
 
 interface RecentGame {
@@ -18,16 +19,15 @@ interface Props {
   settings: Record<string, unknown>;
 }
 
-export function RetroPlayingView({ settings }: Props): React.ReactElement {
+export function RetroPlayingView(_props: Props): React.ReactElement {
   const [games, setGames] = useState<RecentGame[]>([]);
   const [loading, setLoading] = useState(true);
-  const { apiUser, apiKey, user } = extractRetroSettings(settings);
 
   useEffect(() => {
     async function fetchData(): Promise<void> {
       try {
         const count = window.innerHeight > 900 ? 10 : 5;
-        const res = await fetch(`/api/retro/recent-games?apiUser=${apiUser}&apiKey=${apiKey}&user=${user}&count=${count}`);
+        const res = await fetch(withActiveProfile(`/api/retro/recent-games?count=${count}`));
         const data = await res.json();
         if (Array.isArray(data)) setGames(data);
       } catch { /* ignore */ }
@@ -36,7 +36,7 @@ export function RetroPlayingView({ settings }: Props): React.ReactElement {
     fetchData();
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [apiUser, apiKey, user]);
+  }, []);
 
   if (loading) {
     return <div className={styles.loading}>Loading…</div>;

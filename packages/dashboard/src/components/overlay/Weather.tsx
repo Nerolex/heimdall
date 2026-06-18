@@ -129,10 +129,10 @@ export function Weather({ config }: WeatherProps): React.ReactElement {
     }
 
     fetchWeather();
-    const refreshMs = (config.refreshInterval || DEFAULT_REFRESH_MINUTES) * 60 * 1000;
+    const refreshMs = (config.refreshIntervalMinutes || DEFAULT_REFRESH_MINUTES) * 60 * 1000;
     const timer = setInterval(fetchWeather, refreshMs);
     return () => clearInterval(timer);
-  }, [config.apiKey, config.city, config.units, config.refreshInterval]);
+  }, [config.apiKey, config.city, config.units, config.refreshIntervalMinutes]);
 
   if (error) {
     return <span data-testid="overlay-weather" style={{ fontSize: '4vw', opacity: 0.6 }}>--</span>;

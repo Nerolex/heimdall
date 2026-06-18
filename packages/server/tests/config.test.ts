@@ -90,9 +90,9 @@ describe('loadConfig', () => {
     expect(result.config!.lastfm?.apiKey).toBe('lastfm-key');
     expect(result.config!.steam?.steamId).toBe('steam-id');
     expect(result.config!.retro?.apiUser).toBe('ra-api');
-    expect(result.config!.retro?.igdbClientId).toBe('igdb-id');
-    expect(result.config!.retro?.igdbClientSecret).toBe('igdb-secret');
-    expect(result.config!.retro?.sgdbApiKey).toBe('sgdb-key');
+    expect(result.config!.igdb?.clientId).toBe('igdb-id');
+    expect(result.config!.igdb?.clientSecret).toBe('igdb-secret');
+    expect(result.config!.sgdb?.apiKey).toBe('sgdb-key');
     expect(result.config!.plex?.token).toBe('plex-token');
   });
 

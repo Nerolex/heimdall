@@ -12,3 +12,4 @@ Thumbs.db
 coverage/
 *.tsbuildinfo
 config.json
+config.*.json

@@ -92,7 +92,7 @@ interface ClockViewSettings {
   weatherApiKey?: string;
   weatherCity?: string;
   weatherUnits?: string;
-  /** Weather poll interval in seconds. Mirrors WeatherConfig.refreshInterval. */
+  /** Weather poll interval in minutes. Mirrors WeatherConfig.refreshIntervalMinutes. */
   weatherRefreshInterval?: number;
 }
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { withActiveProfile } from '../../../app/apiProfile';
 import styles from './Gaming.module.css';
 
 interface NowPlayingData {
@@ -13,44 +14,25 @@ interface Props {
   settings: Record<string, unknown>;
 }
 
-export function GamingNowView({ settings }: Props): React.ReactElement {
+export function GamingNowView(_props: Props): React.ReactElement {
   const [data, setData] = useState<NowPlayingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [heroUrl, setHeroUrl] = useState<string | null>(null);
 
-  const steamApiKey = settings.steamApiKey as string | undefined;
-  const steamId = settings.steamId as string | undefined;
-  const raApiUser = settings.raApiUser as string | undefined;
-  const raApiKey = settings.raApiKey as string | undefined;
-  const raUser = settings.raUser as string | undefined;
-  const sgdbApiKey = settings.sgdbApiKey as string | undefined;
-
   useEffect(() => {
     async function fetchData(): Promise<void> {
       try {
-        const params = new URLSearchParams();
-        if (steamApiKey && steamId) {
-          params.set('steamApiKey', steamApiKey);
-          params.set('steamId', steamId);
-        }
-        if (raApiUser && raApiKey && raUser) {
-          params.set('raApiUser', raApiUser);
-          params.set('raApiKey', raApiKey);
-          params.set('raUser', raUser);
-        }
-
-        const res = await fetch(`/api/gaming/now-playing?${params}`);
+        const res = await fetch(withActiveProfile('/api/gaming/now-playing'));
         const result: NowPlayingData = await res.json();
         setData(result);
 
-        // Try to get hero art from SGDB
-        if (result.gameName && sgdbApiKey) {
+        if (result.gameName) {
           try {
-            const searchRes = await fetch(`/api/sgdb/search?apiKey=${sgdbApiKey}&term=${encodeURIComponent(result.gameName)}`);
+            const searchRes = await fetch(withActiveProfile(`/api/sgdb/search?term=${encodeURIComponent(result.gameName)}`));
             const searchData = await searchRes.json();
             if (searchData.success && searchData.data?.length > 0) {
               const sgdbGameId = searchData.data[0].id;
-              const heroRes = await fetch(`/api/sgdb/heroes?apiKey=${sgdbApiKey}&gameId=${sgdbGameId}`);
+              const heroRes = await fetch(withActiveProfile(`/api/sgdb/heroes?gameId=${sgdbGameId}`));
               const heroData = await heroRes.json();
               if (heroData.success && heroData.data?.length > 0) {
                 const originalUrl = heroData.data[0].url as string;
@@ -64,9 +46,9 @@ export function GamingNowView({ settings }: Props): React.ReactElement {
       setLoading(false);
     }
     fetchData();
-    const interval = setInterval(fetchData, 30 * 1000); // Poll every 30s for live status
+    const interval = setInterval(fetchData, 30 * 1000);
     return () => clearInterval(interval);
-  }, [steamApiKey, steamId, raApiUser, raApiKey, raUser, sgdbApiKey]);
+  }, []);
 
   if (loading) return <div className={styles.loading}>Loading…</div>;
 

@@ -1,25 +1,12 @@
 import { type FastifyInstance } from 'fastify';
+import { loadConfig } from '../config.js';
+import { resolveConfigPath, resolveProfileConfigPath } from '../utils/projectRoot.js';
 
 const RA_BASE = 'https://retroachievements.org/API';
 const MEDIA_BASE = 'https://media.retroachievements.org';
 
-interface RAQuery {
-  user?: string;
-  apiUser?: string;
-  apiKey?: string;
-}
-
-function getCredentials(query: RAQuery): { z: string; y: string; u: string } | null {
-  const z = query.apiUser || '';
-  const y = query.apiKey || '';
-  const u = query.user || z;
-  if (!z || !y) return null;
-  return { z, y, u };
-}
-
-// Simple cache: key → { data, timestamp }
 const cache = new Map<string, { data: unknown; ts: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 5 * 60 * 1000;
 
 async function fetchRA(endpoint: string, params: Record<string, string>): Promise<unknown> {
   const url = new URL(`${RA_BASE}/${endpoint}`);
@@ -36,52 +23,58 @@ async function fetchRA(endpoint: string, params: Record<string, string>): Promis
   return data;
 }
 
+function raCredentials(query: { apiUser?: string; apiKey?: string; user?: string; profile?: string }) {
+  const result = loadConfig(query.profile ? resolveProfileConfigPath(query.profile) : resolveConfigPath());
+  const fromConfig = result.config?.retro;
+  return {
+    z: fromConfig?.apiUser || query.apiUser || '',
+    y: fromConfig?.apiKey || query.apiKey || '',
+    u: fromConfig?.user || query.user || fromConfig?.apiUser || query.apiUser || '',
+  };
+}
+
 export async function retroAchievementsRoute(fastify: FastifyInstance): Promise<void> {
-  // GET /api/retro/profile
-  fastify.get<{ Querystring: RAQuery }>('/api/retro/profile', async (request) => {
-    const creds = getCredentials(request.query);
-    if (!creds) return { error: 'Missing apiUser/apiKey' };
+  fastify.get<{ Querystring: { user?: string; apiUser?: string; apiKey?: string } }>('/api/retro/profile', async (request) => {
+    const { z, y, u } = raCredentials(request.query);
+    if (!z || !y) return { error: 'Missing apiUser/apiKey' };
 
     const data = await fetchRA('API_GetUserSummary.php', {
-      z: creds.z, y: creds.y, u: creds.u, g: '5', a: '10',
+      z, y, u, g: '5', a: '10',
     });
     return data;
   });
 
-  // GET /api/retro/recent-achievements
-  fastify.get<{ Querystring: RAQuery & { minutes?: string } }>('/api/retro/recent-achievements', async (request) => {
-    const creds = getCredentials(request.query);
-    if (!creds) return { error: 'Missing apiUser/apiKey' };
+  fastify.get<{ Querystring: { user?: string; apiUser?: string; apiKey?: string; minutes?: string } }>('/api/retro/recent-achievements', async (request) => {
+    const { z, y, u } = raCredentials(request.query);
+    if (!z || !y) return { error: 'Missing apiUser/apiKey' };
 
-    const minutes = request.query.minutes || '43200'; // default 30 days
+    const minutes = request.query.minutes || '43200';
     const data = await fetchRA('API_GetUserRecentAchievements.php', {
-      z: creds.z, y: creds.y, u: creds.u, m: minutes,
+      z, y, u, m: minutes,
     });
     return data;
   });
 
-  // GET /api/retro/recent-games
-  fastify.get<{ Querystring: RAQuery & { count?: string } }>('/api/retro/recent-games', async (request) => {
-    const creds = getCredentials(request.query);
-    if (!creds) return { error: 'Missing apiUser/apiKey' };
+  fastify.get<{ Querystring: { user?: string; apiUser?: string; apiKey?: string; count?: string } }>('/api/retro/recent-games', async (request) => {
+    const { z, y, u } = raCredentials(request.query);
+    if (!z || !y) return { error: 'Missing apiUser/apiKey' };
 
     const count = request.query.count || '10';
     const data = await fetchRA('API_GetUserRecentlyPlayedGames.php', {
-      z: creds.z, y: creds.y, u: creds.u, c: count,
+      z, y, u, c: count,
     });
     return data;
   });
 
-  // GET /api/retro/game-info — full game info with screenshots and user progress
-  fastify.get<{ Querystring: RAQuery & { gameId: string } }>('/api/retro/game-info', async (request) => {
-    const creds = getCredentials(request.query);
-    if (!creds) return { error: 'Missing apiUser/apiKey' };
+  fastify.get<{ Querystring: { user?: string; apiUser?: string; apiKey?: string; gameId: string } }>('/api/retro/game-info', async (request) => {
+    const { z, y, u } = raCredentials(request.query);
+    if (!z || !y) return { error: 'Missing apiUser/apiKey' };
 
     const gameId = request.query.gameId;
     if (!gameId) return { error: 'Missing gameId' };
 
     const data = await fetchRA('API_GetGameInfoAndUserProgress.php', {
-      z: creds.z, y: creds.y, u: creds.u, g: gameId,
+      z, y, u, g: gameId,
     });
     return data;
   });

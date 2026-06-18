@@ -7,7 +7,8 @@ function stripUndefined<T extends Record<string, unknown>>(value: T): T {
 
 /**
  * Redact sensitive credentials from config payloads returned to clients.
- * This is opt-in until all frontend integrations are server-credential-based.
+ * Frontend no longer needs credentials — gaming/retro/steam/igdb/sgdb routes
+ * read them from the server-side config on each request.
  */
 export function redactConfigForClient(config: DashboardConfig): DashboardConfig {
   const cfg = config as DashboardConfig & Record<string, unknown>;
@@ -26,8 +27,14 @@ export function redactConfigForClient(config: DashboardConfig): DashboardConfig 
   const retro = cfg.retro ? stripUndefined({
     ...cfg.retro,
     apiKey: undefined,
-    igdbClientSecret: undefined,
-    sgdbApiKey: undefined,
+  }) : undefined;
+  const igdb = cfg.igdb ? stripUndefined({
+    ...cfg.igdb,
+    clientSecret: undefined,
+  }) : undefined;
+  const sgdb = cfg.sgdb ? stripUndefined({
+    ...cfg.sgdb,
+    apiKey: undefined,
   }) : undefined;
   const plex = cfg.plex ? stripUndefined({
     ...cfg.plex,
@@ -40,6 +47,8 @@ export function redactConfigForClient(config: DashboardConfig): DashboardConfig 
     ...(lastfm ? { lastfm } : {}),
     ...(steam ? { steam } : {}),
     ...(retro ? { retro } : {}),
+    ...(igdb ? { igdb } : {}),
+    ...(sgdb ? { sgdb } : {}),
     ...(plex ? { plex } : {}),
   } as DashboardConfig;
 }

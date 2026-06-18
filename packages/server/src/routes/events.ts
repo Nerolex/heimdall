@@ -1,7 +1,7 @@
 import { type FastifyInstance } from 'fastify';
 import { loadConfig } from '../config.js';
 import { getSnapshot } from '../services/events/snapshotStore.js';
-import { resolveConfigPath } from '../utils/projectRoot.js';
+import { resolveConfigPath, resolveProfileConfigPath } from '../utils/projectRoot.js';
 import type { RefreshStatus } from '@heimdall/shared';
 
 const ALLOWED_TYPES = ['events-today', 'events-weekend', 'events-upcoming'] as const;
@@ -10,7 +10,7 @@ export async function eventsRoute(fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Querystring: { type?: string; days?: string } }>(
     '/api/events/snapshot',
     async (request, reply) => {
-      const { type, days: daysStr } = request.query;
+      const { type, days: daysStr, profile } = request.query as { type?: string; days?: string; profile?: string };
 
       if (!type || !ALLOWED_TYPES.includes(type as (typeof ALLOWED_TYPES)[number])) {
         return reply.status(400).send({
@@ -19,7 +19,7 @@ export async function eventsRoute(fastify: FastifyInstance): Promise<void> {
         });
       }
 
-      const result = loadConfig(resolveConfigPath());
+      const result = loadConfig(profile ? resolveProfileConfigPath(profile) : resolveConfigPath());
       const eventsConfig = result.config?.providers?.events;
       if (!eventsConfig) {
         return reply.status(422).send({ error: 'Events provider not configured' });
@@ -36,8 +36,8 @@ export async function eventsRoute(fastify: FastifyInstance): Promise<void> {
     }
   );
 
-  fastify.get('/api/events/health', async (_request, reply) => {
-    const result = loadConfig(resolveConfigPath());
+  fastify.get<{ Querystring: { profile?: string } }>('/api/events/health', async (request, reply) => {
+    const result = loadConfig(request.query.profile ? resolveProfileConfigPath(request.query.profile) : resolveConfigPath());
     const eventsConfig = result.config?.providers?.events;
     if (!eventsConfig) {
       return reply.status(422).send({ error: 'Events provider not configured' });

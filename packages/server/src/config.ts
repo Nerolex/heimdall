@@ -51,29 +51,58 @@ function normalizeEventsProvider(raw: unknown): EventsProviderConfig | null {
   };
 }
 
+function normalizeWeatherConfig(raw: JsonObject): JsonObject {
+  const result = { ...raw };
+  if (raw.refreshInterval != null && raw.refreshIntervalMinutes == null) {
+    result.refreshIntervalMinutes = raw.refreshInterval;
+  }
+  delete result.refreshInterval;
+  return result;
+}
+
+function normalizeConcertsConfig(raw: JsonObject): JsonObject {
+  const result = { ...raw };
+  if (raw.refreshInterval != null && raw.refreshIntervalHours == null) {
+    result.refreshIntervalHours = raw.refreshInterval;
+  }
+  delete result.refreshInterval;
+  return result;
+}
+
+const KNOWN_OVERLAY_MODES = new Set(['both', 'clock', 'weather', 'none']);
+const KNOWN_FREQUENCIES = new Set(['high', 'normal', 'low']);
+
+function isValidViewEntryShape(raw: unknown): string | null {
+  if (!isObject(raw)) return 'Each view entry must be a JSON object';
+  if (typeof raw.type !== 'string' || raw.type.trim() === '') {
+    return 'Each view entry must have a non-empty "type" string';
+  }
+  if (raw.overlay != null && !KNOWN_OVERLAY_MODES.has(raw.overlay as string)) {
+    return `View "${raw.type}": invalid overlay "${raw.overlay}" (valid: both, clock, weather, none)`;
+  }
+  if (raw.frequency != null && !KNOWN_FREQUENCIES.has(raw.frequency as string)) {
+    return `View "${raw.type}": invalid frequency "${raw.frequency}" (valid: high, normal, low)`;
+  }
+  return null;
+}
+
 function normalizeGroupedShape(parsed: JsonObject): JsonObject {
   const app = getObject(parsed.app);
   const providers = getObject(parsed.providers);
   const music = getObject(providers?.music);
   const gaming = getObject(providers?.gaming);
-  const weather = getObject(providers?.weather) ?? getObject(parsed.weather);
+  const rawWeather = getObject(providers?.weather) ?? getObject(parsed.weather);
+  const weather = rawWeather ? normalizeWeatherConfig(rawWeather) : undefined;
   const calendar = getObject(providers?.calendar) ?? getObject(parsed.calendar);
   const lastfm = getObject(music?.lastfm) ?? getObject(parsed.lastfm);
   const steam = getObject(gaming?.steam) ?? getObject(parsed.steam);
   const plex = getObject(providers?.plex) ?? getObject(parsed.plex);
   const eventsProvider = getObject(providers?.events);
-  const concertsProvider = getObject(providers?.concerts);
-  const legacyRetro = getObject(parsed.retro);
-  const groupedRetro = getObject(gaming?.retro);
+  const rawConcerts = normalizeConcertsConfig(getObject(providers?.concerts) ?? {});
+  const concertsProvider = Object.keys(rawConcerts).length > 0 ? rawConcerts : undefined;
+  const retro = getObject(gaming?.retro) ?? getObject(parsed.retro);
   const igdb = getObject(gaming?.igdb);
   const sgdb = getObject(gaming?.sgdb);
-  const retro = {
-    ...(legacyRetro || {}),
-    ...(groupedRetro || {}),
-    ...(igdb?.clientId != null ? { igdbClientId: igdb.clientId } : {}),
-    ...(igdb?.clientSecret != null ? { igdbClientSecret: igdb.clientSecret } : {}),
-    ...(sgdb?.apiKey != null ? { sgdbApiKey: sgdb.apiKey } : {}),
-  };
 
   return {
     schemaVersion: parsed.schemaVersion,
@@ -85,8 +114,10 @@ function normalizeGroupedShape(parsed: JsonObject): JsonObject {
     ...(weather ? { weather } : {}),
     ...(calendar ? { calendar } : {}),
     ...(lastfm ? { lastfm } : {}),
-    ...(Object.keys(retro).length > 0 ? { retro } : {}),
+    ...(retro ? { retro } : {}),
     ...(steam ? { steam } : {}),
+    ...(igdb ? { igdb } : {}),
+    ...(sgdb ? { sgdb } : {}),
     ...(plex ? { plex } : {}),
     ...(eventsProvider || concertsProvider ? { 
       providers: { 
@@ -145,6 +176,18 @@ export function loadConfig(configPath: string): ConfigResult {
     };
   }
 
+  // Validate each view entry before proceeding
+  const rawViews = Array.isArray(normalizedParsed.views) ? normalizedParsed.views : [];
+  for (let i = 0; i < rawViews.length; i++) {
+    const error = isValidViewEntryShape(rawViews[i]);
+    if (error) {
+      return {
+        error: 'config_invalid',
+        message: `View entry [${i}]: ${error}`,
+      };
+    }
+  }
+
   const config: DashboardConfig = {
     ...(typeof normalizedParsed.schemaVersion === 'number' ? { schemaVersion: normalizedParsed.schemaVersion } : {}),
     cycleInterval: normalizeCycleInterval(normalizedParsed.cycleInterval),
@@ -155,6 +198,8 @@ export function loadConfig(configPath: string): ConfigResult {
     ...(normalizedParsed.keepAwake != null ? { keepAwake: normalizedParsed.keepAwake } : {}),
     ...(normalizedParsed.retro ? { retro: normalizedParsed.retro } : {}),
     ...(normalizedParsed.steam ? { steam: normalizedParsed.steam } : {}),
+    ...(normalizedParsed.igdb ? { igdb: normalizedParsed.igdb } : {}),
+    ...(normalizedParsed.sgdb ? { sgdb: normalizedParsed.sgdb } : {}),
     ...(normalizedParsed.calendar ? { calendar: normalizedParsed.calendar } : {}),
     ...(normalizedParsed.lastfm ? { lastfm: normalizedParsed.lastfm } : {}),
     ...(normalizedParsed.plex ? { plex: normalizedParsed.plex } : {}),

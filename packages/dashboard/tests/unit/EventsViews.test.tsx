@@ -26,6 +26,7 @@ function makeEvent(overrides: Partial<EventRecord> = {}): EventRecord {
     rawDescription: 'Club Stage | 2024-05-15 20:00',
     recurrenceNote: null,
     detailUrl: 'https://rausgegangen.de/en/dortmund/test-concert',
+    city: 'dortmund',
     ...overrides,
   };
 }

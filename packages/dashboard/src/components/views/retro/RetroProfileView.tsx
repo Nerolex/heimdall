@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { RA_MEDIA, extractRetroSettings } from './retroApi';
+import { withActiveProfile } from '../../../app/apiProfile';
+import { RA_MEDIA } from './retroApi';
 import styles from './Retro.module.css';
 
 interface UserSummary {
@@ -21,15 +22,14 @@ interface Props {
   settings: Record<string, unknown>;
 }
 
-export function RetroProfileView({ settings }: Props): React.ReactElement {
+export function RetroProfileView(_props: Props): React.ReactElement {
   const [profile, setProfile] = useState<UserSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const { apiUser, apiKey, user } = extractRetroSettings(settings);
 
   useEffect(() => {
     async function fetchData(): Promise<void> {
       try {
-        const res = await fetch(`/api/retro/profile?apiUser=${apiUser}&apiKey=${apiKey}&user=${user}`);
+        const res = await fetch(withActiveProfile('/api/retro/profile'));
         const data = await res.json();
         if (data.User) setProfile(data);
       } catch { /* ignore */ }
@@ -38,7 +38,7 @@ export function RetroProfileView({ settings }: Props): React.ReactElement {
     fetchData();
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [apiUser, apiKey, user]);
+  }, []);
 
   if (loading) {
     return <div className={styles.loading}>Loading…</div>;

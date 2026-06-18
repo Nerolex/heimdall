@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { withActiveProfile } from '../../../app/apiProfile';
 import styles from './Gaming.module.css';
 
 interface UnifiedAchievement {
@@ -27,36 +28,19 @@ function timeAgo(dateStr: string): string {
   return `vor ${days}d`;
 }
 
-export function GamingRecentView({ settings }: Props): React.ReactElement {
+export function GamingRecentView(_props: Props): React.ReactElement {
   const [achievements, setAchievements] = useState<UnifiedAchievement[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const steamApiKey = settings.steamApiKey as string | undefined;
-  const steamId = settings.steamId as string | undefined;
-  const raApiUser = settings.raApiUser as string | undefined;
-  const raApiKey = settings.raApiKey as string | undefined;
-  const raUser = settings.raUser as string | undefined;
 
   useEffect(() => {
     async function fetchData(): Promise<void> {
       try {
-        const params = new URLSearchParams();
-        if (steamApiKey && steamId) {
-          params.set('steamApiKey', steamApiKey);
-          params.set('steamId', steamId);
-        }
-        if (raApiUser && raApiKey && raUser) {
-          params.set('raApiUser', raApiUser);
-          params.set('raApiKey', raApiKey);
-          params.set('raUser', raUser);
-        }
         let maxItems: number;
         if (window.innerHeight < 650) maxItems = 4;
         else if (window.innerHeight < 900) maxItems = 6;
         else maxItems = 10;
-        params.set('limit', String(maxItems));
 
-        const res = await fetch(`/api/gaming/recent-achievements?${params}`);
+        const res = await fetch(withActiveProfile(`/api/gaming/recent-achievements?limit=${maxItems}`));
         const data: UnifiedAchievement[] = await res.json();
         if (Array.isArray(data)) setAchievements(data);
       } catch { /* ignore */ }
@@ -65,7 +49,7 @@ export function GamingRecentView({ settings }: Props): React.ReactElement {
     fetchData();
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [steamApiKey, steamId, raApiUser, raApiKey, raUser]);
+  }, []);
 
   if (loading) return <div className={styles.loading}>Loading…</div>;
 

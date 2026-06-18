@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { RA_MEDIA, extractRetroSettings, timeAgo } from './retroApi';
+import { withActiveProfile } from '../../../app/apiProfile';
+import { RA_MEDIA, timeAgo } from './retroApi';
 import styles from './Retro.module.css';
 
 interface Achievement {
@@ -20,17 +21,15 @@ interface Props {
   settings: Record<string, unknown>;
 }
 
-export function RetroRecentView({ settings }: Props): React.ReactElement {
+export function RetroRecentView(_props: Props): React.ReactElement {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
-  const { apiUser, apiKey, user } = extractRetroSettings(settings);
 
   useEffect(() => {
     async function fetchData(): Promise<void> {
       try {
-        const res = await fetch(`/api/retro/recent-achievements?apiUser=${apiUser}&apiKey=${apiKey}&user=${user}&minutes=43200`);
+        const res = await fetch(withActiveProfile('/api/retro/recent-achievements'));
         const data = await res.json();
-        // Hero + max 2 compact rows — keeps it readable at a glance on small screens
         if (Array.isArray(data)) setAchievements(data.slice(0, 3));
       } catch { /* ignore */ }
       setLoading(false);
@@ -38,7 +37,7 @@ export function RetroRecentView({ settings }: Props): React.ReactElement {
     fetchData();
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [apiUser, apiKey, user]);
+  }, []);
 
   if (loading) {
     return <div className={styles.loading}>Loading…</div>;
@@ -55,7 +54,6 @@ export function RetroRecentView({ settings }: Props): React.ReactElement {
         <div className={styles.empty}>Keine Achievements in letzter Zeit</div>
       ) : (
         <div className={styles.achievementList}>
-          {/* Hero: first achievement */}
           <div className={styles.achievementHero}>
             <img src={`${RA_MEDIA}${achievements[0].BadgeURL}`} alt="" className={styles.heroImage} />
             <div className={styles.heroInfo}>
@@ -72,7 +70,6 @@ export function RetroRecentView({ settings }: Props): React.ReactElement {
             </div>
           </div>
 
-          {/* Rest: compact list */}
           {achievements.slice(1).map((ach) => (
             <div key={ach.Date + ach.Title} className={styles.achievementRow}>
               <img src={`${RA_MEDIA}${ach.BadgeURL}`} alt="" className={styles.badge} />

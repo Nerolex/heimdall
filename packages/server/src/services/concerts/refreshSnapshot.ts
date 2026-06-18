@@ -112,7 +112,7 @@ export async function refreshConcertsSnapshot(config: ConcertsConfig): Promise<v
  * Start periodic refresh scheduler
  */
 export function startConcertsRefreshScheduler(config: ConcertsConfig): void {
-  const refreshInterval = (config.concerts.refreshInterval ?? 6) * 60 * 60 * 1000; // hours to ms
+  const refreshInterval = (config.concerts.refreshIntervalHours ?? 6) * 60 * 60 * 1000; // hours to ms
   
   // Initial refresh
   refreshConcertsSnapshot(config).catch(console.error);
@@ -122,5 +122,5 @@ export function startConcertsRefreshScheduler(config: ConcertsConfig): void {
     refreshConcertsSnapshot(config).catch(console.error);
   }, refreshInterval);
 
-  console.log(`[concerts] Refresh scheduler started (every ${config.concerts.refreshInterval ?? 6}h)`);
+  console.log(`[concerts] Refresh scheduler started (every ${config.concerts.refreshIntervalHours ?? 6}h)`);
 }

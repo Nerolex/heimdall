@@ -12,9 +12,13 @@ describe('redactConfigForClient', () => {
         apiUser: 'retro-api-user',
         apiKey: 'retro-secret',
         user: 'retro-user',
-        igdbClientId: 'igdb-id',
-        igdbClientSecret: 'igdb-secret',
-        sgdbApiKey: 'sgdb-secret',
+      },
+      igdb: {
+        clientId: 'igdb-id',
+        clientSecret: 'igdb-secret',
+      },
+      sgdb: {
+        apiKey: 'sgdb-secret',
       },
       steam: { apiKey: 'steam-secret', steamId: '123' },
       plex: { url: 'http://127.0.0.1:32400', token: 'plex-secret' },
@@ -28,8 +32,8 @@ describe('redactConfigForClient', () => {
     expect((redacted.lastfm as Record<string, unknown>).apiKey).toBeUndefined();
     expect((redacted.retro as Record<string, unknown>).apiUser).toBe('retro-api-user');
     expect((redacted.retro as Record<string, unknown>).apiKey).toBeUndefined();
-    expect((redacted.retro as Record<string, unknown>).igdbClientSecret).toBeUndefined();
-    expect((redacted.retro as Record<string, unknown>).sgdbApiKey).toBeUndefined();
+    expect((redacted.igdb as Record<string, unknown>).clientSecret).toBeUndefined();
+    expect((redacted.sgdb as Record<string, unknown>).apiKey).toBeUndefined();
     expect((redacted.steam as Record<string, unknown>).steamId).toBe('123');
     expect((redacted.steam as Record<string, unknown>).apiKey).toBeUndefined();
     expect((redacted.plex as Record<string, unknown>).url).toBe('http://127.0.0.1:32400');

@@ -1,10 +1,11 @@
 import { type FastifyInstance } from 'fastify';
+import { loadConfig } from '../config.js';
+import { resolveConfigPath, resolveProfileConfigPath } from '../utils/projectRoot.js';
 
 const SGDB_BASE = 'https://www.steamgriddb.com/api/v2';
 
-// Simple cache
 const cache = new Map<string, { data: unknown; ts: number }>();
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour (images don't change often)
+const CACHE_TTL = 60 * 60 * 1000;
 
 async function fetchSGDB(endpoint: string, apiKey: string): Promise<unknown> {
   const url = `${SGDB_BASE}${endpoint}`;
@@ -21,25 +22,24 @@ async function fetchSGDB(endpoint: string, apiKey: string): Promise<unknown> {
   return data;
 }
 
-interface SGDBQuery {
-  apiKey?: string;
-  term?: string;
-  gameId?: string;
+function sgdbApiKey(query: { apiKey?: string; profile?: string }): string | undefined {
+  const result = loadConfig(query.profile ? resolveProfileConfigPath(query.profile) : resolveConfigPath());
+  return result.config?.sgdb?.apiKey || query.apiKey;
 }
 
 export async function steamGridDBRoute(fastify: FastifyInstance): Promise<void> {
-  // GET /api/sgdb/search?apiKey=...&term=...
-  fastify.get<{ Querystring: SGDBQuery }>('/api/sgdb/search', async (request) => {
-    const { apiKey, term } = request.query;
+  fastify.get<{ Querystring: { apiKey?: string; term?: string } }>('/api/sgdb/search', async (request) => {
+    const apiKey = sgdbApiKey(request.query);
+    const term = request.query.term;
     if (!apiKey || !term) return { error: 'Missing apiKey or term' };
 
     const data = await fetchSGDB(`/search/autocomplete/${encodeURIComponent(term)}`, apiKey);
     return data;
   });
 
-  // GET /api/sgdb/heroes?apiKey=...&gameId=...
-  fastify.get<{ Querystring: SGDBQuery }>('/api/sgdb/heroes', async (request) => {
-    const { apiKey, gameId } = request.query;
+  fastify.get<{ Querystring: { apiKey?: string; gameId?: string } }>('/api/sgdb/heroes', async (request) => {
+    const apiKey = sgdbApiKey(request.query);
+    const gameId = request.query.gameId;
     if (!apiKey || !gameId) return { error: 'Missing apiKey or gameId' };
 
     const data = await fetchSGDB(`/heroes/game/${gameId}?dimensions=1920x620,1600x650`, apiKey);
