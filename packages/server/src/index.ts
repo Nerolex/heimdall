@@ -17,6 +17,7 @@ import { plexRoute } from './routes/plex.js';
 import { youtubeRoute } from './routes/youtube.js';
 import { eventsRoute } from './routes/events.js';
 import { concertsRoute } from './routes/concerts.js';
+import { showcaseRoute } from './routes/showcase.js';
 import { bootstrapRefreshScheduler } from './services/events/refreshDailySnapshot.js';
 import { loadFromDisk, persistToDisk } from './services/events/snapshotStore.js';
 import { loadSnapshotFromDisk as loadConcertsSnapshot } from './services/concerts/snapshotStore.js';
@@ -150,6 +151,7 @@ async function start(): Promise<void> {
   await registerRoutes(server);
   await bootstrapEventsService(server, PROJECT_ROOT);
   await bootstrapConcertsService(server);
+  await server.register(showcaseRoute);
   await registerStaticFiles(server, PROJECT_ROOT, currentDir);
 
   try {

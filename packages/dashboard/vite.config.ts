@@ -9,8 +9,8 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': 'http://192.168.178.51:3000',
-      '/assets': 'http://192.168.178.51:3000',
+      '/api': 'http://127.0.0.1:3000',
+      '/assets': 'http://127.0.0.1:3000',
     },
   },
 });
