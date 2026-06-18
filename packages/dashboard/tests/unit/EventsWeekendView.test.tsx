@@ -3,7 +3,7 @@ import { render, act, cleanup } from '@testing-library/react';
 import React from 'react';
 import type { EventRecord, EventsViewSnapshot } from '@heimdall/shared';
 import { EventsWeekendView } from '../../src/components/views/events/EventsWeekendView';
-import { clearSnapshotCache } from '../../src/components/views/events/useEventsSnapshot';
+import { clearSnapshotCache } from '../../src/hooks/useViewSnapshot';
 
 afterEach(() => {
   cleanup();

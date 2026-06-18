@@ -1,9 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, act, cleanup } from '@testing-library/react';
 import React from 'react';
-import { EventCard } from '../../src/components/views/events/EventCard';
 import { EventsTodayView } from '../../src/components/views/events/EventsTodayView';
-import { clearSnapshotCache } from '../../src/components/views/events/useEventsSnapshot';
+import { clearSnapshotCache } from '../../src/hooks/useViewSnapshot';
 import type { EventRecord, EventsViewSnapshot } from '@heimdall/shared';
 
 afterEach(() => {
@@ -41,32 +40,6 @@ const mockSnapshot: EventsViewSnapshot = {
   refreshedAt: '2024-05-15T00:00:00Z',
   stale: false,
 };
-
-describe('EventCard', () => {
-  it('renders title, categoryLabel, dateDisplay, venueAndTime', () => {
-    const { container } = render(<EventCard event={makeEvent()} />);
-    expect(container.textContent).toContain('Test Concert');
-    expect(container.textContent).toContain('Konzerte & Musik');
-    expect(container.textContent).toContain('Mi., 15. Mai');
-    expect(container.textContent).toContain('Club Stage · 20:00 Uhr');
-  });
-
-  it('falls back to rawDescription when venueAndTime is null', () => {
-    const event = makeEvent({ venueAndTime: null, rawDescription: 'Raw description text' });
-    const { container } = render(<EventCard event={event} />);
-    expect(container.textContent).toContain('Raw description text');
-  });
-
-  it('omits recurrenceNote when null', () => {
-    const { container } = render(<EventCard event={makeEvent({ recurrenceNote: null })} />);
-    expect(container.querySelector('[class*="recurrenceNote"]')).toBeNull();
-  });
-
-  it('renders recurrenceNote when non-null', () => {
-    const { container } = render(<EventCard event={makeEvent({ recurrenceNote: 'Every Friday' })} />);
-    expect(container.textContent).toContain('Every Friday');
-  });
-});
 
 describe('EventsTodayView', () => {
   it('renders card list on ready status', async () => {

@@ -1,11 +1,11 @@
 import React from 'react';
-import { EventsShowcaseView } from './EventsShowcaseView';
+import { ShowcaseView } from '../shared/ShowcaseView';
 import type { ViewInternalSettings } from '../../../app/internalSettings';
 
 export function EventsTodayView({ settings }: { settings: Record<string, unknown> }) {
   return (
-    <EventsShowcaseView
-      viewType="events-today"
+    <ShowcaseView
+      source="events-today"
       skipIfEmpty={settings.skipIfEmpty !== false}
       internalSettings={settings as ViewInternalSettings}
     />
