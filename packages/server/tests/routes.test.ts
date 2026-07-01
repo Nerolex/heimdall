@@ -82,7 +82,7 @@ describe('GET /api/config', () => {
 
     expect(res.statusCode).toBe(200);
     const body = JSON.parse(res.payload);
-    expect(body.weather.apiKey).toBeUndefined();
+    expect(body.weather.apiKey).toBe('secret-weather');
     expect(body.lastfm.apiKey).toBeUndefined();
     expect(body.retro.apiKey).toBeUndefined();
     expect(body.igdb.clientSecret).toBeUndefined();

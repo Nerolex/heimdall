@@ -12,10 +12,7 @@ function stripUndefined<T extends Record<string, unknown>>(value: T): T {
  */
 export function redactConfigForClient(config: DashboardConfig): DashboardConfig {
   const cfg = config as DashboardConfig & Record<string, unknown>;
-  const weather = cfg.weather ? stripUndefined({
-    ...cfg.weather,
-    apiKey: undefined,
-  }) : undefined;
+  const weather = cfg.weather ? cfg.weather : undefined;
   const lastfm = cfg.lastfm ? stripUndefined({
     ...cfg.lastfm,
     apiKey: undefined,

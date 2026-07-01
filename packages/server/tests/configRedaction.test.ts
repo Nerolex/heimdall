@@ -27,7 +27,7 @@ describe('redactConfigForClient', () => {
     const redacted = redactConfigForClient(input);
 
     expect(redacted.weather?.city).toBe('Berlin');
-    expect((redacted.weather as Record<string, unknown>).apiKey).toBeUndefined();
+    expect(redacted.weather?.apiKey).toBe('weather-secret');
     expect(redacted.lastfm?.user).toBe('mike');
     expect((redacted.lastfm as Record<string, unknown>).apiKey).toBeUndefined();
     expect((redacted.retro as Record<string, unknown>).apiUser).toBe('retro-api-user');
