@@ -3,6 +3,16 @@ import { loadConfig } from '../config.js';
 import { getSnapshot } from '../services/concerts/snapshotStore.js';
 import { resolveConfigPath, resolveProfileConfigPath } from '../utils/projectRoot.js';
 
+/** Keep only concerts whose date is today or later */
+function filterFutureConcerts(concerts: Array<{ date: string }>): Array<{ date: string }> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return concerts.filter(c => {
+    const d = new Date(c.date + 'T00:00:00');
+    return d >= today;
+  });
+}
+
 export async function concertsRoute(fastify: FastifyInstance): Promise<void> {
   fastify.get<{ Querystring: { profile?: string } }>('/api/concerts/snapshot', async (request, reply) => {
     const result = loadConfig(request.query.profile ? resolveProfileConfigPath(request.query.profile) : resolveConfigPath());
@@ -18,7 +28,7 @@ export async function concertsRoute(fastify: FastifyInstance): Promise<void> {
       return reply.status(404).send({ error: 'No snapshot available' });
     }
 
-    return reply.status(200).send(snapshot);
+    return reply.status(200).send({ ...snapshot, concerts: filterFutureConcerts(snapshot.concerts) });
   });
 
   fastify.get<{ Querystring: { profile?: string } }>('/api/concerts/health', async (request, reply) => {

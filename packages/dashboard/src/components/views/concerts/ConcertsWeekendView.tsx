@@ -42,7 +42,7 @@ export function ConcertsWeekendView({ settings }: { settings: Record<string, unk
     () => concerts.map(c => ({
       id: c.id,
       title: c.artistName,
-      categoryLabel: '🎵 Concert',
+      categoryLabel: '🎵 Konzert',
       date: c.date,
       dateDisplay: c.dateDisplay,
       timeDisplay: c.distanceKm !== null ? `${Math.round(c.distanceKm)} km` : null,

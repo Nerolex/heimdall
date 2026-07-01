@@ -35,7 +35,7 @@ function concertToShowcaseItem(c: ConcertRecord): ShowcaseItem {
     venue: c.venue ? `${c.venue}, ${c.city}` : null,
     dateDisplay: c.dateDisplay,
     detailUrl: c.eventUrl || c.lastFmUrl || `https://www.setlist.fm/search?query=${encodeURIComponent(c.artistName)}`,
-    categoryLabel: '🎵 Concert',
+    categoryLabel: '🎵 Konzert',
     backgroundUrl,
     extraLine: c.distanceKm !== null ? `${Math.round(c.distanceKm)} km` : null,
     city: c.city,

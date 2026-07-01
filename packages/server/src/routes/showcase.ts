@@ -6,6 +6,16 @@ import { resolveConfigPath, resolveProfileConfigPath } from '../utils/projectRoo
 
 const EVENT_SOURCES = new Set(['events-today', 'events-weekend', 'events-upcoming']);
 
+/** Keep only concerts whose date is today or later */
+function filterFutureConcerts(concerts: Array<{ date: string }>): Array<{ date: string }> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return concerts.filter(c => {
+    const d = new Date(c.date + 'T00:00:00');
+    return d >= today;
+  });
+}
+
 type ShowcaseSource = 'concerts' | 'events-today' | 'events-weekend' | 'events-upcoming';
 
 export async function showcaseRoute(fastify: FastifyInstance): Promise<void> {
@@ -30,7 +40,7 @@ export async function showcaseRoute(fastify: FastifyInstance): Promise<void> {
         if (!snapshot) {
           return reply.status(404).send({ error: 'No snapshot available' });
         }
-        return reply.send(snapshot);
+        return reply.send({ ...snapshot, concerts: filterFutureConcerts(snapshot.concerts) });
       }
 
       if (EVENT_SOURCES.has(source)) {
